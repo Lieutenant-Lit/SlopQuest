@@ -22,8 +22,9 @@
       }
 
       options = options || {};
+      var timeout = options.timeout || TIMEOUT_MS;
       var controller = new AbortController();
-      var timeoutId = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
+      var timeoutId = setTimeout(function () { controller.abort(); }, timeout);
 
       var body = {
         model: model,
