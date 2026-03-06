@@ -689,10 +689,80 @@ select:focus {
 }
 
 /* ===== GAME OVER ===== */
-#gameover-stats {
+#screen-gameover .screen-content {
+  gap: var(--spacing-lg);
+}
+
+.gameover-reason {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-danger);
+  text-align: center;
+  padding: var(--spacing-sm) 0;
+}
+
+/* Stats grid */
+.gameover-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.stat-value {
+  font-family: var(--font-ui);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Event log (key moments) */
+.gameover-event-log {
   font-family: var(--font-ui);
   font-size: 0.875rem;
+}
+
+.gameover-event-log h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--color-text-muted);
+  margin-bottom: var(--spacing-sm);
+}
+
+.gameover-event-log ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.gameover-event-log li {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--color-text);
+  line-height: 1.4;
 }
 
 /* ===== MAIN MENU ===== */

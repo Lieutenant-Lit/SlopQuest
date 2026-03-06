@@ -267,16 +267,17 @@
 
   <div id="screen-gameover" class="screen">
     <div class="screen-header">
-      <h1>Game Over</h1>
+      <h1 id="gameover-title">Game Over</h1>
     </div>
     <div class="screen-content">
       <div id="gameover-passage" class="passage">
         <p class="placeholder-text">Your fate will be described here...</p>
       </div>
-      <div id="gameover-stats"></div>
-      <div class="button-group">
-        <button id="btn-rewind-from-death" class="btn btn-primary btn-large">Rewind</button>
-        <button id="btn-new-game-from-death" class="btn btn-secondary">New Game</button>
+      <div id="gameover-stats" class="gameover-stats"></div>
+      <div id="gameover-event-log" class="gameover-event-log hidden"></div>
+      <div class="button-group" id="gameover-actions">
+        <button id="btn-rewind-from-death" class="btn btn-primary btn-large">Rewind Timeline</button>
+        <button id="btn-new-game-from-death" class="btn btn-secondary btn-large">New Game</button>
       </div>
     </div>
   </div>
