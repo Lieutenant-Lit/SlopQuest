@@ -337,6 +337,82 @@ select:focus {
   font-size: 0.75rem;
 }
 
+/* ===== SETUP FORM ===== */
+.setup-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.setup-options-vertical {
+  flex-direction: column;
+}
+
+.setup-option {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  cursor: pointer;
+  min-height: 44px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.setup-option:hover {
+  border-color: var(--color-primary);
+}
+
+.setup-option.active {
+  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.12);
+}
+
+.setup-option-card {
+  width: 100%;
+  text-align: left;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-label {
+  font-weight: 600;
+}
+
+.option-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.setup-card-disabled {
+  opacity: 0.45;
+}
+
+.setup-toggle-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.setup-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  cursor: default;
+}
+
+.setup-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+}
+
 /* ===== GAME OVER ===== */
 #gameover-stats {
   font-family: var(--font-ui);
