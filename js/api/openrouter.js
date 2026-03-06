@@ -1,29 +1,83 @@
 /**
  * SQ.API — Base API client for OpenRouter.
- * All API calls go through here. Checks SQ.useMockData to decide
- * whether to hit the real API or return mock data.
+ * All API calls go through here. Handles all error types from Section 6.7:
+ * network failures, auth (401/403), credits (402), rate limits (429 w/ auto-retry),
+ * model errors (500+), timeouts (30s AbortController), malformed responses.
  */
 (function () {
   var BASE_URL = 'https://openrouter.ai/api/v1/chat/completions';
   var TIMEOUT_MS = 30000;
+  var RATE_LIMIT_DELAY_MS = 10000;
+
+  /**
+   * Typed API error with a code for callers to distinguish error types.
+   * @param {string} message - Human-readable error message
+   * @param {string} code - Machine-readable error code
+   */
+  function APIError(message, code) {
+    this.name = 'APIError';
+    this.message = message;
+    this.code = code;
+  }
+  APIError.prototype = Object.create(Error.prototype);
+  APIError.prototype.constructor = APIError;
+
+  // Error codes matching Section 6.7 error table
+  var ErrorCodes = {
+    NO_API_KEY: 'no_api_key',
+    AUTH_FAILED: 'auth_failed',
+    INSUFFICIENT_CREDITS: 'insufficient_credits',
+    RATE_LIMITED: 'rate_limited',
+    MODEL_ERROR: 'model_error',
+    NETWORK_ERROR: 'network_error',
+    TIMEOUT: 'timeout',
+    MALFORMED_RESPONSE: 'malformed_response',
+    UNKNOWN: 'unknown'
+  };
 
   SQ.API = {
+    /** Expose error codes for callers. */
+    ErrorCodes: ErrorCodes,
+
+    /** Expose APIError constructor for instanceof checks. */
+    APIError: APIError,
+
+    /**
+     * Active AbortController for the current call.
+     * Callers can abort via SQ.API.abort().
+     */
+    _controller: null,
+
     /**
      * Make a chat completion call to OpenRouter.
+     * Auto-retries once on 429 rate limit after a 10s delay.
      * @param {string} model - Model ID (e.g., 'anthropic/claude-sonnet-4')
      * @param {Array} messages - Array of { role, content } message objects
-     * @param {object} [options] - Additional options (modalities, temperature, etc.)
-     * @returns {Promise<object>} Parsed response content
+     * @param {object} [options] - Additional options (temperature, max_tokens, timeout, etc.)
+     * @returns {Promise<string>} Raw response content string
      */
     call: function (model, messages, options) {
+      return this._callWithRetry(model, messages, options, 0);
+    },
+
+    /**
+     * Internal call with 429 retry logic.
+     * @private
+     */
+    _callWithRetry: function (model, messages, options, retryCount) {
+      var self = this;
       var apiKey = SQ.PlayerConfig.getApiKey();
       if (!apiKey) {
-        return Promise.reject(new Error('No API key configured. Set your key in Settings.'));
+        return Promise.reject(new APIError(
+          'No API key configured. Set your key in Settings.',
+          ErrorCodes.NO_API_KEY
+        ));
       }
 
       options = options || {};
       var timeout = options.timeout || TIMEOUT_MS;
       var controller = new AbortController();
+      this._controller = controller;
       var timeoutId = setTimeout(function () { controller.abort(); }, timeout);
 
       var body = {
@@ -48,39 +102,97 @@
       })
         .then(function (response) {
           clearTimeout(timeoutId);
+          self._controller = null;
 
           if (response.status === 401 || response.status === 403) {
-            throw new Error('API key rejected. Check your key in Settings.');
+            throw new APIError(
+              'API key rejected. Check your key in Settings.',
+              ErrorCodes.AUTH_FAILED
+            );
           }
           if (response.status === 402) {
-            throw new Error('OpenRouter account has insufficient credits. Add funds and try again.');
+            throw new APIError(
+              'OpenRouter account has insufficient credits. Add funds and tap Retry.',
+              ErrorCodes.INSUFFICIENT_CREDITS
+            );
           }
           if (response.status === 429) {
-            throw new Error('Rate limited. Please wait a moment and try again.');
+            // Auto-retry once after delay per Section 6.7
+            if (retryCount < 1) {
+              return new Promise(function (resolve) {
+                setTimeout(resolve, RATE_LIMIT_DELAY_MS);
+              }).then(function () {
+                return self._callWithRetry(model, messages, options, retryCount + 1);
+              });
+            }
+            throw new APIError(
+              'Rate limited. Please wait a moment and try again.',
+              ErrorCodes.RATE_LIMITED
+            );
           }
           if (response.status >= 500) {
-            throw new Error('The AI model returned an error. Try again, or switch models in Settings.');
+            throw new APIError(
+              'The AI model returned an error. Tap Retry, or switch models in Settings.',
+              ErrorCodes.MODEL_ERROR
+            );
           }
           if (!response.ok) {
-            throw new Error('API request failed with status ' + response.status);
+            throw new APIError(
+              'API request failed with status ' + response.status + '.',
+              ErrorCodes.UNKNOWN
+            );
           }
 
           return response.json();
         })
         .then(function (data) {
           if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('Unexpected API response format');
+            throw new APIError(
+              'Unexpected API response format.',
+              ErrorCodes.MALFORMED_RESPONSE
+            );
           }
           return data.choices[0].message.content;
         })
         .catch(function (err) {
           clearTimeout(timeoutId);
+          self._controller = null;
+
+          // Already a typed APIError — rethrow
+          if (err instanceof APIError) throw err;
+
           if (err.name === 'AbortError') {
-            throw new Error('Response is taking too long. Please try again.');
+            throw new APIError(
+              'Response is taking too long. Tap Retry.',
+              ErrorCodes.TIMEOUT
+            );
           }
-          throw err;
+
+          // Network failure — fetch threw (offline, DNS, CORS, etc.)
+          throw new APIError(
+            'Connection lost. Check your internet and tap Retry.',
+            ErrorCodes.NETWORK_ERROR
+          );
         });
     },
+
+    /**
+     * Abort the current in-flight API call, if any.
+     * Safe to call even if no call is active.
+     */
+    abort: function () {
+      if (this._controller) {
+        this._controller.abort();
+        this._controller = null;
+      }
+    },
+
+    /**
+     * Notify a loading status callback during rate-limit waits.
+     * This is set by callers who want to update UI during retries.
+     * @type {function|null}
+     */
+    onStatusUpdate: null,
 
     /**
      * Validate an API key with a lightweight test call.

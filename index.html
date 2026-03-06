@@ -211,7 +211,7 @@
     </div>
     <div id="loading-overlay" class="hidden">
       <div class="spinner"></div>
-      <p>Generating...</p>
+      <p id="loading-status">Generating...</p>
       <button id="btn-cancel-loading" class="btn btn-secondary">Cancel</button>
     </div>
   </div>
@@ -245,6 +245,15 @@
     </div>
   </div>
 
+  <!-- ===== ERROR OVERLAY ===== -->
+  <div id="error-overlay" class="hidden">
+    <div class="error-overlay-content">
+      <h2>Something went wrong</h2>
+      <p id="error-message"></p>
+      <div id="error-actions"></div>
+    </div>
+  </div>
+
   <!-- ===== DEV TOOLBAR ===== -->
   <div id="dev-toolbar">
     <button id="btn-dev-toggle" title="Toggle Mock/Live mode">MOCK</button>
@@ -266,6 +275,9 @@
   <script src="js/api/passageGenerator.js"></script>
   <script src="js/api/imageGenerator.js"></script>
   <script src="js/api/audioGenerator.js"></script>
+
+  <!-- UI modules -->
+  <script src="js/ui/errorOverlay.js"></script>
 
   <!-- Prompt modules -->
   <script src="js/prompts/difficultyConfig.js"></script>

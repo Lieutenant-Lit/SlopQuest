@@ -26,9 +26,11 @@
         SQ.showScreen('rewind');
       });
 
-      // Cancel loading
+      // Cancel loading — abort in-flight API call
       document.getElementById('btn-cancel-loading').addEventListener('click', function () {
+        SQ.API.abort();
         self.hideLoading();
+        self._enableChoices();
       });
     },
 
@@ -123,12 +125,15 @@
         self.applyResponse(state, response);
       }).catch(function (err) {
         self.hideLoading();
-        // Re-enable choices so player can retry
-        document.querySelectorAll('.btn-choice').forEach(function (btn) {
-          btn.disabled = false;
-        });
+        self._enableChoices();
         console.error('Passage generation failed:', err);
-        alert('Error: ' + err.message + '\n\nYour progress is safe. Try again.');
+
+        // Show error overlay with retry callback
+        SQ.ErrorOverlay.show(err, {
+          onRetry: function () {
+            self.makeChoice(choiceId);
+          }
+        });
       });
     },
 
@@ -255,7 +260,17 @@
       this.renderState();
     },
 
+    /**
+     * Re-enable choice buttons after an error or cancel.
+     */
+    _enableChoices: function () {
+      document.querySelectorAll('.btn-choice').forEach(function (btn) {
+        btn.disabled = false;
+      });
+    },
+
     showLoading: function () {
+      document.getElementById('loading-status').textContent = 'Generating...';
       document.getElementById('loading-overlay').classList.remove('hidden');
     },
 

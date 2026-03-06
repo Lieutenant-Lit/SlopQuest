@@ -75,6 +75,11 @@
       }
     });
 
+    // Initialize error overlay
+    if (SQ.ErrorOverlay && SQ.ErrorOverlay.init) {
+      SQ.ErrorOverlay.init();
+    }
+
     // Wire up back buttons
     document.querySelectorAll('.btn-back').forEach(function (btn) {
       btn.addEventListener('click', function () {

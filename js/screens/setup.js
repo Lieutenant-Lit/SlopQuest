@@ -118,15 +118,20 @@
 
     /**
      * Start skeleton + passage generation flow.
+     * Shows loading overlay with cancel support, uses ErrorOverlay on failure.
      */
     startGeneration: function () {
+      var self = this;
       var setupConfig = this.gatherConfig();
       var btn = document.getElementById('btn-start-game');
+      var loadingOverlay = document.getElementById('loading-overlay');
+      var loadingStatus = document.getElementById('loading-status');
 
       // Disable button and show loading overlay
       btn.disabled = true;
       btn.textContent = 'Generating...';
-      document.getElementById('loading-overlay').classList.remove('hidden');
+      if (loadingStatus) loadingStatus.textContent = 'Generating story skeleton...';
+      loadingOverlay.classList.remove('hidden');
 
       // Create new game state
       SQ.GameState.create(setupConfig);
@@ -148,6 +153,9 @@
 
         SQ.GameState.save();
 
+        // Update status for second phase
+        if (loadingStatus) loadingStatus.textContent = 'Generating opening passage...';
+
         // Generate opening passage
         return SQ.PassageGenerator.generate(state, null);
       }).then(function (passageResponse) {
@@ -166,17 +174,31 @@
         }
 
         SQ.GameState.save();
-        document.getElementById('loading-overlay').classList.add('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Generate Story';
+        loadingOverlay.classList.add('hidden');
+        self._resetButton();
         SQ.showScreen('game');
       }).catch(function (err) {
         console.error('Setup: generation failed', err);
-        document.getElementById('loading-overlay').classList.add('hidden');
-        btn.disabled = false;
-        btn.textContent = 'Generate Story';
-        alert('Failed to generate story: ' + err.message);
+        loadingOverlay.classList.add('hidden');
+        self._resetButton();
+
+        // Show error overlay with retry
+        SQ.ErrorOverlay.show(err, {
+          onRetry: function () {
+            self.startGeneration();
+          }
+        });
       });
+    },
+
+    /**
+     * Reset the generate button to its default state.
+     * @private
+     */
+    _resetButton: function () {
+      var btn = document.getElementById('btn-start-game');
+      btn.disabled = false;
+      btn.textContent = 'Generate Story';
     }
   };
 })();
