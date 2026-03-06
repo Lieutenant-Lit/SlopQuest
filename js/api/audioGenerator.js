@@ -37,36 +37,144 @@
 
     /**
      * Call the active TTS provider.
-     * Currently: OpenRouter with audio modality.
+     * Currently: OpenRouter with audio modality (requires stream: true).
+     * Uses its own fetch + SSE parsing since streaming is fundamentally
+     * different from the non-streaming SQ.API.call path.
      * To swap providers (e.g., ElevenLabs), replace this method.
      * @private
      */
     _callProvider: function (passageText) {
       var model = SQ.PlayerConfig.getModel('audio');
-      var messages = [
-        {
-          role: 'user',
-          content: 'Read the following passage aloud as a narrator. '
-            + 'Use a natural, dramatic reading voice appropriate for a story. '
-            + 'Do not add any commentary or extra text — just narrate:\n\n'
-            + passageText
-        }
-      ];
+      var apiKey = SQ.PlayerConfig.getApiKey();
 
-      return SQ.API.call(model, messages, {
+      if (!apiKey) {
+        console.warn('AudioGenerator: no API key configured');
+        return Promise.resolve(null);
+      }
+
+      var body = {
+        model: model,
+        stream: true,
         modalities: ['text', 'audio'],
-        timeout: AUDIO_TIMEOUT_MS
+        audio: { voice: 'alloy', format: 'wav' },
+        messages: [
+          {
+            role: 'user',
+            content: 'Read the following passage aloud as a narrator. '
+              + 'Use a natural, dramatic reading voice appropriate for a story. '
+              + 'Do not add any commentary or extra text — just narrate:\n\n'
+              + passageText
+          }
+        ]
+      };
+
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, AUDIO_TIMEOUT_MS);
+
+      return fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'SlopQuest'
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
       })
         .then(function (response) {
-          return SQ.AudioGenerator._extractAudioUrl(response);
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error('HTTP ' + response.status + ': ' + text.slice(0, 200));
+            });
+          }
+
+          // Parse SSE stream and accumulate audio data chunks
+          return SQ.AudioGenerator._parseSSEAudio(response);
+        })
+        .then(function (audioData) {
+          return SQ.AudioGenerator._extractAudioUrl(audioData);
         })
         .catch(function (err) {
+          clearTimeout(timeoutId);
           console.warn('AudioGenerator: generation failed, degrading to text-only.');
           console.warn('  Model:', model);
           console.warn('  Error:', err.message || err);
           if (err.code) console.warn('  Code:', err.code);
           return null;
         });
+    },
+
+    /**
+     * Parse an SSE stream response and accumulate the audio data.
+     * OpenRouter streams audio chunks in delta.audio.data (base64 segments).
+     * Returns a synthetic message object matching the non-streaming format.
+     * @private
+     */
+    _parseSSEAudio: function (response) {
+      var reader = response.body.getReader();
+      var decoder = new TextDecoder();
+      var buffer = '';
+      var audioChunks = [];
+      var audioId = null;
+
+      function processLines(text) {
+        buffer += text;
+        var lines = buffer.split('\n');
+        // Keep the last partial line in the buffer
+        buffer = lines.pop() || '';
+
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (!line || line === 'data: [DONE]') continue;
+          if (line.indexOf('data: ') !== 0) continue;
+
+          try {
+            var data = JSON.parse(line.slice(6));
+            var delta = data.choices && data.choices[0] && data.choices[0].delta;
+            if (!delta) continue;
+
+            // Accumulate audio data chunks
+            if (delta.audio) {
+              if (delta.audio.id) audioId = delta.audio.id;
+              if (delta.audio.data) {
+                audioChunks.push(delta.audio.data);
+              }
+            }
+          } catch (e) {
+            // Skip malformed SSE lines
+          }
+        }
+      }
+
+      function read() {
+        return reader.read().then(function (result) {
+          if (result.done) {
+            // Process any remaining buffer
+            if (buffer.trim()) processLines('\n');
+            return;
+          }
+          processLines(decoder.decode(result.value, { stream: true }));
+          return read();
+        });
+      }
+
+      return read().then(function () {
+        if (audioChunks.length === 0) {
+          return null;
+        }
+
+        // Combine all base64 audio chunks into a single audio object
+        var combinedData = audioChunks.join('');
+        return {
+          audio: {
+            id: audioId,
+            data: combinedData
+          }
+        };
+      });
     },
 
     /**
