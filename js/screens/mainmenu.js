@@ -5,9 +5,10 @@
 (function () {
   SQ.Screens.MainMenu = {
     init: function () {
-      // Continue — load saved game and jump to game screen
+      // Continue — load saved game + history stack and jump to game screen
       document.getElementById('btn-continue').addEventListener('click', function () {
         SQ.GameState.load();
+        SQ.HistoryStack.load();
         SQ.showScreen('game');
       });
 

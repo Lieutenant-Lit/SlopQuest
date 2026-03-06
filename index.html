@@ -249,9 +249,18 @@
       <h1>Timeline</h1>
     </div>
     <div class="screen-content">
-      <p class="subtitle">Rewind to a previous turn</p>
+      <p class="subtitle">Tap any turn to rewind. Everything after it will be discarded.</p>
       <div id="rewind-timeline">
         <p class="placeholder-text">Timeline entries will appear here...</p>
+      </div>
+      <div id="rewind-confirm" class="hidden">
+        <div class="rewind-confirm-card">
+          <p id="rewind-confirm-text">Rewind to this turn?</p>
+          <div class="button-group button-group-row">
+            <button id="btn-rewind-confirm" class="btn btn-primary">Rewind</button>
+            <button id="btn-rewind-cancel" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
