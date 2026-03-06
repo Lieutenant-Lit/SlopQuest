@@ -34,18 +34,21 @@
         }
       ];
 
+      // Only send modalities — no temperature/max_tokens which can cause
+      // 404 on image-focused models that don't accept text generation params.
       return SQ.API.call(model, messages, {
         modalities: ['image', 'text'],
-        temperature: 0.8,
-        max_tokens: 1024,
         timeout: IMAGE_TIMEOUT_MS
       })
         .then(function (response) {
           return SQ.ImageGenerator._extractImageUrl(response);
         })
         .catch(function (err) {
-          // Graceful degradation: log and return null, never block the game
-          console.warn('ImageGenerator: generation failed, degrading to text-only', err.message || err);
+          // Graceful degradation: log full error detail and return null
+          console.warn('ImageGenerator: generation failed, degrading to text-only.');
+          console.warn('  Model:', model);
+          console.warn('  Error:', err.message || err);
+          if (err.code) console.warn('  Code:', err.code);
           return null;
         });
     },

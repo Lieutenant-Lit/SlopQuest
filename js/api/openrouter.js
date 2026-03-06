@@ -116,46 +116,53 @@
         .then(function (response) {
           clearTimeout(timeoutId);
 
-          if (response.status === 401 || response.status === 403) {
-            throw new APIError(
-              'API key rejected. Check your key in Settings.',
-              ErrorCodes.AUTH_FAILED
-            );
-          }
-          if (response.status === 402) {
-            throw new APIError(
-              'OpenRouter account has insufficient credits. Add funds and tap Retry.',
-              ErrorCodes.INSUFFICIENT_CREDITS
-            );
-          }
-          if (response.status === 429) {
-            // Auto-retry once after delay per Section 6.7
-            if (retryCount < 1) {
-              return new Promise(function (resolve) {
-                setTimeout(resolve, RATE_LIMIT_DELAY_MS);
-              }).then(function () {
-                return self._callWithRetry(model, messages, options, retryCount + 1, callId);
-              });
-            }
-            throw new APIError(
-              'Rate limited. Please wait a moment and try again.',
-              ErrorCodes.RATE_LIMITED
-            );
-          }
-          if (response.status >= 500) {
-            throw new APIError(
-              'The AI model returned an error. Tap Retry, or switch models in Settings.',
-              ErrorCodes.MODEL_ERROR
-            );
-          }
-          if (!response.ok) {
-            throw new APIError(
-              'API request failed with status ' + response.status + '.',
-              ErrorCodes.UNKNOWN
-            );
+          if (response.ok) {
+            return response.json();
           }
 
-          return response.json();
+          // Non-OK: read the body to get OpenRouter's actual error message
+          return response.json().catch(function () {
+            return { error: { message: 'HTTP ' + response.status } };
+          }).then(function (errorBody) {
+            var serverMsg = (errorBody.error && errorBody.error.message) || ('HTTP ' + response.status);
+            console.error('OpenRouter API error (' + response.status + '):', serverMsg);
+
+            if (response.status === 401 || response.status === 403) {
+              throw new APIError(
+                'API key rejected. Check your key in Settings.',
+                ErrorCodes.AUTH_FAILED
+              );
+            }
+            if (response.status === 402) {
+              throw new APIError(
+                'OpenRouter account has insufficient credits. Add funds and tap Retry.',
+                ErrorCodes.INSUFFICIENT_CREDITS
+              );
+            }
+            if (response.status === 429) {
+              if (retryCount < 1) {
+                return new Promise(function (resolve) {
+                  setTimeout(resolve, RATE_LIMIT_DELAY_MS);
+                }).then(function () {
+                  return self._callWithRetry(model, messages, options, retryCount + 1, callId);
+                });
+              }
+              throw new APIError(
+                'Rate limited. Please wait a moment and try again.',
+                ErrorCodes.RATE_LIMITED
+              );
+            }
+            if (response.status >= 500) {
+              throw new APIError(
+                'The AI model returned an error: ' + serverMsg,
+                ErrorCodes.MODEL_ERROR
+              );
+            }
+            throw new APIError(
+              serverMsg,
+              ErrorCodes.UNKNOWN
+            );
+          });
         })
         .then(function (data) {
           if (!data.choices || !data.choices[0] || !data.choices[0].message) {
