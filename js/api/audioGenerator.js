@@ -40,7 +40,7 @@
 
       // If we have segments with any NPC speakers, use multi-voice path.
       // Even if voice IDs overlap, different speakers have different styles.
-      if (segments && segments.length > 1 && this._hasNpcSpeakers(segments, npcVoices)) {
+      if (segments && segments.length > 1 && this._hasNpcSpeakers(segments)) {
         return this._generateMultiVoice(segments, npcVoices);
       }
 
@@ -70,18 +70,89 @@
     },
 
     /**
-     * Check if any segment has a named NPC speaker with a voice entry.
-     * We always use multi-voice when there are NPC speakers, even if
-     * voice IDs overlap, because each character has different style instructions.
+     * Check if any segment has a named speaker (known or unknown).
+     * We use multi-voice whenever ANY segment has a non-null speaker,
+     * even if that speaker doesn't have a voice entry yet — they'll
+     * get one assigned on the fly in _generateMultiVoice.
      * @private
      */
-    _hasNpcSpeakers: function (segments, npcVoices) {
-      if (!npcVoices) return false;
+    _hasNpcSpeakers: function (segments) {
       for (var i = 0; i < segments.length; i++) {
-        var speaker = segments[i].speaker;
-        if (speaker && npcVoices[speaker]) return true;
+        if (segments[i].speaker) return true;
       }
       return false;
+    },
+
+    /**
+     * Find speakers in segments that don't have voice profiles yet and
+     * instantly assign them a unique voice + basic style instruction.
+     * Caches the assignment in npcVoices (and game state) so the same
+     * character reuses their voice if they speak again later.
+     * @private
+     */
+    _assignUnknownSpeakers: function (segments, npcVoices) {
+      var unknowns = [];
+      for (var i = 0; i < segments.length; i++) {
+        var speaker = segments[i].speaker;
+        if (speaker && !npcVoices[speaker] && unknowns.indexOf(speaker) === -1) {
+          unknowns.push(speaker);
+        }
+      }
+      if (unknowns.length === 0) return;
+
+      // Collect voices already in use (narrator + existing NPCs)
+      var usedVoices = {};
+      usedVoices[SQ.PlayerConfig.getNarratorVoice()] = true;
+      var keys = Object.keys(npcVoices);
+      for (var j = 0; j < keys.length; j++) {
+        var v = npcVoices[keys[j]];
+        var voiceId = typeof v === 'string' ? v : (v && v.voice);
+        if (voiceId) usedVoices[voiceId] = true;
+      }
+
+      // All available voices
+      var allVoices = SQ.PlayerConfig.VOICES.map(function (v) { return v.id; });
+
+      for (var k = 0; k < unknowns.length; k++) {
+        var name = unknowns[k];
+
+        // Pick an unused voice, cycling through all if we run out
+        var picked = null;
+        for (var m = 0; m < allVoices.length; m++) {
+          if (!usedVoices[allVoices[m]]) {
+            picked = allVoices[m];
+            break;
+          }
+        }
+        if (!picked) {
+          // All voices used — pick one at random (excluding narrator)
+          var pool = allVoices.filter(function (v) {
+            return v !== SQ.PlayerConfig.getNarratorVoice();
+          });
+          picked = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // Generate a basic style instruction from the speaker name
+        var style = 'Speak as ' + name + ' would — give this character a distinctive, '
+          + 'memorable voice. Use a unique accent, tone, and pacing that fits a '
+          + 'character called "' + name + '". Make them sound completely different '
+          + 'from a standard narrator.';
+
+        npcVoices[name] = { voice: picked, style: style };
+        usedVoices[picked] = true;
+
+        console.log('AudioGenerator: auto-assigned voice "' + picked + '" to unknown speaker "' + name + '"');
+      }
+
+      // Persist to game state so these assignments stick across passages
+      var gameState = SQ.GameState.get();
+      if (gameState) {
+        if (!gameState.npc_voices) gameState.npc_voices = {};
+        for (var n = 0; n < unknowns.length; n++) {
+          gameState.npc_voices[unknowns[n]] = npcVoices[unknowns[n]];
+        }
+        SQ.GameState.save();
+      }
     },
 
     /**
@@ -92,11 +163,18 @@
       var narratorProfile = SQ.PlayerConfig.getNarratorProfile();
       var self = this;
 
+      // Ensure npcVoices map exists
+      if (!npcVoices) npcVoices = {};
+
+      // Auto-assign voices to any unknown speakers before generating audio.
+      // This handles characters not in the original skeleton (guards, merchants, etc.)
+      this._assignUnknownSpeakers(segments, npcVoices);
+
       // Build parallel requests for each segment
       var promises = segments.map(function (seg) {
         var voice = narratorProfile.voice;
         var style = narratorProfile.style;
-        if (seg.speaker && npcVoices && npcVoices[seg.speaker]) {
+        if (seg.speaker && npcVoices[seg.speaker]) {
           voice = self._resolveVoice(npcVoices[seg.speaker]) || voice;
           style = self._resolveStyle(npcVoices[seg.speaker]) || style;
         }
