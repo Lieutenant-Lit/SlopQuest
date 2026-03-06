@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SlopQuest</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- ===== SCREENS ===== -->
+
+  <div id="screen-settings" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" data-target="mainmenu">&larr; Back</button>
+      <h1>Settings</h1>
+    </div>
+    <div class="screen-content">
+
+      <div class="card">
+        <h2>API Key</h2>
+        <p>Enter your <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">OpenRouter API key</a> to play.</p>
+        <input type="password" id="api-key-input" placeholder="sk-or-..." autocomplete="off">
+        <button id="btn-validate-key" class="btn btn-primary">Validate Key</button>
+        <div id="key-status" class="status-message"></div>
+      </div>
+
+      <div class="card">
+        <h2>Text Model</h2>
+        <p>Used for skeleton &amp; passage generation.</p>
+        <select id="model-select">
+          <option value="anthropic/claude-sonnet-4">Claude Sonnet (default)</option>
+          <option value="google/gemini-2.5-flash-preview">Gemini Flash</option>
+          <option value="openai/gpt-4o">GPT-4o</option>
+          <option value="custom">Custom model...</option>
+        </select>
+        <input type="text" id="model-custom-input" class="hidden" placeholder="org/model-name">
+      </div>
+
+      <div class="card">
+        <h2>Illustrations</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-illustrations-toggle">
+          <span>Enable AI illustrations</span>
+        </label>
+        <p>Generates a scene illustration alongside each passage. Uses additional API credits.</p>
+        <div id="image-model-section">
+          <label class="card-label">Image Model</label>
+          <select id="image-model-select">
+            <option value="google/gemini-3.1-flash-image-preview">Gemini 3.1 Flash Image (default)</option>
+            <option value="google/gemini-3-pro-image-preview">Gemini 3 Pro Image</option>
+            <option value="google/gemini-2.5-flash-image-preview">Gemini 2.5 Flash Image (legacy)</option>
+            <option value="openai/gpt-5-image-mini">GPT-5 Image Mini</option>
+            <option value="openai/gpt-5-image">GPT-5 Image</option>
+            <option value="custom">Custom model...</option>
+          </select>
+          <input type="text" id="image-model-custom-input" class="hidden" placeholder="org/model-name">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Voice Narration</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-narration-toggle">
+          <span>Enable AI voice narration</span>
+        </label>
+        <p>Reads passages aloud using a TTS model. Uses additional API credits.</p>
+        <div id="audio-model-section">
+          <label class="card-label">Audio Model</label>
+          <select id="audio-model-select">
+            <option value="openai/gpt-4o-audio-preview">GPT-4o Audio (default)</option>
+            <option value="custom">Custom model...</option>
+          </select>
+          <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
+        </div>
+      </div>
+
+      <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
+    </div>
+  </div>
+
+  <div id="screen-mainmenu" class="screen">
+    <div class="screen-header">
+      <h1>SlopQuest</h1>
+    </div>
+    <div class="screen-content mainmenu-content">
+      <p class="subtitle">AI-Generated Gamebook RPG</p>
+      <div class="mainmenu-buttons">
+        <button id="btn-continue" class="btn btn-primary btn-large hidden">Continue Game</button>
+        <button id="btn-new-game" class="btn btn-secondary btn-large">New Game</button>
+      </div>
+      <button id="btn-open-settings" class="btn btn-link">Settings</button>
+    </div>
+  </div>
+
+  <div id="screen-setup" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" data-target="mainmenu">&larr; Back</button>
+      <h1>New Game</h1>
+    </div>
+    <div class="screen-content">
+      <p class="subtitle">Configure your adventure</p>
+
+      <div class="card">
+        <h2>Setting / Universe</h2>
+        <p>Pick a world or describe your own.</p>
+        <div class="setup-options" data-group="setting">
+          <button class="setup-option active" data-value="dark fantasy">Fantasy</button>
+          <button class="setup-option" data-value="sci-fi">Sci-Fi</button>
+          <button class="setup-option" data-value="horror">Horror</button>
+          <button class="setup-option" data-value="post-apocalyptic">Post-Apocalyptic</button>
+          <button class="setup-option" data-value="historical">Historical</button>
+          <button class="setup-option" data-value="mystery">Mystery</button>
+          <button class="setup-option" data-value="custom">Custom...</button>
+        </div>
+        <input type="text" id="setup-setting-custom" class="hidden" placeholder="Describe your setting or name a universe...">
+      </div>
+
+      <div class="card">
+        <h2>Character</h2>
+        <p>Broad archetype — the skeleton fills in the details.</p>
+        <input type="text" id="setup-archetype" placeholder="e.g. disgraced knight, rogue scholar, starship mechanic...">
+        <input type="text" id="setup-name" placeholder="Character name (optional)">
+      </div>
+
+      <div class="card">
+        <h2>Writing Style</h2>
+        <div class="setup-options" data-group="writingStyle">
+          <button class="setup-option active" data-value="literary">Literary</button>
+          <button class="setup-option" data-value="pulpy">Pulpy</button>
+          <button class="setup-option" data-value="minimalist">Minimalist</button>
+          <button class="setup-option" data-value="flowery">Flowery</button>
+          <button class="setup-option" data-value="humorous">Humorous</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Tone</h2>
+        <div class="setup-options" data-group="tone">
+          <button class="setup-option active" data-value="dark and gritty">Dark &amp; Gritty</button>
+          <button class="setup-option" data-value="epic and mythic">Epic &amp; Mythic</button>
+          <button class="setup-option" data-value="mysterious">Mysterious</button>
+          <button class="setup-option" data-value="comedic">Comedic</button>
+          <button class="setup-option" data-value="whimsical">Whimsical</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Perspective</h2>
+        <div class="setup-options" data-group="perspective">
+          <button class="setup-option" data-value="first person">First Person</button>
+          <button class="setup-option active" data-value="second person">Second Person</button>
+          <button class="setup-option" data-value="third person">Third Person</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Tense</h2>
+        <div class="setup-options" data-group="tense">
+          <button class="setup-option" data-value="past">Past</button>
+          <button class="setup-option active" data-value="present">Present</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Difficulty</h2>
+        <p>Difficulty is mechanical — it controls how forgiving the world is, not the writing tone.</p>
+        <div class="setup-options setup-options-vertical" data-group="difficulty">
+          <button class="setup-option setup-option-card" data-value="chill">
+            <span class="option-label">Chill</span>
+            <span class="option-desc">A relaxing story experience. No game overs, generous resources, obvious hints.</span>
+          </button>
+          <button class="setup-option setup-option-card active" data-value="normal">
+            <span class="option-label">Normal</span>
+            <span class="option-desc">A balanced adventure. Choices have consequences but recovery is usually possible.</span>
+          </button>
+          <button class="setup-option setup-option-card" data-value="hard">
+            <span class="option-label">Hard</span>
+            <span class="option-desc">A challenging experience. Death is possible. Consequences hit fast and hard.</span>
+          </button>
+          <button class="setup-option setup-option-card" data-value="brutal">
+            <span class="option-label">Brutal</span>
+            <span class="option-desc">Lethal and unforgiving. Death is common, clues are cryptic, and NPCs hold grudges.</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Story Length</h2>
+        <div class="setup-options setup-options-vertical" data-group="storyLength">
+          <button class="setup-option setup-option-card" data-value="short">
+            <span class="option-label">Short</span>
+            <span class="option-desc">15-20 turns &middot; ~20-30 min &middot; ~$0.30-0.80</span>
+          </button>
+          <button class="setup-option setup-option-card active" data-value="medium">
+            <span class="option-label">Medium</span>
+            <span class="option-desc">30-40 turns &middot; ~45-75 min &middot; ~$0.80-2.00</span>
+          </button>
+          <button class="setup-option setup-option-card" data-value="long">
+            <span class="option-label">Long</span>
+            <span class="option-desc">50-70 turns &middot; ~90-150 min &middot; ~$2.00-5.00</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Multimodal</h2>
+        <div class="setup-toggle-row">
+          <label class="setup-toggle">
+            <input type="checkbox" id="setup-illustrations-toggle">
+            <span>Illustrations</span>
+            <span class="option-desc">AI-generated scene art (uses extra API credits)</span>
+          </label>
+          <label class="setup-toggle">
+            <input type="checkbox" id="setup-narration-toggle">
+            <span>Narration</span>
+            <span class="option-desc">AI voice narration of passages (uses extra API credits)</span>
+          </label>
+        </div>
+      </div>
+
+      <button id="btn-start-game" class="btn btn-primary btn-large">Generate Story</button>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen">
+    <div class="screen-header">
+      <div class="game-header-row">
+        <button class="btn-icon" id="btn-settings-gear" title="Settings">&#9881;</button>
+        <h1 id="game-title">SlopQuest</h1>
+        <button class="btn-icon" id="btn-rewind" title="Rewind">&#8634;</button>
+      </div>
+      <div id="game-status-bar">
+        <div class="status-group">
+          <span id="status-health" class="status-chip status-health" title="Health">
+            <span class="status-icon">&#9829;</span>
+            <span class="status-value">100</span>
+          </span>
+          <span id="status-gold" class="status-chip" title="Gold">
+            <span class="status-icon">&#9679;</span>
+            <span class="status-value">0</span>
+          </span>
+          <span id="status-provisions" class="status-chip" title="Provisions">
+            <span class="status-icon">&#9724;</span>
+            <span class="status-value">0</span>
+          </span>
+        </div>
+        <div class="status-group">
+          <span id="status-act" class="status-chip">Act 1</span>
+          <span id="status-scene" class="status-chip">Scene 1</span>
+        </div>
+      </div>
+    </div>
+    <div class="screen-content">
+      <div id="illustration-container" class="illustration-container hidden">
+        <img id="illustration-image" class="illustration-image" alt="Scene illustration">
+      </div>
+      <div id="audio-controls" class="audio-controls hidden">
+        <button class="btn-icon btn-audio" id="btn-audio-playpause" title="Play narration">&#9654;</button>
+        <button class="btn-icon btn-audio" id="btn-audio-replay" title="Replay narration">&#8634;</button>
+      </div>
+      <div id="passage-text" class="passage">
+        <p class="placeholder-text">Your adventure will appear here...</p>
+      </div>
+      <div id="choices-container">
+        <button class="btn btn-choice" data-choice="A">
+          <span class="choice-label">A</span>
+          <span class="choice-text">Choice A</span>
+        </button>
+        <button class="btn btn-choice" data-choice="B">
+          <span class="choice-label">B</span>
+          <span class="choice-text">Choice B</span>
+        </button>
+        <button class="btn btn-choice" data-choice="C">
+          <span class="choice-label">C</span>
+          <span class="choice-text">Choice C</span>
+        </button>
+        <button class="btn btn-choice" data-choice="D">
+          <span class="choice-label">D</span>
+          <span class="choice-text">Choice D</span>
+        </button>
+      </div>
+    </div>
+    <div id="loading-overlay" class="hidden">
+      <div class="spinner"></div>
+      <p id="loading-status">Generating...</p>
+      <button id="btn-cancel-loading" class="btn btn-secondary">Cancel</button>
+    </div>
+  </div>
+
+  <div id="screen-rewind" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" data-target="game">&larr; Back</button>
+      <h1>Timeline</h1>
+    </div>
+    <div class="screen-content">
+      <p class="subtitle">Tap any turn to rewind. Everything after it will be discarded.</p>
+      <div id="rewind-timeline">
+        <p class="placeholder-text">Timeline entries will appear here...</p>
+      </div>
+      <div id="rewind-confirm" class="hidden">
+        <div class="rewind-confirm-card">
+          <p id="rewind-confirm-text">Rewind to this turn?</p>
+          <div class="button-group button-group-row">
+            <button id="btn-rewind-confirm" class="btn btn-primary">Rewind</button>
+            <button id="btn-rewind-cancel" class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-gameover" class="screen">
+    <div class="screen-header">
+      <h1 id="gameover-title">Game Over</h1>
+    </div>
+    <div class="screen-content">
+      <div id="gameover-passage" class="passage">
+        <p class="placeholder-text">Your fate will be described here...</p>
+      </div>
+      <div id="gameover-stats" class="gameover-stats"></div>
+      <div id="gameover-event-log" class="gameover-event-log hidden"></div>
+      <div class="button-group" id="gameover-actions">
+        <button id="btn-rewind-from-death" class="btn btn-primary btn-large">Rewind Timeline</button>
+        <button id="btn-new-game-from-death" class="btn btn-secondary btn-large">New Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ERROR OVERLAY ===== -->
+  <div id="error-overlay" class="hidden">
+    <div class="error-overlay-content">
+      <h2>Something went wrong</h2>
+      <p id="error-message"></p>
+      <div id="error-actions"></div>
+    </div>
+  </div>
+
+  <!-- ===== DEV TOOLBAR ===== -->
+  <div id="dev-toolbar">
+    <button id="btn-dev-toggle" title="Toggle Mock/Live mode">MOCK</button>
+  </div>
+
+  <!-- ===== SCRIPTS (dependency order) ===== -->
+  <script>window.SQ = { Screens: {} };</script>
+
+  <!-- State modules (no deps) -->
+  <script src="js/state/playerConfig.js"></script>
+  <script src="js/state/gameState.js"></script>
+  <script src="js/state/historyStack.js"></script>
+  <script src="js/state/stateValidator.js"></script>
+
+  <!-- API modules -->
+  <script src="js/api/mockData.js"></script>
+  <script src="js/api/openrouter.js"></script>
+  <script src="js/api/skeletonGenerator.js"></script>
+  <script src="js/api/passageGenerator.js"></script>
+  <script src="js/api/imageGenerator.js"></script>
+  <script src="js/api/audioGenerator.js"></script>
+
+  <!-- UI modules -->
+  <script src="js/ui/errorOverlay.js"></script>
+
+  <!-- Prompt modules -->
+  <script src="js/prompts/difficultyConfig.js"></script>
+  <script src="js/prompts/skeletonPrompt.js"></script>
+  <script src="js/prompts/passagePrompt.js"></script>
+
+  <!-- Screen modules -->
+  <script src="js/screens/settings.js"></script>
+  <script src="js/screens/mainmenu.js"></script>
+  <script src="js/screens/setup.js"></script>
+  <script src="js/screens/game.js"></script>
+  <script src="js/screens/rewind.js"></script>
+  <script src="js/screens/gameover.js"></script>
+
+  <!-- Entry point (must be last) -->
+  <script src="js/main.js"></script>
+</body>
+</html>
