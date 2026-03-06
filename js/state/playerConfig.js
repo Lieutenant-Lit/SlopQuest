@@ -11,7 +11,7 @@
     models: {
       skeleton: 'anthropic/claude-sonnet-4',
       passage: 'anthropic/claude-sonnet-4',
-      image: 'google/gemini-2.5-flash-image-preview',
+      image: 'google/gemini-3.1-flash-image-preview',
       audio: 'openai/gpt-4o-audio-preview'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
