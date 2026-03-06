@@ -56,7 +56,7 @@
         model: model,
         stream: true,
         modalities: ['text', 'audio'],
-        audio: { voice: 'alloy', format: 'wav' },
+        audio: { voice: 'alloy', format: 'pcm16' },
         messages: [
           {
             role: 'user',
@@ -166,26 +166,95 @@
           return null;
         }
 
-        // Combine all base64 audio chunks into a single audio object
-        var combinedData = audioChunks.join('');
-        return {
-          audio: {
-            id: audioId,
-            data: combinedData
+        // Decode all base64 PCM16 chunks into a single Uint8Array
+        var arrays = audioChunks.map(function (chunk) {
+          var binary = atob(chunk);
+          var bytes = new Uint8Array(binary.length);
+          for (var j = 0; j < binary.length; j++) {
+            bytes[j] = binary.charCodeAt(j);
           }
-        };
+          return bytes;
+        });
+
+        // Concatenate all chunks
+        var totalLength = 0;
+        for (var k = 0; k < arrays.length; k++) totalLength += arrays[k].length;
+        var pcmData = new Uint8Array(totalLength);
+        var offset = 0;
+        for (var m = 0; m < arrays.length; m++) {
+          pcmData.set(arrays[m], offset);
+          offset += arrays[m].length;
+        }
+
+        // Wrap PCM16 data in a WAV container for HTML5 Audio playback
+        var wavBlob = SQ.AudioGenerator._pcm16ToWavBlob(pcmData, 24000);
+        return URL.createObjectURL(wavBlob);
       });
     },
 
     /**
+     * Wrap raw PCM16 (signed 16-bit little-endian) data in a WAV container.
+     * @param {Uint8Array} pcmData - Raw PCM16 audio bytes
+     * @param {number} sampleRate - Sample rate (OpenAI audio uses 24000 Hz)
+     * @returns {Blob} WAV file blob
+     * @private
+     */
+    _pcm16ToWavBlob: function (pcmData, sampleRate) {
+      var numChannels = 1;
+      var bitsPerSample = 16;
+      var byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+      var blockAlign = numChannels * (bitsPerSample / 8);
+      var dataLength = pcmData.length;
+      var headerLength = 44;
+      var buffer = new ArrayBuffer(headerLength + dataLength);
+      var view = new DataView(buffer);
+
+      // RIFF header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeString(view, 8, 'WAVE');
+
+      // fmt sub-chunk
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);             // sub-chunk size
+      view.setUint16(20, 1, true);              // PCM format
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitsPerSample, true);
+
+      // data sub-chunk
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      // Copy PCM data after header
+      var wavBytes = new Uint8Array(buffer);
+      wavBytes.set(pcmData, headerLength);
+
+      return new Blob([buffer], { type: 'audio/wav' });
+
+      function writeString(dv, off, str) {
+        for (var i = 0; i < str.length; i++) {
+          dv.setUint8(off + i, str.charCodeAt(i));
+        }
+      }
+    },
+
+    /**
      * Extract audio data URL from the API response.
-     * OpenRouter returns audio in message.audio or content array.
+     * Handles non-streaming responses (fallback path).
      * @private
      */
     _extractAudioUrl: function (response) {
       if (!response) return null;
 
-      // Primary: msg.audio object (OpenRouter audio modality)
+      // If response is already an object URL from streaming path
+      if (typeof response === 'string' && response.indexOf('blob:') === 0) {
+        return response;
+      }
+
+      // Primary: msg.audio object (OpenRouter audio modality, non-streaming)
       if (response.audio) {
         if (response.audio.data) {
           return 'data:audio/wav;base64,' + response.audio.data;
