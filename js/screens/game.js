@@ -39,6 +39,14 @@
         self.hideLoading();
         self._enableChoices();
       });
+
+      // Audio playback controls
+      document.getElementById('btn-audio-playpause').addEventListener('click', function () {
+        SQ.AudioGenerator.togglePlayPause();
+      });
+      document.getElementById('btn-audio-replay').addEventListener('click', function () {
+        SQ.AudioGenerator.replay();
+      });
     },
 
     onShow: function () {
@@ -46,7 +54,10 @@
       this.renderState();
     },
 
-    onHide: function () {},
+    onHide: function () {
+      // Stop narration when navigating away
+      SQ.AudioGenerator.stop();
+    },
 
     /**
      * Render the current game state to the screen.
@@ -66,6 +77,13 @@
         this._showIllustration(state.illustration_image_url, false);
       } else {
         this._hideIllustration();
+      }
+
+      // Audio controls — show if narration is enabled and we have audio
+      if (state.narration_audio_url && SQ.PlayerConfig.isNarrationEnabled()) {
+        SQ.AudioGenerator.showControls();
+      } else {
+        SQ.AudioGenerator.hideControls();
       }
 
       // Passage (with fade-in on new passages, instant on initial load/rewind)
@@ -225,13 +243,33 @@
         self.hideLoading();
         self.applyResponse(state, response);
 
+        // Fire TTS narration for the new passage text (parallel with image).
+        // Text is already rendered by applyResponse → renderState, so audio plays
+        // over visible text per design doc Section 5 progressive rendering order.
+        if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
+          SQ.AudioGenerator.hideControls();
+          SQ.AudioGenerator.generate(response.passage).then(function (audioUrl) {
+            if (audioUrl) {
+              state.narration_audio_url = audioUrl;
+              SQ.AudioGenerator.showControls();
+              SQ.AudioGenerator.play(audioUrl);
+            } else {
+              SQ.AudioGenerator.hideControls();
+            }
+          });
+        } else {
+          SQ.AudioGenerator.stop();
+          SQ.AudioGenerator.hideControls();
+        }
+
         // If no image was started yet but the new response has an illustration_prompt,
         // fire image generation now (for this passage's scene).
         if (!imagePromise && SQ.PlayerConfig.isIllustrationsEnabled() && response.illustration_prompt) {
           imagePromise = SQ.ImageGenerator.generate(response.illustration_prompt, state);
         }
 
-        // Fade illustration in when it arrives (or hide if no image call)
+        // Fade illustration in when it arrives (or hide if no image call).
+        // Image fades in last per design doc Section 5 progressive rendering.
         if (imagePromise) {
           self._showIllustrationLoading();
           imagePromise.then(function (imageUrl) {

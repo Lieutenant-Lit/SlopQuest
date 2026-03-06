@@ -55,6 +55,29 @@
         }
       });
 
+      // Narration toggle
+      document.getElementById('settings-narration-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setNarrationEnabled(this.checked);
+      });
+
+      // Audio model selection
+      document.getElementById('audio-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('audio-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('audio', this.value);
+        }
+      });
+
+      document.getElementById('audio-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('audio', this.value.trim());
+        }
+      });
+
       // Save & continue to main menu
       document.getElementById('btn-save-settings').addEventListener('click', function () {
         SQ.showScreen('mainmenu');
@@ -117,6 +140,28 @@
         var imageCustomInput = document.getElementById('image-model-custom-input');
         imageCustomInput.classList.remove('hidden');
         imageCustomInput.value = currentImageModel;
+      }
+
+      // Set narration toggle state
+      document.getElementById('settings-narration-toggle').checked =
+        SQ.PlayerConfig.isNarrationEnabled();
+
+      // Set audio model selector to current value
+      var currentAudioModel = SQ.PlayerConfig.getModel('audio');
+      var audioSelect = document.getElementById('audio-model-select');
+      var audioFound = false;
+      for (var k = 0; k < audioSelect.options.length; k++) {
+        if (audioSelect.options[k].value === currentAudioModel) {
+          audioSelect.selectedIndex = k;
+          audioFound = true;
+          break;
+        }
+      }
+      if (!audioFound && currentAudioModel) {
+        audioSelect.value = 'custom';
+        var audioCustomInput = document.getElementById('audio-model-custom-input');
+        audioCustomInput.classList.remove('hidden');
+        audioCustomInput.value = currentAudioModel;
       }
 
       // Reset validation status

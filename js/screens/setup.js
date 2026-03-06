@@ -26,6 +26,11 @@
         SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
       });
 
+      // Narration toggle — persist immediately
+      document.getElementById('setup-narration-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setNarrationEnabled(this.checked);
+      });
+
       // Generate Story button
       document.getElementById('btn-start-game').addEventListener('click', function () {
         self.startGeneration();
@@ -68,6 +73,10 @@
       // Set illustrations toggle to saved preference
       document.getElementById('setup-illustrations-toggle').checked =
         SQ.PlayerConfig.isIllustrationsEnabled();
+
+      // Set narration toggle to saved preference
+      document.getElementById('setup-narration-toggle').checked =
+        SQ.PlayerConfig.isNarrationEnabled();
 
       // Reset generate button
       var btn = document.getElementById('btn-start-game');
@@ -193,6 +202,17 @@
               var container = document.getElementById('illustration-container');
               if (container && !container.closest('.screen.active')) return;
               SQ.Screens.Game._showIllustration(imageUrl, true);
+            }
+          });
+        }
+
+        // Fire TTS narration for the opening passage (non-blocking)
+        if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
+          SQ.AudioGenerator.generate(state.last_passage).then(function (audioUrl) {
+            if (audioUrl) {
+              state.narration_audio_url = audioUrl;
+              SQ.AudioGenerator.showControls();
+              SQ.AudioGenerator.play(audioUrl);
             }
           });
         }

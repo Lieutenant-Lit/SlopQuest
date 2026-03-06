@@ -83,12 +83,13 @@
      * @private
      */
     _save: function () {
-      // Strip base64 image data from snapshots before persisting —
-      // images are large (~100KB+ each) and regenerable, not worth burning localStorage quota.
+      // Strip base64 media data from snapshots before persisting —
+      // images and audio are large and regenerable, not worth burning localStorage quota.
       var lightweight = stack.map(function (entry) {
-        if (entry.state && entry.state.illustration_image_url) {
+        if (entry.state && (entry.state.illustration_image_url || entry.state.narration_audio_url)) {
           var clone = JSON.parse(JSON.stringify(entry));
           delete clone.state.illustration_image_url;
+          delete clone.state.narration_audio_url;
           return clone;
         }
         return entry;

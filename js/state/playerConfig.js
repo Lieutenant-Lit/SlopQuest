@@ -15,7 +15,8 @@
       audio: 'openai/gpt-4o-audio-preview'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
-    illustrations_enabled: false
+    illustrations_enabled: false,
+    narration_enabled: false
   };
 
   // Mock mode flag — default true for development
@@ -124,6 +125,23 @@
     setIllustrationsEnabled: function (enabled) {
       var config = this.load();
       config.illustrations_enabled = !!enabled;
+      this.save(config);
+    },
+
+    /**
+     * Check if voice narration is enabled.
+     */
+    isNarrationEnabled: function () {
+      var config = this.load();
+      return config.narration_enabled === true;
+    },
+
+    /**
+     * Toggle voice narration on/off.
+     */
+    setNarrationEnabled: function (enabled) {
+      var config = this.load();
+      config.narration_enabled = !!enabled;
       this.save(config);
     }
   };

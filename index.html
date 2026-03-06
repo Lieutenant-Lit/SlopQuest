@@ -58,6 +58,23 @@
         </div>
       </div>
 
+      <div class="card">
+        <h2>Voice Narration</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-narration-toggle">
+          <span>Enable AI voice narration</span>
+        </label>
+        <p>Reads passages aloud using a TTS model. Uses additional API credits.</p>
+        <div id="audio-model-section">
+          <label class="card-label">Audio Model</label>
+          <select id="audio-model-select">
+            <option value="openai/gpt-4o-audio-preview">GPT-4o Audio (default)</option>
+            <option value="custom">Custom model...</option>
+          </select>
+          <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
+        </div>
+      </div>
+
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
     </div>
   </div>
@@ -195,9 +212,9 @@
             <span class="option-desc">AI-generated scene art (uses extra API credits)</span>
           </label>
           <label class="setup-toggle">
-            <input type="checkbox" disabled>
+            <input type="checkbox" id="setup-narration-toggle">
             <span>Narration</span>
-            <span class="option-desc">(Coming soon)</span>
+            <span class="option-desc">AI voice narration of passages (uses extra API credits)</span>
           </label>
         </div>
       </div>
@@ -237,6 +254,10 @@
     <div class="screen-content">
       <div id="illustration-container" class="illustration-container hidden">
         <img id="illustration-image" class="illustration-image" alt="Scene illustration">
+      </div>
+      <div id="audio-controls" class="audio-controls hidden">
+        <button class="btn-icon btn-audio" id="btn-audio-playpause" title="Play narration">&#9654;</button>
+        <button class="btn-icon btn-audio" id="btn-audio-replay" title="Replay narration">&#8634;</button>
       </div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>
