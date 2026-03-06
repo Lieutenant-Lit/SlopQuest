@@ -78,7 +78,22 @@
         }
       });
 
-      // Narrator voice dropdown — populate from VOICES constant
+      // Narrator profile dropdown — populate from VOICE_PROFILES
+      var profileSelect = document.getElementById('narrator-profile-select');
+      SQ.PlayerConfig.VOICE_PROFILES.forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.label;
+        profileSelect.appendChild(opt);
+      });
+      profileSelect.addEventListener('change', function () {
+        SQ.PlayerConfig.setNarratorProfile(this.value);
+        // Update the voice override dropdown to match the profile's voice
+        var voiceSelect = document.getElementById('narrator-voice-select');
+        voiceSelect.value = SQ.PlayerConfig.getNarratorVoice();
+      });
+
+      // Narrator voice override dropdown — populate from VOICES
       var voiceSelect = document.getElementById('narrator-voice-select');
       SQ.PlayerConfig.VOICES.forEach(function (v) {
         var opt = document.createElement('option');
@@ -176,7 +191,9 @@
         audioCustomInput.value = currentAudioModel;
       }
 
-      // Set narrator voice selector to current value
+      // Set narrator profile and voice selectors
+      var profileSelect = document.getElementById('narrator-profile-select');
+      profileSelect.value = SQ.PlayerConfig.getNarratorProfileId();
       var voiceSelect = document.getElementById('narrator-voice-select');
       voiceSelect.value = SQ.PlayerConfig.getNarratorVoice();
 
@@ -189,6 +206,11 @@
           gameState.skeleton.npcs.length > 0 && SQ.PlayerConfig.isNarrationEnabled()) {
         charCard.classList.remove('hidden');
         charList.innerHTML = '';
+        var profiles = SQ.PlayerConfig.VOICE_PROFILES;
+        // Filter to NPC-appropriate profiles (exclude narrator-only)
+        var npcProfiles = profiles.filter(function (p) {
+          return p.id !== 'epic_narrator' && p.id !== 'dark_narrator';
+        });
 
         gameState.skeleton.npcs.forEach(function (npc) {
           var row = document.createElement('div');
@@ -198,25 +220,68 @@
           label.className = 'card-label';
           label.textContent = npc.name;
 
-          var sel = document.createElement('select');
+          // Profile selector (primary control)
+          var profileSel = document.createElement('select');
+          profileSel.className = 'character-profile-select';
+          npcProfiles.forEach(function (p) {
+            var opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.label;
+            var entry = gameState.npc_voices && gameState.npc_voices[npc.name];
+            if (entry && typeof entry === 'object' && entry.profileId === p.id) {
+              opt.selected = true;
+            }
+            profileSel.appendChild(opt);
+          });
+
+          // Voice override selector (secondary)
+          var voiceSel = document.createElement('select');
+          voiceSel.className = 'character-voice-override';
           SQ.PlayerConfig.VOICES.forEach(function (v) {
             var opt = document.createElement('option');
             opt.value = v.id;
             opt.textContent = v.label;
-            if (gameState.npc_voices && gameState.npc_voices[npc.name] === v.id) {
+            var entry = gameState.npc_voices && gameState.npc_voices[npc.name];
+            var currentVoice = (entry && typeof entry === 'object') ? entry.voice : entry;
+            if (currentVoice === v.id) {
               opt.selected = true;
             }
-            sel.appendChild(opt);
+            voiceSel.appendChild(opt);
           });
 
-          sel.addEventListener('change', function () {
+          profileSel.addEventListener('change', function () {
+            var selectedProfileId = this.value;
+            // Find the profile and update the NPC entry
+            for (var p = 0; p < profiles.length; p++) {
+              if (profiles[p].id === selectedProfileId) {
+                if (!gameState.npc_voices) gameState.npc_voices = {};
+                gameState.npc_voices[npc.name] = {
+                  voice: profiles[p].voice,
+                  style: profiles[p].style,
+                  profileId: profiles[p].id
+                };
+                // Update the voice override to match
+                voiceSel.value = profiles[p].voice;
+                SQ.GameState.save();
+                break;
+              }
+            }
+          });
+
+          voiceSel.addEventListener('change', function () {
             if (!gameState.npc_voices) gameState.npc_voices = {};
-            gameState.npc_voices[npc.name] = this.value;
+            var entry = gameState.npc_voices[npc.name];
+            if (entry && typeof entry === 'object') {
+              entry.voice = this.value;
+            } else {
+              gameState.npc_voices[npc.name] = { voice: this.value, style: '', profileId: '' };
+            }
             SQ.GameState.save();
           });
 
           row.appendChild(label);
-          row.appendChild(sel);
+          row.appendChild(profileSel);
+          row.appendChild(voiceSel);
           charList.appendChild(row);
         });
       } else {

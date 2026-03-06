@@ -73,7 +73,12 @@
           </select>
           <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
 
-          <label class="card-label" style="margin-top: var(--spacing-md)">Narrator Voice</label>
+          <label class="card-label" style="margin-top: var(--spacing-md)">Narrator Profile</label>
+          <select id="narrator-profile-select">
+            <!-- Populated dynamically from SQ.PlayerConfig.VOICE_PROFILES -->
+          </select>
+
+          <label class="card-label" style="margin-top: var(--spacing-sm)">Narrator Voice Override</label>
           <select id="narrator-voice-select">
             <!-- Populated dynamically from SQ.PlayerConfig.VOICES -->
           </select>
@@ -82,7 +87,7 @@
 
       <div class="card hidden" id="character-voices-card">
         <h2>Character Voices</h2>
-        <p>Assign a distinct voice to each NPC. The narrator voice is used for non-dialogue text.</p>
+        <p>Each NPC gets a voice profile with its own accent, tone, and personality. Change profiles to alter how characters sound.</p>
         <div id="character-voices-list"></div>
       </div>
 

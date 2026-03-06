@@ -24,7 +24,7 @@
      * Generate narration audio for a passage.
      * @param {string} passageText - The passage text to narrate (fallback if no segments)
      * @param {Array|null} segments - narration_segments array: [{speaker, text}, ...]
-     * @param {Object|null} npcVoices - Map of NPC name → voice ID
+     * @param {Object|null} npcVoices - Map of NPC name → {voice, style, profileId} or string voice ID
      * @returns {Promise<string|null>} Audio data URL or null on failure
      */
     generate: function (passageText, segments, npcVoices) {
@@ -43,9 +43,29 @@
         return this._generateMultiVoice(segments, npcVoices);
       }
 
-      // Single-voice fallback: use narrator voice for the whole passage
-      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
-      return this._generateSingleSegment(passageText, narratorVoice);
+      // Single-voice fallback: use narrator profile for the whole passage
+      var profile = SQ.PlayerConfig.getNarratorProfile();
+      return this._generateSingleSegment(passageText, profile.voice, profile.style);
+    },
+
+    /**
+     * Resolve voice ID from an npcVoices entry (handles both string and object formats).
+     * @private
+     */
+    _resolveVoice: function (npcVoiceEntry) {
+      if (!npcVoiceEntry) return null;
+      if (typeof npcVoiceEntry === 'string') return npcVoiceEntry;
+      return npcVoiceEntry.voice || null;
+    },
+
+    /**
+     * Resolve style instruction from an npcVoices entry.
+     * @private
+     */
+    _resolveStyle: function (npcVoiceEntry) {
+      if (!npcVoiceEntry) return null;
+      if (typeof npcVoiceEntry === 'string') return null;
+      return npcVoiceEntry.style || null;
     },
 
     /**
@@ -59,7 +79,8 @@
       for (var i = 0; i < segments.length; i++) {
         var speaker = segments[i].speaker;
         if (speaker && npcVoices && npcVoices[speaker]) {
-          voices[npcVoices[speaker]] = true;
+          var v = this._resolveVoice(npcVoices[speaker]) || narratorVoice;
+          voices[v] = true;
         }
       }
       return Object.keys(voices).length > 1;
@@ -70,17 +91,19 @@
      * @private
      */
     _generateMultiVoice: function (segments, npcVoices) {
-      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
+      var narratorProfile = SQ.PlayerConfig.getNarratorProfile();
       var self = this;
 
       // Build parallel requests for each segment
       var promises = segments.map(function (seg) {
-        var voice = narratorVoice;
+        var voice = narratorProfile.voice;
+        var style = narratorProfile.style;
         if (seg.speaker && npcVoices && npcVoices[seg.speaker]) {
-          voice = npcVoices[seg.speaker];
+          voice = self._resolveVoice(npcVoices[seg.speaker]) || voice;
+          style = self._resolveStyle(npcVoices[seg.speaker]) || style;
         }
         // Each call returns raw PCM16 Uint8Array
-        return self._fetchPcm16(seg.text, voice);
+        return self._fetchPcm16(seg.text, voice, style);
       });
 
       return Promise.all(promises)
@@ -114,13 +137,13 @@
     },
 
     /**
-     * Generate audio for a single text with a single voice.
+     * Generate audio for a single text with a single voice and style.
      * Returns a WAV blob URL.
      * @private
      */
-    _generateSingleSegment: function (text, voice) {
+    _generateSingleSegment: function (text, voice, style) {
       var self = this;
-      return this._fetchPcm16(text, voice)
+      return this._fetchPcm16(text, voice, style)
         .then(function (pcmData) {
           if (!pcmData) return null;
           var wavBlob = self._pcm16ToWavBlob(pcmData, 24000);
@@ -134,14 +157,15 @@
     },
 
     /**
-     * Fetch raw PCM16 audio data for a text segment with a given voice.
+     * Fetch raw PCM16 audio data for a text segment with a given voice and style.
      * This is the core API call — returns a Uint8Array of PCM16 bytes.
      * @param {string} text - Text to narrate
      * @param {string} voice - OpenAI voice ID
+     * @param {string|null} style - Style instruction for voice characterization
      * @returns {Promise<Uint8Array|null>}
      * @private
      */
-    _fetchPcm16: function (text, voice) {
+    _fetchPcm16: function (text, voice, style) {
       var model = SQ.PlayerConfig.getModel('audio');
       var apiKey = SQ.PlayerConfig.getApiKey();
 
@@ -150,20 +174,27 @@
         return Promise.resolve(null);
       }
 
+      var messages = [];
+      if (style) {
+        messages.push({
+          role: 'system',
+          content: style + '\nDo not add any commentary or extra text. Just read the passage aloud.'
+        });
+      }
+      messages.push({
+        role: 'user',
+        content: 'Read the following passage aloud. '
+          + 'Use a natural, dramatic reading voice appropriate for a story. '
+          + 'Do not add any commentary or extra text — just narrate:\n\n'
+          + text
+      });
+
       var body = {
         model: model,
         stream: true,
         modalities: ['text', 'audio'],
         audio: { voice: voice || 'alloy', format: 'pcm16' },
-        messages: [
-          {
-            role: 'user',
-            content: 'Read the following passage aloud as a narrator. '
-              + 'Use a natural, dramatic reading voice appropriate for a story. '
-              + 'Do not add any commentary or extra text — just narrate:\n\n'
-              + text
-          }
-        ]
+        messages: messages
       };
 
       var controller = new AbortController();
