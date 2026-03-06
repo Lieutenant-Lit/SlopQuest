@@ -1,5 +1,6 @@
 /**
- * SQ.Screens.Settings — API key input, model selection, validation, main menu.
+ * SQ.Screens.Settings — API key input, model selection, validation.
+ * First screen for new players. Accessible from main menu via Settings button.
  */
 (function () {
   SQ.Screens.Settings = {
@@ -31,26 +32,14 @@
         }
       });
 
-      // Main menu buttons
-      document.getElementById('btn-continue').addEventListener('click', function () {
-        SQ.GameState.load();
-        SQ.showScreen('game');
-      });
-
-      document.getElementById('btn-new-game').addEventListener('click', function () {
-        if (SQ.GameState.exists()) {
-          if (!confirm('Starting a new game will erase your current progress. Continue?')) {
-            return;
-          }
-          SQ.GameState.clear();
-          SQ.HistoryStack.clear();
-        }
-        SQ.showScreen('setup');
+      // Save & continue to main menu
+      document.getElementById('btn-save-settings').addEventListener('click', function () {
+        SQ.showScreen('mainmenu');
       });
     },
 
     onShow: function () {
-      // Populate fields from saved config
+      // Populate API key field from saved config
       var apiKey = SQ.PlayerConfig.getApiKey();
       var keyInput = document.getElementById('api-key-input');
       if (apiKey) {
@@ -75,13 +64,20 @@
         customInput.value = currentModel;
       }
 
-      // Show/hide continue button
-      var continueSection = document.getElementById('continue-section');
-      if (SQ.GameState.exists()) {
-        continueSection.classList.remove('hidden');
-      } else {
-        continueSection.classList.add('hidden');
+      // Hide back button if no API key yet (first-time user)
+      var backBtn = document.querySelector('#screen-settings .btn-back');
+      if (backBtn) {
+        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData) {
+          backBtn.classList.remove('hidden');
+        } else {
+          backBtn.classList.add('hidden');
+        }
       }
+
+      // Reset validation status
+      var status = document.getElementById('key-status');
+      status.textContent = '';
+      status.className = 'status-message';
     },
 
     onHide: function () {},
@@ -89,6 +85,7 @@
     validateKey: function () {
       var keyInput = document.getElementById('api-key-input');
       var status = document.getElementById('key-status');
+      var btn = document.getElementById('btn-validate-key');
       var key = keyInput.value.trim();
 
       if (!key) {
@@ -105,19 +102,32 @@
         return;
       }
 
-      status.textContent = 'Validating...';
+      // Disable button and show validating state
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+      status.textContent = 'Checking key with OpenRouter...';
       status.className = 'status-message';
 
-      SQ.API.validateKey(key).then(function (valid) {
-        if (valid) {
-          SQ.PlayerConfig.setApiKey(key);
-          status.textContent = 'Key validated successfully.';
-          status.className = 'status-message success';
-        } else {
-          status.textContent = 'Invalid key. Check your OpenRouter API key.';
+      SQ.API.validateKey(key)
+        .then(function (valid) {
+          if (valid) {
+            SQ.PlayerConfig.setApiKey(key);
+            status.textContent = 'Key validated successfully.';
+            status.className = 'status-message success';
+          } else {
+            status.textContent = 'Invalid key. Check your OpenRouter API key.';
+            status.className = 'status-message error';
+          }
+        })
+        .catch(function () {
+          status.textContent = 'Network error — could not reach OpenRouter. Try again.';
           status.className = 'status-message error';
-        }
-      });
+        })
+        .then(function () {
+          // Always re-enable the button (finally equivalent)
+          btn.disabled = false;
+          btn.textContent = 'Validate Key';
+        });
     }
   };
 })();

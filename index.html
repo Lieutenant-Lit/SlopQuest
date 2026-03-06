@@ -12,10 +12,10 @@
 
   <div id="screen-settings" class="screen">
     <div class="screen-header">
-      <h1>SlopQuest</h1>
+      <button class="btn-back" data-target="mainmenu">&larr; Back</button>
+      <h1>Settings</h1>
     </div>
     <div class="screen-content">
-      <p class="subtitle">AI-Generated Gamebook RPG</p>
 
       <div class="card">
         <h2>API Key</h2>
@@ -37,18 +37,27 @@
         <input type="text" id="model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
 
-      <div class="card" id="main-menu">
-        <div id="continue-section" class="hidden">
-          <button id="btn-continue" class="btn btn-primary btn-large">Continue Game</button>
-        </div>
+      <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
+    </div>
+  </div>
+
+  <div id="screen-mainmenu" class="screen">
+    <div class="screen-header">
+      <h1>SlopQuest</h1>
+    </div>
+    <div class="screen-content mainmenu-content">
+      <p class="subtitle">AI-Generated Gamebook RPG</p>
+      <div class="mainmenu-buttons">
+        <button id="btn-continue" class="btn btn-primary btn-large hidden">Continue Game</button>
         <button id="btn-new-game" class="btn btn-secondary btn-large">New Game</button>
       </div>
+      <button id="btn-open-settings" class="btn btn-link">Settings</button>
     </div>
   </div>
 
   <div id="screen-setup" class="screen">
     <div class="screen-header">
-      <button class="btn-back" data-target="settings">&larr; Back</button>
+      <button class="btn-back" data-target="mainmenu">&larr; Back</button>
       <h1>New Game</h1>
     </div>
     <div class="screen-content">
@@ -150,6 +159,7 @@
 
   <!-- Screen modules -->
   <script src="js/screens/settings.js"></script>
+  <script src="js/screens/mainmenu.js"></script>
   <script src="js/screens/setup.js"></script>
   <script src="js/screens/game.js"></script>
   <script src="js/screens/rewind.js"></script>

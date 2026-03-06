@@ -161,6 +161,11 @@ select:focus {
   background: var(--color-primary-hover);
 }
 
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   background: var(--color-secondary);
   color: var(--color-text);
@@ -337,6 +342,43 @@ select:focus {
   font-family: var(--font-ui);
   font-size: 0.875rem;
   color: var(--color-text-muted);
+}
+
+/* ===== MAIN MENU ===== */
+.mainmenu-content {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-xl);
+}
+
+.mainmenu-content .subtitle {
+  font-size: 1rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.mainmenu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 320px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.btn-link:hover {
+  color: var(--color-text);
 }
 
 /* ===== DEV TOOLBAR ===== */
