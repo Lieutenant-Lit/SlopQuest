@@ -242,27 +242,154 @@ select:focus {
   flex: 1;
   text-align: center;
   font-size: 1.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 var(--spacing-xs);
 }
 
+/* --- Status Bar --- */
 #game-status-bar {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: var(--font-ui);
   font-size: 0.75rem;
   color: var(--color-text-muted);
   padding-top: var(--spacing-sm);
+  gap: var(--spacing-sm);
 }
 
+.status-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px var(--spacing-xs);
+  border-radius: 4px;
+  background: var(--color-surface);
+  white-space: nowrap;
+}
+
+.status-icon {
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+.status-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Health color states */
+.status-health .status-icon { color: var(--color-danger); }
+.status-health.health-high .status-value { color: var(--color-success); }
+.status-health.health-mid .status-value { color: var(--color-warning); }
+.status-health.health-low .status-value { color: var(--color-danger); }
+
+/* --- Passage --- */
 .passage {
   font-size: 1.05rem;
   line-height: 1.75;
+  flex: 1;
+  min-height: 0;
 }
 
+.passage p {
+  margin-bottom: 0.75em;
+}
+
+.passage p:last-child {
+  margin-bottom: 0;
+}
+
+/* Paragraph fade-in animation */
+.passage-paragraph-enter {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.passage-paragraph-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Choices --- */
 #choices-container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-xl);
+}
+
+.btn-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  text-align: left;
+  padding: var(--spacing-md);
+  min-height: 52px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  width: 100%;
+  line-height: 1.4;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+.btn-choice:hover:not(:disabled) {
+  background: var(--color-surface-raised);
+  border-color: var(--color-primary);
+}
+
+.btn-choice:active:not(:disabled) {
+  background: rgba(124, 111, 240, 0.12);
+}
+
+.btn-choice:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.choice-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 4px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.choice-text {
+  flex: 1;
+}
+
+/* Choice enter animation */
+.choice-enter {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* --- Status effects indicator (optional future use) --- */
+#status-effects {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 /* ===== LOADING OVERLAY ===== */
@@ -568,6 +695,22 @@ select:focus {
 
   .passage {
     font-size: 1.125rem;
+  }
+
+  .btn-choice {
+    min-height: 56px;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .choice-label {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    font-size: 0.8125rem;
+  }
+
+  #game-status-bar {
+    font-size: 0.8125rem;
   }
 }
 

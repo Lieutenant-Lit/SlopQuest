@@ -1,10 +1,17 @@
 /**
  * SQ.Screens.Game — Main gameplay screen.
- * Displays passages, choices, status bar. Handles the turn loop.
- * Applies the full state_updates schema from design doc Section 6.4.
+ * Displays passages (with fade-in effect), choices, status bar.
+ * Handles the turn loop. Applies the full state_updates schema
+ * from design doc Section 6.4.
  */
 (function () {
+  /** Delay (ms) between each paragraph fade-in. */
+  var PARAGRAPH_STAGGER_MS = 120;
+
   SQ.Screens.Game = {
+    /** Tracks whether the current render is the initial load (no animation). */
+    _isInitialRender: true,
+
     init: function () {
       var self = this;
 
@@ -35,6 +42,7 @@
     },
 
     onShow: function () {
+      this._isInitialRender = true;
       this.renderState();
     },
 
@@ -51,42 +59,119 @@
       document.getElementById('game-title').textContent = state.meta.title || 'SlopQuest';
 
       // Status bar
-      document.getElementById('status-health').textContent = 'HP: ' + (state.player.health || 0);
-      document.getElementById('status-act').textContent = 'Act ' + (state.current.act || 1);
-      document.getElementById('status-scene').textContent = 'Scene ' + (state.current.scene_number || 1);
+      this._renderStatusBar(state);
 
-      // Passage
-      var passageEl = document.getElementById('passage-text');
-      if (state.last_passage) {
-        passageEl.innerHTML = '';
-        var paragraphs = state.last_passage.split(/\n\n+/);
-        paragraphs.forEach(function (p) {
-          var el = document.createElement('p');
-          el.textContent = p.trim();
-          passageEl.appendChild(el);
-        });
-      }
+      // Passage (with fade-in on new passages, instant on initial load/rewind)
+      this._renderPassage(state.last_passage, !this._isInitialRender);
+      this._isInitialRender = false;
 
       // Choices — hide if game over or story complete
       if (state.game_over || state.story_complete) {
         document.getElementById('choices-container').classList.add('hidden');
       } else {
         document.getElementById('choices-container').classList.remove('hidden');
-        this.renderChoices(state.current_choices);
+        this.renderChoices(state.current_choices, !this._isInitialRender);
       }
     },
 
     /**
-     * Render the 4 choice buttons.
+     * Render the resource/status bar.
+     * Shows health, gold, provisions, and current act/scene.
+     * @private
      */
-    renderChoices: function (choices) {
+    _renderStatusBar: function (state) {
+      var player = state.player || {};
+      var current = state.current || {};
+      var resources = player.resources || {};
+
+      // Health — update value and apply color class
+      var healthEl = document.getElementById('status-health');
+      var healthVal = typeof player.health === 'number' ? player.health : 100;
+      healthEl.querySelector('.status-value').textContent = healthVal;
+      healthEl.classList.remove('health-high', 'health-mid', 'health-low');
+      if (healthVal > 60) {
+        healthEl.classList.add('health-high');
+      } else if (healthVal > 25) {
+        healthEl.classList.add('health-mid');
+      } else {
+        healthEl.classList.add('health-low');
+      }
+
+      // Gold
+      var goldEl = document.getElementById('status-gold');
+      goldEl.querySelector('.status-value').textContent =
+        typeof resources.gold === 'number' ? resources.gold : 0;
+
+      // Provisions
+      var provEl = document.getElementById('status-provisions');
+      provEl.querySelector('.status-value').textContent =
+        typeof resources.provisions === 'number' ? resources.provisions : 0;
+
+      // Act / Scene
+      document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
+      document.getElementById('status-scene').textContent = 'Scene ' + (current.scene_number || 1);
+    },
+
+    /**
+     * Render passage text into the passage container.
+     * Splits on double-newlines into paragraphs.
+     * If animate=true, paragraphs fade in with a staggered delay.
+     * @private
+     */
+    _renderPassage: function (text, animate) {
+      var passageEl = document.getElementById('passage-text');
+
+      if (!text) return;
+
+      passageEl.innerHTML = '';
+      var paragraphs = text.split(/\n\n+/);
+
+      paragraphs.forEach(function (p, i) {
+        var trimmed = p.trim();
+        if (!trimmed) return;
+
+        var el = document.createElement('p');
+        el.textContent = trimmed;
+
+        if (animate) {
+          el.classList.add('passage-paragraph-enter');
+          // Stagger each paragraph's appearance
+          setTimeout(function () {
+            el.classList.add('passage-paragraph-visible');
+          }, i * PARAGRAPH_STAGGER_MS);
+        }
+
+        passageEl.appendChild(el);
+      });
+
+      // Scroll passage to top when new content arrives
+      passageEl.scrollTop = 0;
+    },
+
+    /**
+     * Render the 4 choice buttons with label badges.
+     * Uses the structured .choice-label + .choice-text spans.
+     * If animate=true, choices fade in after passage paragraphs.
+     */
+    renderChoices: function (choices, animate) {
       var labels = ['A', 'B', 'C', 'D'];
-      labels.forEach(function (id) {
+      labels.forEach(function (id, i) {
         var btn = document.querySelector('.btn-choice[data-choice="' + id + '"]');
+        var labelEl = btn.querySelector('.choice-label');
+        var textEl = btn.querySelector('.choice-text');
+
         if (choices && choices[id]) {
-          btn.textContent = id + '. ' + choices[id].text;
+          labelEl.textContent = id;
+          textEl.textContent = choices[id].text;
           btn.classList.remove('hidden');
           btn.disabled = false;
+
+          if (animate) {
+            btn.classList.add('choice-enter');
+            setTimeout(function () {
+              btn.classList.remove('choice-enter');
+            }, 50 + i * 80);
+          }
         } else {
           btn.classList.add('hidden');
         }

@@ -193,9 +193,24 @@
         <button class="btn-icon" id="btn-rewind" title="Rewind">&#8634;</button>
       </div>
       <div id="game-status-bar">
-        <span id="status-health">HP: 100</span>
-        <span id="status-act">Act 1</span>
-        <span id="status-scene">Scene 1</span>
+        <div class="status-group">
+          <span id="status-health" class="status-chip status-health" title="Health">
+            <span class="status-icon">&#9829;</span>
+            <span class="status-value">100</span>
+          </span>
+          <span id="status-gold" class="status-chip" title="Gold">
+            <span class="status-icon">&#9679;</span>
+            <span class="status-value">0</span>
+          </span>
+          <span id="status-provisions" class="status-chip" title="Provisions">
+            <span class="status-icon">&#9724;</span>
+            <span class="status-value">0</span>
+          </span>
+        </div>
+        <div class="status-group">
+          <span id="status-act" class="status-chip">Act 1</span>
+          <span id="status-scene" class="status-chip">Scene 1</span>
+        </div>
       </div>
     </div>
     <div class="screen-content">
@@ -203,10 +218,22 @@
         <p class="placeholder-text">Your adventure will appear here...</p>
       </div>
       <div id="choices-container">
-        <button class="btn btn-choice" data-choice="A">Choice A</button>
-        <button class="btn btn-choice" data-choice="B">Choice B</button>
-        <button class="btn btn-choice" data-choice="C">Choice C</button>
-        <button class="btn btn-choice" data-choice="D">Choice D</button>
+        <button class="btn btn-choice" data-choice="A">
+          <span class="choice-label">A</span>
+          <span class="choice-text">Choice A</span>
+        </button>
+        <button class="btn btn-choice" data-choice="B">
+          <span class="choice-label">B</span>
+          <span class="choice-text">Choice B</span>
+        </button>
+        <button class="btn btn-choice" data-choice="C">
+          <span class="choice-label">C</span>
+          <span class="choice-text">Choice C</span>
+        </button>
+        <button class="btn btn-choice" data-choice="D">
+          <span class="choice-label">D</span>
+          <span class="choice-text">Choice D</span>
+        </button>
       </div>
     </div>
     <div id="loading-overlay" class="hidden">
