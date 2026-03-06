@@ -38,8 +38,9 @@
         return this._mockGenerate();
       }
 
-      // If we have valid segments with multiple speakers, use multi-voice path
-      if (segments && segments.length > 0 && this._hasMultipleVoices(segments, npcVoices)) {
+      // If we have segments with any NPC speakers, use multi-voice path.
+      // Even if voice IDs overlap, different speakers have different styles.
+      if (segments && segments.length > 1 && this._hasNpcSpeakers(segments, npcVoices)) {
         return this._generateMultiVoice(segments, npcVoices);
       }
 
@@ -69,21 +70,18 @@
     },
 
     /**
-     * Check if segments actually use more than one voice.
+     * Check if any segment has a named NPC speaker with a voice entry.
+     * We always use multi-voice when there are NPC speakers, even if
+     * voice IDs overlap, because each character has different style instructions.
      * @private
      */
-    _hasMultipleVoices: function (segments, npcVoices) {
-      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
-      var voices = {};
-      voices[narratorVoice] = true;
+    _hasNpcSpeakers: function (segments, npcVoices) {
+      if (!npcVoices) return false;
       for (var i = 0; i < segments.length; i++) {
         var speaker = segments[i].speaker;
-        if (speaker && npcVoices && npcVoices[speaker]) {
-          var v = this._resolveVoice(npcVoices[speaker]) || narratorVoice;
-          voices[v] = true;
-        }
+        if (speaker && npcVoices[speaker]) return true;
       }
-      return Object.keys(voices).length > 1;
+      return false;
     },
 
     /**

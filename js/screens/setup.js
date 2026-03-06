@@ -168,90 +168,38 @@
             state.relationships[npc.name] = npc.initial_relationship || 0;
           });
 
-          // Auto-assign voice profiles to NPCs based on their role
-          var roleHints = {
-            'captain': 'grizzled_commander', 'guard': 'grizzled_commander',
-            'commander': 'grizzled_commander', 'knight': 'grizzled_commander',
-            'soldier': 'grizzled_commander', 'warrior': 'grizzled_commander',
-            'ally': 'rebel_leader', 'resistance': 'rebel_leader',
-            'rebel': 'rebel_leader', 'leader': 'rebel_leader',
-            'scholar': 'mysterious_scholar', 'archivist': 'mysterious_scholar',
-            'keeper': 'mysterious_scholar', 'librarian': 'mysterious_scholar',
-            'mage': 'ancient_sorcerer', 'sorcerer': 'ancient_sorcerer',
-            'wizard': 'ancient_sorcerer', 'witch': 'ancient_sorcerer',
-            'noble': 'scheming_noble', 'lord': 'scheming_noble',
-            'lady': 'scheming_noble', 'duke': 'scheming_noble',
-            'urchin': 'street_urchin', 'thief': 'street_urchin',
-            'rogue': 'street_urchin', 'broker': 'street_urchin',
-            'elder': 'wise_elder', 'mentor': 'wise_elder',
-            'squire': 'young_squire', 'apprentice': 'young_squire',
-            'mercenary': 'mercenary', 'assassin': 'mercenary',
-            'tavern': 'tavern_keeper', 'innkeep': 'tavern_keeper'
-          };
-          var profiles = SQ.PlayerConfig.VOICE_PROFILES;
-          // Filter out narrator-only profiles for NPC assignment
-          var npcProfiles = profiles.filter(function (p) {
-            return p.id !== 'epic_narrator' && p.id !== 'dark_narrator';
-          });
-          var usedProfileIds = {};
-
-          skeleton.npcs.forEach(function (npc) {
-            var roleLower = (npc.role || '').toLowerCase();
-            var nameLower = (npc.name || '').toLowerCase();
-            var matched = null;
-
-            // Try keyword matching on NPC role and name
-            var words = Object.keys(roleHints);
-            for (var w = 0; w < words.length; w++) {
-              if (roleLower.indexOf(words[w]) !== -1 || nameLower.indexOf(words[w]) !== -1) {
-                var profileId = roleHints[words[w]];
-                if (!usedProfileIds[profileId]) {
-                  matched = profileId;
-                  break;
-                }
-              }
-            }
-
-            // Fallback: pick first unused NPC profile
-            if (!matched) {
-              for (var p = 0; p < npcProfiles.length; p++) {
-                if (!usedProfileIds[npcProfiles[p].id]) {
-                  matched = npcProfiles[p].id;
-                  break;
-                }
-              }
-            }
-
-            // Last resort: cycle through profiles
-            if (!matched) {
-              matched = npcProfiles[Object.keys(usedProfileIds).length % npcProfiles.length].id;
-            }
-
-            usedProfileIds[matched] = true;
-
-            // Find the full profile and store voice + style + profileId
-            for (var q = 0; q < profiles.length; q++) {
-              if (profiles[q].id === matched) {
-                state.npc_voices[npc.name] = {
-                  voice: profiles[q].voice,
-                  style: profiles[q].style,
-                  profileId: profiles[q].id
-                };
-                break;
-              }
-            }
-          });
         }
 
         SQ.GameState.save();
 
+        // Generate voice profiles for NPCs via LLM (parallel with passage gen)
+        var voiceProfilePromise = Promise.resolve({});
+        if (skeleton.npcs && skeleton.npcs.length > 0 && SQ.PlayerConfig.isNarrationEnabled()) {
+          if (loadingStatus) loadingStatus.textContent = 'Casting character voices...';
+          voiceProfilePromise = SQ.VoiceProfileGenerator.generate(skeleton, state.meta);
+        }
+
         // Update status for second phase
         if (loadingStatus) loadingStatus.textContent = 'Generating opening passage...';
 
-        // Generate opening passage
-        return SQ.PassageGenerator.generate(state, null);
-      }).then(function (passageResponse) {
+        // Generate opening passage (parallel with voice profiles)
+        var passagePromise = SQ.PassageGenerator.generate(state, null);
+
+        return Promise.all([passagePromise, voiceProfilePromise]).then(function (results) {
+          return { passageResponse: results[0], voiceProfiles: results[1] };
+        });
+      }).then(function (combined) {
+        var passageResponse = combined.passageResponse;
+        var voiceProfiles = combined.voiceProfiles;
         var state = SQ.GameState.get();
+
+        // Apply LLM-generated voice profiles to NPC voices
+        if (voiceProfiles && Object.keys(voiceProfiles).length > 0) {
+          var profileKeys = Object.keys(voiceProfiles);
+          for (var vp = 0; vp < profileKeys.length; vp++) {
+            state.npc_voices[profileKeys[vp]] = voiceProfiles[profileKeys[vp]];
+          }
+        }
 
         // Push initial state to history
         SQ.HistoryStack.push(SQ.GameState.snapshot(), '', null);

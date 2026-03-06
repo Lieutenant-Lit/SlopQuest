@@ -151,6 +151,19 @@ a {
   flex: 1;
 }
 
+.character-style-input {
+  flex: 1 1 100%;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 2.5rem;
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],
