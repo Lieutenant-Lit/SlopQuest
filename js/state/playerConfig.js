@@ -14,7 +14,8 @@
       image: 'google/gemini-2.5-flash-image-preview',
       audio: 'openai/gpt-4o-audio-preview'
     },
-    visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style'
+    visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
+    illustrations_enabled: false
   };
 
   // Mock mode flag — default true for development
@@ -90,6 +91,40 @@
      */
     hasApiKey: function () {
       return this.getApiKey().length > 0;
+    },
+
+    /**
+     * Get the locked visual style prefix for image generation.
+     */
+    getVisualStylePrefix: function () {
+      var config = this.load();
+      return config.visual_style_prefix || DEFAULT_CONFIG.visual_style_prefix;
+    },
+
+    /**
+     * Set the visual style prefix.
+     */
+    setVisualStylePrefix: function (prefix) {
+      var config = this.load();
+      config.visual_style_prefix = prefix;
+      this.save(config);
+    },
+
+    /**
+     * Check if illustrations are enabled.
+     */
+    isIllustrationsEnabled: function () {
+      var config = this.load();
+      return config.illustrations_enabled === true;
+    },
+
+    /**
+     * Toggle illustrations on/off.
+     */
+    setIllustrationsEnabled: function (enabled) {
+      var config = this.load();
+      config.illustrations_enabled = !!enabled;
+      this.save(config);
     }
   };
 })();

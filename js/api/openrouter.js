@@ -152,7 +152,15 @@
               ErrorCodes.MALFORMED_RESPONSE
             );
           }
-          return data.choices[0].message.content;
+          var msg = data.choices[0].message;
+
+          // Image modality: look for image content in multipart response
+          if (Array.isArray(msg.content)) {
+            // Multipart content — return the full array for callers to parse
+            return msg.content;
+          }
+
+          return msg.content;
         })
         .catch(function (err) {
           clearTimeout(timeoutId);

@@ -292,6 +292,39 @@ select:focus {
 .status-health.health-mid .status-value { color: var(--color-warning); }
 .status-health.health-low .status-value { color: var(--color-danger); }
 
+/* --- Illustration --- */
+.illustration-container {
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  margin-bottom: var(--spacing-md);
+}
+
+.illustration-container.illustration-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.illustration-container.illustration-loading {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.illustration-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 400px;
+  object-fit: cover;
+}
+
 /* --- Passage --- */
 .passage {
   font-size: 1.05rem;

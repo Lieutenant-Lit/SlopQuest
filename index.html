@@ -37,6 +37,15 @@
         <input type="text" id="model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
 
+      <div class="card">
+        <h2>Illustrations</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-illustrations-toggle">
+          <span>Enable AI illustrations</span>
+        </label>
+        <p>Generates a scene illustration alongside each passage. Uses additional API credits.</p>
+      </div>
+
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
     </div>
   </div>
@@ -165,13 +174,13 @@
         </div>
       </div>
 
-      <div class="card setup-card-disabled">
+      <div class="card">
         <h2>Multimodal</h2>
         <div class="setup-toggle-row">
           <label class="setup-toggle">
-            <input type="checkbox" disabled>
+            <input type="checkbox" id="setup-illustrations-toggle">
             <span>Illustrations</span>
-            <span class="option-desc">(Coming soon)</span>
+            <span class="option-desc">AI-generated scene art (uses extra API credits)</span>
           </label>
           <label class="setup-toggle">
             <input type="checkbox" disabled>
@@ -214,6 +223,9 @@
       </div>
     </div>
     <div class="screen-content">
+      <div id="illustration-container" class="illustration-container hidden">
+        <img id="illustration-image" class="illustration-image" alt="Scene illustration">
+      </div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>
       </div>

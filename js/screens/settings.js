@@ -32,6 +32,11 @@
         }
       });
 
+      // Illustrations toggle
+      document.getElementById('settings-illustrations-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
+      });
+
       // Save & continue to main menu
       document.getElementById('btn-save-settings').addEventListener('click', function () {
         SQ.showScreen('mainmenu');
@@ -73,6 +78,10 @@
           backBtn.classList.add('hidden');
         }
       }
+
+      // Set illustrations toggle state
+      document.getElementById('settings-illustrations-toggle').checked =
+        SQ.PlayerConfig.isIllustrationsEnabled();
 
       // Reset validation status
       var status = document.getElementById('key-status');

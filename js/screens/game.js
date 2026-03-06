@@ -61,6 +61,13 @@
       // Status bar
       this._renderStatusBar(state);
 
+      // Illustration — show if we have a cached image URL
+      if (state.illustration_image_url) {
+        this._showIllustration(state.illustration_image_url, false);
+      } else {
+        this._hideIllustration();
+      }
+
       // Passage (with fade-in on new passages, instant on initial load/rewind)
       this._renderPassage(state.last_passage, !this._isInitialRender);
       this._isInitialRender = false;
@@ -205,9 +212,40 @@
 
       self.showLoading();
 
+      // Fire image generation in parallel if illustrations are enabled.
+      // The image call uses the PREVIOUS passage's illustration_prompt since
+      // we don't have the new one yet. On the first turn after the opening,
+      // we use the illustration_prompt from the opening passage response.
+      var imagePromise = null;
+      if (SQ.PlayerConfig.isIllustrationsEnabled() && state.illustration_prompt) {
+        imagePromise = SQ.ImageGenerator.generate(state.illustration_prompt, state);
+      }
+
       SQ.PassageGenerator.generate(state, choiceId).then(function (response) {
         self.hideLoading();
         self.applyResponse(state, response);
+
+        // If no image was started yet but the new response has an illustration_prompt,
+        // fire image generation now (for this passage's scene).
+        if (!imagePromise && SQ.PlayerConfig.isIllustrationsEnabled() && response.illustration_prompt) {
+          imagePromise = SQ.ImageGenerator.generate(response.illustration_prompt, state);
+        }
+
+        // Fade illustration in when it arrives (or hide if no image call)
+        if (imagePromise) {
+          self._showIllustrationLoading();
+          imagePromise.then(function (imageUrl) {
+            if (imageUrl) {
+              state.illustration_image_url = imageUrl;
+              SQ.GameState.save();
+              self._showIllustration(imageUrl, true);
+            } else {
+              self._hideIllustration();
+            }
+          });
+        } else {
+          self._hideIllustration();
+        }
       }).catch(function (err) {
         self.hideLoading();
         self._enableChoices();
@@ -365,6 +403,48 @@
       document.querySelectorAll('.btn-choice').forEach(function (btn) {
         btn.disabled = false;
       });
+    },
+
+    /**
+     * Show an illustration with fade-in.
+     * @param {string} imageUrl - Data URL or remote URL for the image
+     * @param {boolean} animate - Whether to animate the reveal
+     * @private
+     */
+    _showIllustration: function (imageUrl, animate) {
+      var container = document.getElementById('illustration-container');
+      var img = document.getElementById('illustration-image');
+
+      container.classList.remove('hidden', 'illustration-loading', 'illustration-visible');
+      img.src = imageUrl;
+
+      if (animate) {
+        // Force reflow, then add visible class for CSS transition
+        void container.offsetWidth;
+        container.classList.add('illustration-visible');
+      } else {
+        container.classList.add('illustration-visible');
+      }
+    },
+
+    /**
+     * Show illustration container in loading state (placeholder).
+     * @private
+     */
+    _showIllustrationLoading: function () {
+      var container = document.getElementById('illustration-container');
+      container.classList.remove('hidden', 'illustration-visible');
+      container.classList.add('illustration-loading');
+    },
+
+    /**
+     * Hide the illustration container.
+     * @private
+     */
+    _hideIllustration: function () {
+      var container = document.getElementById('illustration-container');
+      container.classList.add('hidden');
+      container.classList.remove('illustration-visible', 'illustration-loading');
     },
 
     showLoading: function () {

@@ -21,6 +21,11 @@
         });
       });
 
+      // Illustrations toggle — persist immediately
+      document.getElementById('setup-illustrations-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
+      });
+
       // Generate Story button
       document.getElementById('btn-start-game').addEventListener('click', function () {
         self.startGeneration();
@@ -59,6 +64,10 @@
       var customInput = document.getElementById('setup-setting-custom');
       customInput.value = '';
       customInput.classList.add('hidden');
+
+      // Set illustrations toggle to saved preference
+      document.getElementById('setup-illustrations-toggle').checked =
+        SQ.PlayerConfig.isIllustrationsEnabled();
 
       // Reset generate button
       var btn = document.getElementById('btn-start-game');
@@ -167,10 +176,25 @@
         // Apply passage response
         state.last_passage = passageResponse.passage;
         state.current_choices = passageResponse.choices;
+        state.illustration_prompt = passageResponse.illustration_prompt || '';
         if (passageResponse.state_updates) {
           if (passageResponse.state_updates.current) {
             SQ.GameState.updateCurrent(passageResponse.state_updates.current);
           }
+        }
+
+        // Fire image generation for the opening scene (non-blocking)
+        if (SQ.PlayerConfig.isIllustrationsEnabled() && state.illustration_prompt) {
+          SQ.ImageGenerator.generate(state.illustration_prompt, state).then(function (imageUrl) {
+            if (imageUrl) {
+              state.illustration_image_url = imageUrl;
+              SQ.GameState.save();
+              // If game screen is already showing, display the illustration
+              var container = document.getElementById('illustration-container');
+              if (container && !container.closest('.screen.active')) return;
+              SQ.Screens.Game._showIllustration(imageUrl, true);
+            }
+          });
         }
 
         SQ.GameState.save();
