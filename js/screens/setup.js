@@ -167,6 +167,14 @@
           skeleton.npcs.forEach(function (npc) {
             state.relationships[npc.name] = npc.initial_relationship || 0;
           });
+
+          // Auto-assign voices to NPCs (exclude narrator voice for distinction)
+          var voicePool = SQ.PlayerConfig.VOICES.map(function (v) { return v.id; });
+          var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
+          voicePool = voicePool.filter(function (v) { return v !== narratorVoice; });
+          skeleton.npcs.forEach(function (npc, i) {
+            state.npc_voices[npc.name] = voicePool[i % voicePool.length];
+          });
         }
 
         SQ.GameState.save();
@@ -208,7 +216,11 @@
 
         // Fire TTS narration for the opening passage (non-blocking)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
-          SQ.AudioGenerator.generate(state.last_passage).then(function (audioUrl) {
+          SQ.AudioGenerator.generate(
+            state.last_passage,
+            passageResponse.narration_segments || null,
+            state.npc_voices
+          ).then(function (audioUrl) {
             if (audioUrl) {
               state.narration_audio_url = audioUrl;
               SQ.AudioGenerator.showControls();

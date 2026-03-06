@@ -3,6 +3,10 @@
  * Abstract interface: swap to ElevenLabs or another provider by replacing
  * the _callProvider method without changing game logic.
  *
+ * Supports multi-voice narration: when narration_segments are provided,
+ * each segment is generated in parallel with its assigned voice, then
+ * all PCM16 buffers are stitched together into a single WAV file.
+ *
  * Design doc Section 5: fires in parallel with text + image generation,
  * audio plays as it streams in, gracefully degrades to text-only on failure.
  */
@@ -18,10 +22,12 @@
   SQ.AudioGenerator = {
     /**
      * Generate narration audio for a passage.
-     * @param {string} passageText - The passage text to narrate
+     * @param {string} passageText - The passage text to narrate (fallback if no segments)
+     * @param {Array|null} segments - narration_segments array: [{speaker, text}, ...]
+     * @param {Object|null} npcVoices - Map of NPC name → voice ID
      * @returns {Promise<string|null>} Audio data URL or null on failure
      */
-    generate: function (passageText) {
+    generate: function (passageText, segments, npcVoices) {
       if (!passageText) return Promise.resolve(null);
       if (!SQ.PlayerConfig.isNarrationEnabled()) return Promise.resolve(null);
 
@@ -32,18 +38,110 @@
         return this._mockGenerate();
       }
 
-      return this._callProvider(passageText);
+      // If we have valid segments with multiple speakers, use multi-voice path
+      if (segments && segments.length > 0 && this._hasMultipleVoices(segments, npcVoices)) {
+        return this._generateMultiVoice(segments, npcVoices);
+      }
+
+      // Single-voice fallback: use narrator voice for the whole passage
+      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
+      return this._generateSingleSegment(passageText, narratorVoice);
     },
 
     /**
-     * Call the active TTS provider.
-     * Currently: OpenRouter with audio modality (requires stream: true).
-     * Uses its own fetch + SSE parsing since streaming is fundamentally
-     * different from the non-streaming SQ.API.call path.
-     * To swap providers (e.g., ElevenLabs), replace this method.
+     * Check if segments actually use more than one voice.
      * @private
      */
-    _callProvider: function (passageText) {
+    _hasMultipleVoices: function (segments, npcVoices) {
+      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
+      var voices = {};
+      voices[narratorVoice] = true;
+      for (var i = 0; i < segments.length; i++) {
+        var speaker = segments[i].speaker;
+        if (speaker && npcVoices && npcVoices[speaker]) {
+          voices[npcVoices[speaker]] = true;
+        }
+      }
+      return Object.keys(voices).length > 1;
+    },
+
+    /**
+     * Generate audio for multiple segments in parallel, then stitch PCM16 buffers.
+     * @private
+     */
+    _generateMultiVoice: function (segments, npcVoices) {
+      var narratorVoice = SQ.PlayerConfig.getNarratorVoice();
+      var self = this;
+
+      // Build parallel requests for each segment
+      var promises = segments.map(function (seg) {
+        var voice = narratorVoice;
+        if (seg.speaker && npcVoices && npcVoices[seg.speaker]) {
+          voice = npcVoices[seg.speaker];
+        }
+        // Each call returns raw PCM16 Uint8Array
+        return self._fetchPcm16(seg.text, voice);
+      });
+
+      return Promise.all(promises)
+        .then(function (pcmArrays) {
+          // Filter out any null results (failed segments)
+          var validArrays = [];
+          for (var i = 0; i < pcmArrays.length; i++) {
+            if (pcmArrays[i]) validArrays.push(pcmArrays[i]);
+          }
+          if (validArrays.length === 0) return null;
+
+          // Concatenate all PCM16 buffers in order
+          var totalLength = 0;
+          for (var j = 0; j < validArrays.length; j++) totalLength += validArrays[j].length;
+          var combined = new Uint8Array(totalLength);
+          var offset = 0;
+          for (var k = 0; k < validArrays.length; k++) {
+            combined.set(validArrays[k], offset);
+            offset += validArrays[k].length;
+          }
+
+          // Wrap combined PCM16 in a single WAV
+          var wavBlob = self._pcm16ToWavBlob(combined, 24000);
+          return URL.createObjectURL(wavBlob);
+        })
+        .catch(function (err) {
+          console.warn('AudioGenerator: multi-voice generation failed, degrading to text-only.');
+          console.warn('  Error:', err.message || err);
+          return null;
+        });
+    },
+
+    /**
+     * Generate audio for a single text with a single voice.
+     * Returns a WAV blob URL.
+     * @private
+     */
+    _generateSingleSegment: function (text, voice) {
+      var self = this;
+      return this._fetchPcm16(text, voice)
+        .then(function (pcmData) {
+          if (!pcmData) return null;
+          var wavBlob = self._pcm16ToWavBlob(pcmData, 24000);
+          return URL.createObjectURL(wavBlob);
+        })
+        .catch(function (err) {
+          console.warn('AudioGenerator: generation failed, degrading to text-only.');
+          console.warn('  Error:', err.message || err);
+          return null;
+        });
+    },
+
+    /**
+     * Fetch raw PCM16 audio data for a text segment with a given voice.
+     * This is the core API call — returns a Uint8Array of PCM16 bytes.
+     * @param {string} text - Text to narrate
+     * @param {string} voice - OpenAI voice ID
+     * @returns {Promise<Uint8Array|null>}
+     * @private
+     */
+    _fetchPcm16: function (text, voice) {
       var model = SQ.PlayerConfig.getModel('audio');
       var apiKey = SQ.PlayerConfig.getApiKey();
 
@@ -56,14 +154,14 @@
         model: model,
         stream: true,
         modalities: ['text', 'audio'],
-        audio: { voice: 'alloy', format: 'pcm16' },
+        audio: { voice: voice || 'alloy', format: 'pcm16' },
         messages: [
           {
             role: 'user',
             content: 'Read the following passage aloud as a narrator. '
               + 'Use a natural, dramatic reading voice appropriate for a story. '
               + 'Do not add any commentary or extra text — just narrate:\n\n'
-              + passageText
+              + text
           }
         ]
       };
@@ -86,44 +184,35 @@
           clearTimeout(timeoutId);
 
           if (!response.ok) {
-            return response.text().then(function (text) {
-              throw new Error('HTTP ' + response.status + ': ' + text.slice(0, 200));
+            return response.text().then(function (respText) {
+              throw new Error('HTTP ' + response.status + ': ' + respText.slice(0, 200));
             });
           }
 
-          // Parse SSE stream and accumulate audio data chunks
-          return SQ.AudioGenerator._parseSSEAudio(response);
-        })
-        .then(function (audioData) {
-          return SQ.AudioGenerator._extractAudioUrl(audioData);
+          return SQ.AudioGenerator._parseSSEPcm16(response);
         })
         .catch(function (err) {
           clearTimeout(timeoutId);
-          console.warn('AudioGenerator: generation failed, degrading to text-only.');
-          console.warn('  Model:', model);
+          console.warn('AudioGenerator: segment fetch failed.');
+          console.warn('  Voice:', voice);
           console.warn('  Error:', err.message || err);
-          if (err.code) console.warn('  Code:', err.code);
           return null;
         });
     },
 
     /**
-     * Parse an SSE stream response and accumulate the audio data.
-     * OpenRouter streams audio chunks in delta.audio.data (base64 segments).
-     * Returns a synthetic message object matching the non-streaming format.
+     * Parse an SSE stream response and return raw PCM16 bytes (Uint8Array).
      * @private
      */
-    _parseSSEAudio: function (response) {
+    _parseSSEPcm16: function (response) {
       var reader = response.body.getReader();
       var decoder = new TextDecoder();
       var buffer = '';
       var audioChunks = [];
-      var audioId = null;
 
       function processLines(text) {
         buffer += text;
         var lines = buffer.split('\n');
-        // Keep the last partial line in the buffer
         buffer = lines.pop() || '';
 
         for (var i = 0; i < lines.length; i++) {
@@ -136,12 +225,8 @@
             var delta = data.choices && data.choices[0] && data.choices[0].delta;
             if (!delta) continue;
 
-            // Accumulate audio data chunks
-            if (delta.audio) {
-              if (delta.audio.id) audioId = delta.audio.id;
-              if (delta.audio.data) {
-                audioChunks.push(delta.audio.data);
-              }
+            if (delta.audio && delta.audio.data) {
+              audioChunks.push(delta.audio.data);
             }
           } catch (e) {
             // Skip malformed SSE lines
@@ -152,7 +237,6 @@
       function read() {
         return reader.read().then(function (result) {
           if (result.done) {
-            // Process any remaining buffer
             if (buffer.trim()) processLines('\n');
             return;
           }
@@ -162,9 +246,7 @@
       }
 
       return read().then(function () {
-        if (audioChunks.length === 0) {
-          return null;
-        }
+        if (audioChunks.length === 0) return null;
 
         // Decode all base64 PCM16 chunks into a single Uint8Array
         var arrays = audioChunks.map(function (chunk) {
@@ -176,7 +258,6 @@
           return bytes;
         });
 
-        // Concatenate all chunks
         var totalLength = 0;
         for (var k = 0; k < arrays.length; k++) totalLength += arrays[k].length;
         var pcmData = new Uint8Array(totalLength);
@@ -186,9 +267,7 @@
           offset += arrays[m].length;
         }
 
-        // Wrap PCM16 data in a WAV container for HTML5 Audio playback
-        var wavBlob = SQ.AudioGenerator._pcm16ToWavBlob(pcmData, 24000);
-        return URL.createObjectURL(wavBlob);
+        return pcmData;
       });
     },
 
@@ -239,53 +318,6 @@
           dv.setUint8(off + i, str.charCodeAt(i));
         }
       }
-    },
-
-    /**
-     * Extract audio data URL from the API response.
-     * Handles non-streaming responses (fallback path).
-     * @private
-     */
-    _extractAudioUrl: function (response) {
-      if (!response) return null;
-
-      // If response is already an object URL from streaming path
-      if (typeof response === 'string' && response.indexOf('blob:') === 0) {
-        return response;
-      }
-
-      // Primary: msg.audio object (OpenRouter audio modality, non-streaming)
-      if (response.audio) {
-        if (response.audio.data) {
-          return 'data:audio/wav;base64,' + response.audio.data;
-        }
-        if (response.audio.url) {
-          return response.audio.url;
-        }
-      }
-
-      // Fallback: content array with audio blocks
-      var content = response.content || response;
-      if (Array.isArray(content)) {
-        for (var i = 0; i < content.length; i++) {
-          var block = content[i];
-          if (block.type === 'audio' && block.data) {
-            return 'data:audio/wav;base64,' + block.data;
-          }
-          if (block.type === 'audio_url' && block.audio_url && block.audio_url.url) {
-            return block.audio_url.url;
-          }
-        }
-      }
-
-      // Fallback: plain data URL
-      if (typeof content === 'string' && content.indexOf('data:audio') === 0) {
-        return content;
-      }
-
-      console.warn('AudioGenerator: could not extract audio from response',
-        JSON.stringify(response).slice(0, 200));
-      return null;
     },
 
     /**

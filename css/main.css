@@ -125,6 +125,23 @@ a {
   margin-top: var(--spacing-sm);
 }
 
+.character-voice-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.character-voice-row .card-label {
+  margin: 0;
+  flex: 1;
+}
+
+.character-voice-row select {
+  flex: 1;
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],

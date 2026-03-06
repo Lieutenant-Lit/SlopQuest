@@ -72,7 +72,18 @@
             <option value="custom">Custom model...</option>
           </select>
           <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
+
+          <label class="card-label" style="margin-top: var(--spacing-md)">Narrator Voice</label>
+          <select id="narrator-voice-select">
+            <!-- Populated dynamically from SQ.PlayerConfig.VOICES -->
+          </select>
         </div>
+      </div>
+
+      <div class="card hidden" id="character-voices-card">
+        <h2>Character Voices</h2>
+        <p>Assign a distinct voice to each NPC. The narrator voice is used for non-dialogue text.</p>
+        <div id="character-voices-list"></div>
       </div>
 
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>

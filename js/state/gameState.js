@@ -55,6 +55,7 @@
         current_choices: null,
         event_log: [],
         backstory_summary: '',
+        npc_voices: {},
         world_flags: {},
         last_passage: '',
         illustration_prompt: '',

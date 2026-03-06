@@ -70,6 +70,9 @@
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
       p += '  "passage": "string — the narrative passage, 150-300 words",\n';
+      p += '  "narration_segments": [\n';
+      p += '    { "speaker": "string|null — NPC name for dialogue lines, null for narrator prose", "text": "string — the text for this segment" }\n';
+      p += '  ],\n';
       p += '  "illustration_prompt": "string — a concise visual description of the key moment for image generation",\n';
       p += '  "state_updates": {\n';
       p += '    "player_changes": { "health": number, "resources": {...}, "inventory": [...], "status_effects": [...], "skills": [...] },\n';
@@ -107,6 +110,7 @@
       p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
+      p += '- narration_segments must break the passage into sequential pieces at dialogue boundaries. Each segment is either narrator prose (speaker: null) or a specific NPC\'s dialogue (speaker: NPC name). The concatenation of all segment texts must equal the full passage text. Dialogue attribution like "she says" goes in the narrator segment, the quoted speech goes in the character segment.\n';
 
       // Tier-specific passage rules
       if (difficulty === 'chill') {

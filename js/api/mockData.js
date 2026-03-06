@@ -159,6 +159,11 @@
   var PASSAGE_RESPONSES = [
     {
       passage: 'The gates of Thornwall loom before you, their iron teeth rusted but still menacing against the grey sky. Two guards in rain-soaked tabards eye your approach with suspicion. The taller one shifts his halberd across his chest — not quite a threat, but close enough.\n\n"State your business," he says. His eyes linger on the faded crest on your cloak. Recognition flickers across his face, followed quickly by contempt. "Wait. I know that sigil. You\'re the one they cast out three winters ago."\n\nThe shorter guard mutters something and reaches for the horn at his belt. Behind you, the road back to the moors stretches into fog. Inside the walls, you can hear the distant clang of a blacksmith and the murmur of a city that doesn\'t know how close it is to breaking.',
+      narration_segments: [
+        { speaker: null, text: 'The gates of Thornwall loom before you, their iron teeth rusted but still menacing against the grey sky. Two guards in rain-soaked tabards eye your approach with suspicion. The taller one shifts his halberd across his chest — not quite a threat, but close enough.' },
+        { speaker: null, text: '"State your business," he says. His eyes linger on the faded crest on your cloak. Recognition flickers across his face, followed quickly by contempt. "Wait. I know that sigil. You\'re the one they cast out three winters ago."' },
+        { speaker: null, text: 'The shorter guard mutters something and reaches for the horn at his belt. Behind you, the road back to the moors stretches into fog. Inside the walls, you can hear the distant clang of a blacksmith and the murmur of a city that doesn\'t know how close it is to breaking.' }
+      ],
       illustration_prompt: 'Dark ink illustration of a cloaked figure standing before imposing medieval city gates in the rain, two guards blocking the entrance, fog-shrouded moors behind, crosshatched style',
       state_updates: {
         current: {
@@ -192,6 +197,12 @@
     },
     {
       passage: 'The Rusted Lantern hasn\'t changed. Same warped floorboards, same smoke-blackened ceiling, same bartender with the same dead-eyed stare. What\'s new is the tension — every table holds a cluster of people speaking in low voices, hands near weapons.\n\nYou find Sera in the back corner, hood up, fingers wrapped around a cup of something that steams in the cold air. She looks up as you approach, and for a moment her expression cycles through surprise, anger, and something that might be relief.\n\n"Three years," she says. "Not a word, and you walk in now. Of course you do." She kicks out the chair across from her. "Sit. You\'ll want to hear this before someone less friendly finds you."',
+      narration_segments: [
+        { speaker: null, text: 'The Rusted Lantern hasn\'t changed. Same warped floorboards, same smoke-blackened ceiling, same bartender with the same dead-eyed stare. What\'s new is the tension — every table holds a cluster of people speaking in low voices, hands near weapons.\n\nYou find Sera in the back corner, hood up, fingers wrapped around a cup of something that steams in the cold air. She looks up as you approach, and for a moment her expression cycles through surprise, anger, and something that might be relief.' },
+        { speaker: 'Sera Blackwood', text: '"Three years. Not a word, and you walk in now. Of course you do."' },
+        { speaker: null, text: 'She kicks out the chair across from her.' },
+        { speaker: 'Sera Blackwood', text: '"Sit. You\'ll want to hear this before someone less friendly finds you."' }
+      ],
       illustration_prompt: 'Dark ink illustration of a tense tavern scene, hooded woman sitting alone in a corner booth, dim lantern light, medieval interior, crosshatched monochrome style',
       state_updates: {
         current: {
@@ -228,6 +239,11 @@
     },
     {
       passage: 'Captain Voss finds you before you find him. You\'re crossing the market square when a gauntleted hand closes on your shoulder and spins you around. His face is older, harder, a fresh scar running from temple to jaw — but the eyes are the same cold blue.\n\n"I should arrest you on sight," he says, voice flat as iron. "Give me one reason not to." Behind him, three royal guards form a loose semicircle. Hands on pommels. The market goes quiet around you, vendors suddenly fascinated by their own wares.\n\nRain drips from the eaves. Somewhere a dog barks. Voss waits, and you can tell — he genuinely hasn\'t decided what to do with you yet.',
+      narration_segments: [
+        { speaker: null, text: 'Captain Voss finds you before you find him. You\'re crossing the market square when a gauntleted hand closes on your shoulder and spins you around. His face is older, harder, a fresh scar running from temple to jaw — but the eyes are the same cold blue.' },
+        { speaker: 'Captain Aldren Voss', text: '"I should arrest you on sight. Give me one reason not to."' },
+        { speaker: null, text: 'Behind him, three royal guards form a loose semicircle. Hands on pommels. The market goes quiet around you, vendors suddenly fascinated by their own wares.\n\nRain drips from the eaves. Somewhere a dog barks. Voss waits, and you can tell — he genuinely hasn\'t decided what to do with you yet.' }
+      ],
       illustration_prompt: 'Dark ink illustration of an armored guard captain confronting a figure in a medieval market square, soldiers behind him, tense standoff, rain, crosshatched woodcut style',
       state_updates: {
         current: {
@@ -264,6 +280,14 @@
     },
     {
       passage: 'The cathedral library smells of dust and secrets. The Archivist moves between shelves that reach into darkness above, pulling volumes with the surety of someone who knows every page by heart. Their robes whisper against the stone floor.\n\n"You want to know about the crown," they say. It isn\'t a question. "Everyone does, eventually. The difference is what you\'re willing to pay for the knowledge."\n\nThey set three items on the reading table: a sealed scroll, a vial of something dark and viscous, and a key so old it seems to be made of compressed rust.\n\n"Each of these contains a piece of the answer. The scroll is the history — what the crown was made to do. The vial is the proof — what it\'s doing now. The key opens the place where it all began." They fold their hands. "I\'ll give you one freely. The other two will cost you."',
+      narration_segments: [
+        { speaker: null, text: 'The cathedral library smells of dust and secrets. The Archivist moves between shelves that reach into darkness above, pulling volumes with the surety of someone who knows every page by heart. Their robes whisper against the stone floor.' },
+        { speaker: 'The Archivist', text: '"You want to know about the crown. Everyone does, eventually. The difference is what you\'re willing to pay for the knowledge."' },
+        { speaker: null, text: 'They set three items on the reading table: a sealed scroll, a vial of something dark and viscous, and a key so old it seems to be made of compressed rust.' },
+        { speaker: 'The Archivist', text: '"Each of these contains a piece of the answer. The scroll is the history — what the crown was made to do. The vial is the proof — what it\'s doing now. The key opens the place where it all began."' },
+        { speaker: null, text: 'They fold their hands.' },
+        { speaker: 'The Archivist', text: '"I\'ll give you one freely. The other two will cost you."' }
+      ],
       illustration_prompt: 'Dark ink illustration of a robed figure in a vast cathedral library, three mysterious objects on an ancient reading table, candlelight, towering bookshelves, crosshatched monochrome',
       state_updates: {
         current: {

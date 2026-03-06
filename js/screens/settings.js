@@ -78,6 +78,18 @@
         }
       });
 
+      // Narrator voice dropdown — populate from VOICES constant
+      var voiceSelect = document.getElementById('narrator-voice-select');
+      SQ.PlayerConfig.VOICES.forEach(function (v) {
+        var opt = document.createElement('option');
+        opt.value = v.id;
+        opt.textContent = v.label;
+        voiceSelect.appendChild(opt);
+      });
+      voiceSelect.addEventListener('change', function () {
+        SQ.PlayerConfig.setNarratorVoice(this.value);
+      });
+
       // Save & continue to main menu
       document.getElementById('btn-save-settings').addEventListener('click', function () {
         SQ.showScreen('mainmenu');
@@ -162,6 +174,53 @@
         var audioCustomInput = document.getElementById('audio-model-custom-input');
         audioCustomInput.classList.remove('hidden');
         audioCustomInput.value = currentAudioModel;
+      }
+
+      // Set narrator voice selector to current value
+      var voiceSelect = document.getElementById('narrator-voice-select');
+      voiceSelect.value = SQ.PlayerConfig.getNarratorVoice();
+
+      // Character voices — show when a game is active with NPCs and narration enabled
+      var charCard = document.getElementById('character-voices-card');
+      var charList = document.getElementById('character-voices-list');
+      var gameState = SQ.GameState.get();
+
+      if (gameState && gameState.skeleton && gameState.skeleton.npcs &&
+          gameState.skeleton.npcs.length > 0 && SQ.PlayerConfig.isNarrationEnabled()) {
+        charCard.classList.remove('hidden');
+        charList.innerHTML = '';
+
+        gameState.skeleton.npcs.forEach(function (npc) {
+          var row = document.createElement('div');
+          row.className = 'character-voice-row';
+
+          var label = document.createElement('label');
+          label.className = 'card-label';
+          label.textContent = npc.name;
+
+          var sel = document.createElement('select');
+          SQ.PlayerConfig.VOICES.forEach(function (v) {
+            var opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.label;
+            if (gameState.npc_voices && gameState.npc_voices[npc.name] === v.id) {
+              opt.selected = true;
+            }
+            sel.appendChild(opt);
+          });
+
+          sel.addEventListener('change', function () {
+            if (!gameState.npc_voices) gameState.npc_voices = {};
+            gameState.npc_voices[npc.name] = this.value;
+            SQ.GameState.save();
+          });
+
+          row.appendChild(label);
+          row.appendChild(sel);
+          charList.appendChild(row);
+        });
+      } else {
+        charCard.classList.add('hidden');
       }
 
       // Reset validation status

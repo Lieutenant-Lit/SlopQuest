@@ -6,6 +6,20 @@
   var STORAGE_KEY = 'slopquest_player_config';
   var MOCK_KEY = 'slopquest_mock_mode';
 
+  var VOICES = [
+    { id: 'alloy',   label: 'Alloy (neutral)' },
+    { id: 'ash',     label: 'Ash (warm)' },
+    { id: 'ballad',  label: 'Ballad (expressive)' },
+    { id: 'coral',   label: 'Coral (soft)' },
+    { id: 'echo',    label: 'Echo (deep)' },
+    { id: 'fable',   label: 'Fable (storyteller)' },
+    { id: 'onyx',    label: 'Onyx (authoritative)' },
+    { id: 'nova',    label: 'Nova (bright)' },
+    { id: 'sage',    label: 'Sage (calm)' },
+    { id: 'shimmer', label: 'Shimmer (gentle)' },
+    { id: 'verse',   label: 'Verse (versatile)' }
+  ];
+
   var DEFAULT_CONFIG = {
     openrouter_api_key: '',
     models: {
@@ -16,7 +30,8 @@
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
-    narration_enabled: false
+    narration_enabled: false,
+    narrator_voice: 'alloy'
   };
 
   // Mock mode flag — default true for development
@@ -142,6 +157,28 @@
     setNarrationEnabled: function (enabled) {
       var config = this.load();
       config.narration_enabled = !!enabled;
+      this.save(config);
+    },
+
+    /**
+     * Available TTS voices for narrator and NPC assignment.
+     */
+    VOICES: VOICES,
+
+    /**
+     * Get the narrator voice ID.
+     */
+    getNarratorVoice: function () {
+      var config = this.load();
+      return config.narrator_voice || DEFAULT_CONFIG.narrator_voice;
+    },
+
+    /**
+     * Set the narrator voice ID.
+     */
+    setNarratorVoice: function (voiceId) {
+      var config = this.load();
+      config.narrator_voice = voiceId;
       this.save(config);
     }
   };

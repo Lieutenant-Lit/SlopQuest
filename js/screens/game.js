@@ -248,7 +248,11 @@
         // over visible text per design doc Section 5 progressive rendering order.
         if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
           SQ.AudioGenerator.hideControls();
-          SQ.AudioGenerator.generate(response.passage).then(function (audioUrl) {
+          SQ.AudioGenerator.generate(
+            response.passage,
+            response.narration_segments || null,
+            state.npc_voices
+          ).then(function (audioUrl) {
             if (audioUrl) {
               state.narration_audio_url = audioUrl;
               SQ.AudioGenerator.showControls();
