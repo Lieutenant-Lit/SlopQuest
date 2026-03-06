@@ -37,6 +37,24 @@
         SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
       });
 
+      // Image model selection
+      document.getElementById('image-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('image-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('image', this.value);
+        }
+      });
+
+      document.getElementById('image-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('image', this.value.trim());
+        }
+      });
+
       // Save & continue to main menu
       document.getElementById('btn-save-settings').addEventListener('click', function () {
         SQ.showScreen('mainmenu');
@@ -82,6 +100,24 @@
       // Set illustrations toggle state
       document.getElementById('settings-illustrations-toggle').checked =
         SQ.PlayerConfig.isIllustrationsEnabled();
+
+      // Set image model selector to current value
+      var currentImageModel = SQ.PlayerConfig.getModel('image');
+      var imageSelect = document.getElementById('image-model-select');
+      var imageFound = false;
+      for (var j = 0; j < imageSelect.options.length; j++) {
+        if (imageSelect.options[j].value === currentImageModel) {
+          imageSelect.selectedIndex = j;
+          imageFound = true;
+          break;
+        }
+      }
+      if (!imageFound && currentImageModel) {
+        imageSelect.value = 'custom';
+        var imageCustomInput = document.getElementById('image-model-custom-input');
+        imageCustomInput.classList.remove('hidden');
+        imageCustomInput.value = currentImageModel;
+      }
 
       // Reset validation status
       var status = document.getElementById('key-status');

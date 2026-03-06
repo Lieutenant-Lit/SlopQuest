@@ -43,28 +43,41 @@
     APIError: APIError,
 
     /**
-     * Active AbortController for the current call.
-     * Callers can abort via SQ.API.abort().
+     * Set of active AbortControllers keyed by a unique call ID.
+     * Supports multiple parallel in-flight calls (e.g., text + image).
      */
-    _controller: null,
+    _controllers: {},
+
+    /** Auto-incrementing call ID for tracking controllers. */
+    _nextCallId: 1,
 
     /**
      * Make a chat completion call to OpenRouter.
      * Auto-retries once on 429 rate limit after a 10s delay.
      * @param {string} model - Model ID (e.g., 'anthropic/claude-sonnet-4')
      * @param {Array} messages - Array of { role, content } message objects
-     * @param {object} [options] - Additional options (temperature, max_tokens, timeout, etc.)
-     * @returns {Promise<string>} Raw response content string
+     * @param {object} [options] - Additional options (temperature, max_tokens, timeout, modalities, etc.)
+     * @returns {Promise<object>} Parsed response message object
      */
     call: function (model, messages, options) {
-      return this._callWithRetry(model, messages, options, 0);
+      var callId = this._nextCallId++;
+      var self = this;
+      return this._callWithRetry(model, messages, options, 0, callId)
+        .then(function (result) {
+          delete self._controllers[callId];
+          return result;
+        })
+        .catch(function (err) {
+          delete self._controllers[callId];
+          throw err;
+        });
     },
 
     /**
      * Internal call with 429 retry logic.
      * @private
      */
-    _callWithRetry: function (model, messages, options, retryCount) {
+    _callWithRetry: function (model, messages, options, retryCount, callId) {
       var self = this;
       var apiKey = SQ.PlayerConfig.getApiKey();
       if (!apiKey) {
@@ -77,7 +90,7 @@
       options = options || {};
       var timeout = options.timeout || TIMEOUT_MS;
       var controller = new AbortController();
-      this._controller = controller;
+      this._controllers[callId] = controller;
       var timeoutId = setTimeout(function () { controller.abort(); }, timeout);
 
       var body = {
@@ -102,7 +115,6 @@
       })
         .then(function (response) {
           clearTimeout(timeoutId);
-          self._controller = null;
 
           if (response.status === 401 || response.status === 403) {
             throw new APIError(
@@ -122,7 +134,7 @@
               return new Promise(function (resolve) {
                 setTimeout(resolve, RATE_LIMIT_DELAY_MS);
               }).then(function () {
-                return self._callWithRetry(model, messages, options, retryCount + 1);
+                return self._callWithRetry(model, messages, options, retryCount + 1, callId);
               });
             }
             throw new APIError(
@@ -154,17 +166,21 @@
           }
           var msg = data.choices[0].message;
 
-          // Image modality: look for image content in multipart response
+          // Return the full message for image callers (they need msg.images).
+          // Text callers expect a string, so return content if no images present.
+          if (msg.images && msg.images.length > 0) {
+            return msg;
+          }
+
+          // Multipart content array (some models return this)
           if (Array.isArray(msg.content)) {
-            // Multipart content — return the full array for callers to parse
-            return msg.content;
+            return msg;
           }
 
           return msg.content;
         })
         .catch(function (err) {
           clearTimeout(timeoutId);
-          self._controller = null;
 
           // Already a typed APIError — rethrow
           if (err instanceof APIError) throw err;
@@ -185,14 +201,17 @@
     },
 
     /**
-     * Abort the current in-flight API call, if any.
-     * Safe to call even if no call is active.
+     * Abort all in-flight API calls.
+     * Safe to call even if no calls are active.
      */
     abort: function () {
-      if (this._controller) {
-        this._controller.abort();
-        this._controller = null;
+      var controllers = this._controllers;
+      for (var id in controllers) {
+        if (controllers.hasOwnProperty(id) && controllers[id]) {
+          controllers[id].abort();
+        }
       }
+      this._controllers = {};
     },
 
     /**

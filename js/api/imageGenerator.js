@@ -35,13 +35,13 @@
       ];
 
       return SQ.API.call(model, messages, {
-        modalities: ['image'],
+        modalities: ['image', 'text'],
         temperature: 0.8,
         max_tokens: 1024,
         timeout: IMAGE_TIMEOUT_MS
       })
-        .then(function (content) {
-          return SQ.ImageGenerator._extractImageUrl(content);
+        .then(function (response) {
+          return SQ.ImageGenerator._extractImageUrl(response);
         })
         .catch(function (err) {
           // Graceful degradation: log and return null, never block the game
@@ -81,27 +81,36 @@
 
     /**
      * Extract image data from the API response.
-     * OpenRouter image modality returns content as either a base64 data URL
-     * string or a structured content block with type "image".
+     * OpenRouter returns images in message.images array:
+     *   { images: [{ type: "image_url", image_url: { url: "data:image/png;base64,..." } }] }
+     * Also handles multipart content arrays and plain string URLs as fallbacks.
      * @private
      */
-    _extractImageUrl: function (content) {
-      if (!content) return null;
+    _extractImageUrl: function (response) {
+      if (!response) return null;
 
-      // If content is a string that starts with data:, it's already a data URL
-      if (typeof content === 'string' && content.indexOf('data:') === 0) {
-        return content;
+      // Primary path: OpenRouter image modality returns msg.images array
+      if (response.images && Array.isArray(response.images)) {
+        for (var i = 0; i < response.images.length; i++) {
+          var img = response.images[i];
+          if (img.type === 'image_url' && img.image_url && img.image_url.url) {
+            return img.image_url.url;
+          }
+          // Some models may return raw base64
+          if (img.data) {
+            return 'data:image/png;base64,' + img.data;
+          }
+          if (img.url) {
+            return img.url;
+          }
+        }
       }
 
-      // If content is a string URL
-      if (typeof content === 'string' && content.indexOf('http') === 0) {
-        return content;
-      }
-
-      // OpenRouter may return content as an array of content blocks
+      // Fallback: content may be a multipart array with image blocks
+      var content = response.content || response;
       if (Array.isArray(content)) {
-        for (var i = 0; i < content.length; i++) {
-          var block = content[i];
+        for (var j = 0; j < content.length; j++) {
+          var block = content[j];
           if (block.type === 'image_url' && block.image_url && block.image_url.url) {
             return block.image_url.url;
           }
@@ -111,14 +120,14 @@
         }
       }
 
-      // If content is an object with image data
-      if (typeof content === 'object' && content !== null) {
-        if (content.url) return content.url;
-        if (content.data) return 'data:image/png;base64,' + content.data;
-        if (content.image_url && content.image_url.url) return content.image_url.url;
+      // Fallback: plain string data URL or HTTP URL
+      if (typeof content === 'string') {
+        if (content.indexOf('data:') === 0 || content.indexOf('http') === 0) {
+          return content;
+        }
       }
 
-      console.warn('ImageGenerator: could not extract image from response', typeof content);
+      console.warn('ImageGenerator: could not extract image from response', JSON.stringify(response).slice(0, 200));
       return null;
     },
 

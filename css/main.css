@@ -117,6 +117,14 @@ a {
   color: var(--color-text-muted);
 }
 
+.card-label {
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-sm);
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],
