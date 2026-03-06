@@ -58,9 +58,13 @@
       p += 'DIFFICULTY: ' + diffConfig.label + '\n';
       p += '- Safe choice ratio: ' + diffConfig.safe_choice_ratio + '\n';
       p += '- Consequence severity: ' + diffConfig.consequence_severity + '\n';
+      p += '- Resource abundance: ' + diffConfig.resource_abundance + '\n';
       p += '- Game over allowed: ' + diffConfig.allow_game_over + '\n';
       p += '- Hint transparency: ' + diffConfig.hint_transparency + '\n';
-      p += '- NPC forgiveness: ' + diffConfig.npc_forgiveness + '\n\n';
+      p += '- NPC forgiveness: ' + diffConfig.npc_forgiveness + '\n';
+      p += '- Max health penalty per turn: ' + diffConfig.max_health_penalty + '\n';
+      p += '- Health floor: ' + diffConfig.health_floor + ' (never reduce health below this except on death)\n';
+      p += '- Resource drain rate: ' + diffConfig.resource_drain_rate + '\n\n';
 
       // Response JSON schema
       p += 'Respond with this exact JSON structure:\n';
@@ -104,9 +108,52 @@
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
 
-      if (isHardOrBrutal) {
-        p += '- Include outcome, consequence, and narration_directive on every choice (Hard/Brutal mode)\n';
-        p += '- Maintain the safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
+      // Tier-specific passage rules
+      if (difficulty === 'chill') {
+        p += '\nCHILL MODE RULES (MANDATORY):\n';
+        p += '- NEVER set game_over to true. The player cannot die on Chill.\n';
+        p += '- NEVER reduce health below ' + diffConfig.health_floor + '. If a consequence would reduce health below ' + diffConfig.health_floor + ', clamp it to ' + diffConfig.health_floor + '.\n';
+        p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points\n';
+        p += '- Consequences are mild: lost items, delayed progress, NPC annoyance — never life-threatening\n';
+        p += '- Include at least 3 clearly safe choices out of 4. The "risky" choice should have minor consequences at most.\n';
+        p += '- Resources are generous. Include opportunities to gain gold/provisions regularly.\n';
+        p += '- When resources run low, have NPCs offer help or make resources easy to find.\n';
+        p += '- Hints should be obvious. If a choice is suboptimal, make the warning clear in the choice text.\n';
+        p += '- NPCs are forgiving. Even if the player makes mistakes, NPCs come around quickly.\n';
+      } else if (difficulty === 'normal') {
+        p += '\nNORMAL MODE RULES (MANDATORY):\n';
+        p += '- NEVER set game_over to true. The player cannot die on Normal.\n';
+        p += '- NEVER reduce health below ' + diffConfig.health_floor + '. Clamp health to ' + diffConfig.health_floor + ' minimum.\n';
+        p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points\n';
+        p += '- Consequences are meaningful but recoverable: health loss, resource costs, relationship damage\n';
+        p += '- Approximately 2 safe and 2 risky choices per turn. Risky choices should have bigger rewards.\n';
+        p += '- Resources drain at a moderate rate. Include periodic opportunities to gain resources.\n';
+        p += '- Hints are moderate: choice text should give reasonable context without spelling out outcomes.\n';
+        p += '- NPCs can be upset but always have a path to reconciliation.\n';
+      } else if (difficulty === 'hard') {
+        p += '\nHARD MODE RULES (MANDATORY):\n';
+        p += '- Include outcome, consequence, and narration_directive on every choice\n';
+        p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
+        p += '- Death is possible but MUST be foreshadowed. If a choice is lethal, there should have been clues in earlier passages.\n';
+        p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points (except for death outcomes)\n';
+        p += '- Resources are scarce. Gaining resources should require effort or trade-offs.\n';
+        p += '- Pending consequences escalate fast: 1-2 scenes before they trigger.\n';
+        p += '- Hints are subtle: the information is available but not highlighted. Attentive players will see the warnings.\n';
+        p += '- NPCs have low forgiveness. Burning a relationship has lasting mechanical consequences.\n';
+        p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
+      } else if (difficulty === 'brutal') {
+        p += '\nBRUTAL MODE RULES (MANDATORY):\n';
+        p += '- Include outcome, consequence, and narration_directive on every choice\n';
+        p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
+        p += '- At most 1 clearly safe choice per turn. At least 1 choice should be lethal or severely punishing.\n';
+        p += '- Health penalties are large: ' + diffConfig.max_health_penalty + ' point maximum. A bad choice can kill from full health.\n';
+        p += '- Resources drain aggressively. Every passage should cost something — provisions, gold, health, or relationships.\n';
+        p += '- Pending consequences trigger immediately (0-1 scenes). No grace period.\n';
+        p += '- Hints are cryptic. The player must interpret subtle clues from world state, NPC behavior, and earlier events.\n';
+        p += '- Some death choices should appear safe. Use trap logic — the "obvious" safe choice is actually the lethal one.\n';
+        p += '- Death narration must be vivid and final. No softening, no "barely survived", no last-minute saves.\n';
+        p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
+        p += '- Create cascading danger: if the player is already wounded or low on resources, make the situation worse, not easier.\n';
       }
 
       return p;

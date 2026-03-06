@@ -97,15 +97,65 @@
       p += '- Recovery paths: ' + difficulty.recovery_paths + '\n';
       p += '- NPC forgiveness: ' + difficulty.npc_forgiveness + '\n\n';
 
-      // Brutal-specific constraints
-      if (setupConfig.difficulty === 'brutal') {
+      // Tier-specific skeleton constraints
+      if (setupConfig.difficulty === 'chill') {
+        p += 'CHILL DIFFICULTY SKELETON REQUIREMENTS:\n';
+        p += '- The skeleton must NEVER include death states, lethal outcomes, or game_over triggers\n';
+        p += '- All choices should lead to interesting story developments, not punishments\n';
+        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never health-threatening\n';
+        p += '- NPCs should be generally helpful or at worst inconvenient — no genuinely hostile NPCs that threaten the player\n';
+        p += '- Resources should be plentiful and easy to acquire. Include opportunities to gain resources in most scenes\n';
+        p += '- Locked constraints should protect the player from accidentally entering dangerous situations\n';
+        p += '- The key_beats should focus on discovery, relationships, and narrative progression — not survival\n\n';
+      } else if (setupConfig.difficulty === 'normal') {
+        p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
+        p += '- The skeleton must NOT include death states or game_over triggers\n';
+        p += '- Consequences should be meaningful but recoverable — health loss (never below 10), resource drain, relationship damage\n';
+        p += '- Include both safe and risky choices. Risky choices should have bigger rewards but real mechanical costs\n';
+        p += '- NPCs can be hostile but should offer paths to resolution or avoidance\n';
+        p += '- Include some resource scarcity but also reliable ways to recover resources\n';
+        p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
+      } else if (setupConfig.difficulty === 'hard') {
+        p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
+        p += '- Death is possible but rare: include at most 1 lethal choice per act\n';
+        p += '- Lethal choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
+        p += '- Include severe consequences: major health loss (up to 50), resource depletion, permanent NPC hostility\n';
+        p += '- Resources are scarce. Gaining resources should require risky choices or NPC favors\n';
+        p += '- Pending consequences should escalate quickly (1-2 scenes) and hit hard when they trigger\n';
+        p += '- Recovery paths exist but require sacrifice — healing costs resources, alliances cost favors\n';
+        p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
+      } else if (setupConfig.difficulty === 'brutal') {
         p += 'BRUTAL DIFFICULTY REQUIREMENTS:\n';
         p += '- At least 40% of choices across each act must have outcome DEATH or SEVERE_PENALTY\n';
         p += '- At least one game_over state must exist per act\n';
         p += '- No scene may have more than two advance_safe options\n';
         p += '- At least one death per act must be non-obvious (requires interpreting earlier clues)\n';
-        p += '- Create genuine trap logic — choices that SOUND safe but are lethal based on earlier context the player may not have noticed\n\n';
+        p += '- Create genuine trap logic — choices that SOUND safe but are lethal based on earlier context the player may not have noticed\n';
+        p += '- Resources are desperately scarce. Starting with almost nothing, gaining resources is rare and costly\n';
+        p += '- Consequences are immediate and severe. Pending consequences trigger within 0-1 scenes\n';
+        p += '- NPCs never forgive. A single wrong move with an NPC should permanently close that relationship\n';
+        p += '- Health penalties should be large (30-100). A bad choice can kill from full health\n';
+        p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';
       }
+
+      // Length × Difficulty interaction
+      p += 'LENGTH × DIFFICULTY INTERACTION (' + storyLength.label + ' + ' + difficulty.label + '):\n';
+      if (setupConfig.storyLength === 'short') {
+        if (setupConfig.difficulty === 'brutal') {
+          p += '- Short + Brutal = a deadly sprint. Nearly every choice matters. Pack maximum danger into few turns.\n';
+        } else {
+          p += '- Short story: keep the plot focused and tight. Every scene should advance the central question.\n';
+        }
+      } else if (setupConfig.storyLength === 'long') {
+        if (setupConfig.difficulty === 'brutal' || setupConfig.difficulty === 'hard') {
+          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns. Resource management is critical.\n';
+        } else {
+          p += '- Long story: develop subplots, deepen NPC relationships, let consequences play out over many scenes.\n';
+        }
+      } else {
+        p += '- Medium length: balance pacing with depth. Enough room for subplots but keep the main arc tight.\n';
+      }
+      p += '\n';
 
       // Final requirements
       p += 'The skeleton must have:\n';

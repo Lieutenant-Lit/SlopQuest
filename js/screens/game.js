@@ -322,8 +322,21 @@
       state.illustration_prompt = response.illustration_prompt || '';
       state.current.scene_number = (state.current.scene_number || 0) + 1;
 
+      // 10b. Enforce difficulty health floor (client-side safety net)
+      // Don't trust the LLM to respect the floor — enforce it mechanically.
+      var diffKey = (state.meta && state.meta.difficulty) || 'normal';
+      var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
+      if (!diffConfig.allow_game_over && state.player.health < diffConfig.health_floor) {
+        state.player.health = diffConfig.health_floor;
+      }
+
+      // 10c. Prevent game_over on difficulties that don't allow it
+      if (!diffConfig.allow_game_over) {
+        updates.game_over = false;
+      }
+
       // 11. Check for game over or story complete
-      var isGameOver = updates.game_over || (state.player.health <= 0);
+      var isGameOver = updates.game_over || (diffConfig.allow_game_over && state.player.health <= 0);
       var isStoryComplete = updates.story_complete;
 
       if (isGameOver) {

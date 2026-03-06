@@ -13,6 +13,10 @@
      * Create a new game state from setup configuration.
      */
     create: function (setupConfig) {
+      var diffKey = setupConfig.difficulty || 'normal';
+      var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
+      var startResources = diffConfig.starting_resources || { gold: 10, provisions: 5 };
+
       this._current = {
         meta: {
           title: '',
@@ -21,7 +25,7 @@
           writing_style: setupConfig.writingStyle || '',
           perspective: setupConfig.perspective || 'second person',
           tense: setupConfig.tense || 'present',
-          difficulty: setupConfig.difficulty || 'normal',
+          difficulty: diffKey,
           story_length: setupConfig.storyLength || 'medium'
         },
         skeleton: null, // populated after skeleton generation
@@ -30,8 +34,8 @@
           archetype: setupConfig.archetype || '',
           health: 100,
           resources: {
-            gold: 10,
-            provisions: 5
+            gold: startResources.gold,
+            provisions: startResources.provisions
           },
           inventory: [],
           status_effects: [],
