@@ -83,20 +83,31 @@
      * @private
      */
     _save: function () {
+      // Strip base64 image data from snapshots before persisting —
+      // images are large (~100KB+ each) and regenerable, not worth burning localStorage quota.
+      var lightweight = stack.map(function (entry) {
+        if (entry.state && entry.state.illustration_image_url) {
+          var clone = JSON.parse(JSON.stringify(entry));
+          delete clone.state.illustration_image_url;
+          return clone;
+        }
+        return entry;
+      });
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stack));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweight));
       } catch (e) {
-        // localStorage full — drop oldest entries until it fits
-        console.warn('HistoryStack: localStorage save failed, trimming oldest entries', e);
-        while (stack.length > 1) {
+        // localStorage still full — drop oldest entries until it fits
+        while (lightweight.length > 1) {
+          lightweight.shift();
           stack.shift();
           try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(stack));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweight));
             return;
           } catch (e2) {
             // keep trimming
           }
         }
+        console.warn('HistoryStack: localStorage save failed after trimming', e);
       }
     },
 
