@@ -83,50 +83,9 @@
      * @private
      */
     _repairSegments: function (passageText, segments) {
-      // Quick check: does concatenating segment texts match the passage?
-      var concat = '';
-      for (var i = 0; i < segments.length; i++) {
-        concat += segments[i].text;
-      }
-
-      // Check for lumped dialogue first — a dialogue segment with narrator
-      // attribution between quotes needs splitting regardless of text match.
-      var needsRepair = false;
-      for (var j = 0; j < segments.length; j++) {
-        if (segments[j].speaker) {
-          var text = segments[j].text;
-          // Count how many separate quoted strings are in this segment
-          var quoteCount = (text.match(/"[^"]*"/g) || []).length;
-          // Check for significant non-quote text (narrator prose mixed in)
-          var stripped = text.replace(/"[^"]*"/g, '').replace(/\s+/g, ' ').trim();
-          // Lumped if: multiple quotes with narrator text between them,
-          // or a single quote with a lot of non-quote text
-          if (quoteCount > 1 && stripped.length > 10) {
-            needsRepair = true;
-            break;
-          }
-        }
-      }
-
-      // If segments look structurally fine, check text completeness.
-      // Use a lenient comparison — only repair if significant text is missing.
-      if (!needsRepair) {
-        var normalPass = passageText.replace(/\s+/g, ' ').trim();
-        var normalConcat = concat.replace(/\s+/g, ' ').trim();
-        // Allow minor differences (whitespace, trailing punctuation, etc.)
-        // Only repair if more than 5% of the passage text is missing
-        if (normalConcat.length >= normalPass.length * 0.95) {
-          return segments;
-        }
-        // Significant text missing — need repair
-        needsRepair = true;
-      }
-
-      if (!needsRepair) return segments;
-
-      console.log('AudioGenerator: repairing malformed narration_segments');
-
-      // Build a speaker map from the LLM's segments — maps quoted text to speakers
+      // Extract speaker hints from the LLM segments — maps quoted text to speakers.
+      // This is all we use from the LLM segments; the passage text is always the
+      // source of truth for segment boundaries and ordering.
       var speakerHints = {};
       for (var k = 0; k < segments.length; k++) {
         if (segments[k].speaker) {
@@ -139,6 +98,9 @@
         }
       }
 
+      // Always re-parse from passage text. LLM segments frequently contain
+      // phantom text, re-ordered lines, or lumped dialogue that cause audio
+      // to play lines that don't exist or in the wrong order.
       return this._parsePassageIntoSegments(passageText, speakerHints);
     },
 
