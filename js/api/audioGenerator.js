@@ -846,6 +846,7 @@
 
       this.stop();
       _audio = new Audio(audioUrl);
+      _audio.playbackRate = SQ.PlayerConfig.getNarrationSpeed();
       _isPlaying = true;
 
       _audio.addEventListener('ended', function () {

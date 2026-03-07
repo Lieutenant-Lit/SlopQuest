@@ -1031,7 +1031,31 @@ select:focus {
 
 .debug-dialogue {
   display: inline;
-  border-radius: 2px;
+  border-radius: 3px;
+  padding: 1px 0;
+  font-weight: 500;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ===== SPEED CONTROL ===== */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.speed-control input[type="range"] {
+  flex: 1;
+  accent-color: var(--color-accent);
+}
+
+.speed-value {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 2.5em;
+  text-align: center;
 }
 
 /* ===== DESKTOP ===== */

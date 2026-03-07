@@ -81,6 +81,12 @@
           </select>
           <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: var(--spacing-xs);">Voice profile is auto-generated to match your story's setting and tone.</p>
 
+          <label class="card-label" style="margin-top: var(--spacing-md)">Voice Speed</label>
+          <div class="speed-control">
+            <input type="range" id="narration-speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+            <span id="narration-speed-value" class="speed-value">1.0x</span>
+          </div>
+
           <label class="setup-toggle" style="margin-top: var(--spacing-md)">
             <input type="checkbox" id="settings-narration-debug-toggle">
             <span>Narration debug</span>

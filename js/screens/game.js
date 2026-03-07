@@ -297,7 +297,7 @@
 
         var color = speaker ? (colorMap[speaker] || '#666') : null;
         if (color) {
-          html += '<span class="debug-dialogue" style="background:' + color + '22;border-left:3px solid ' + color + ';padding-left:4px">'
+          html += '<span class="debug-dialogue" style="background:' + color + '40;border-left:3px solid ' + color + ';padding-left:4px;padding-right:2px">'
             + this._escHtml(quoteText) + '</span>';
         } else {
           html += this._escHtml(quoteText);

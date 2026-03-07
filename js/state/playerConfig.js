@@ -32,6 +32,7 @@
     illustrations_enabled: false,
     narration_enabled: false,
     narrator_gender: 'masculine',
+    narration_speed: 1.0,
     narration_debug: false
   };
 
@@ -180,6 +181,25 @@
     setNarrationDebug: function (enabled) {
       var config = this.load();
       config.narration_debug = !!enabled;
+      this.save(config);
+    },
+
+    /**
+     * Get narration playback speed (0.5 to 2.0).
+     */
+    getNarrationSpeed: function () {
+      var config = this.load();
+      var speed = config.narration_speed;
+      if (typeof speed !== 'number' || speed < 0.5 || speed > 2.0) return 1.0;
+      return speed;
+    },
+
+    /**
+     * Set narration playback speed.
+     */
+    setNarrationSpeed: function (speed) {
+      var config = this.load();
+      config.narration_speed = Math.max(0.5, Math.min(2.0, parseFloat(speed) || 1.0));
       this.save(config);
     },
 

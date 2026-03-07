@@ -83,6 +83,16 @@
         SQ.PlayerConfig.setNarratorGender(this.value);
       });
 
+      // Voice speed slider
+      var speedSlider = document.getElementById('narration-speed-slider');
+      var speedValue = document.getElementById('narration-speed-value');
+      speedSlider.addEventListener('input', function () {
+        speedValue.textContent = parseFloat(this.value).toFixed(1) + 'x';
+      });
+      speedSlider.addEventListener('change', function () {
+        SQ.PlayerConfig.setNarrationSpeed(parseFloat(this.value));
+      });
+
       // Narration debug toggle
       document.getElementById('settings-narration-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setNarrationDebug(this.checked);
@@ -177,6 +187,11 @@
       // Set narrator gender selector
       document.getElementById('narrator-gender-select').value =
         SQ.PlayerConfig.getNarratorGender();
+
+      // Set voice speed slider
+      var savedSpeed = SQ.PlayerConfig.getNarrationSpeed();
+      document.getElementById('narration-speed-slider').value = savedSpeed;
+      document.getElementById('narration-speed-value').textContent = savedSpeed.toFixed(1) + 'x';
 
       // Set narration debug toggle
       document.getElementById('settings-narration-debug-toggle').checked =
