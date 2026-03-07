@@ -243,18 +243,9 @@
         self.hideLoading();
         self.applyResponse(state, response);
 
-        // Fire Audio Director for full-cast narration (parallel with image).
-        // Text is already rendered by applyResponse → renderState, so audio plays
-        // over visible text per design doc Section 5 progressive rendering order.
+        // Queue Audio Director for on-demand narration (user clicks play to generate).
         if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
-          SQ.AudioDirector.hideControls();
-          SQ.AudioDirector.generate(response.passage, state).then(function (success) {
-            if (success) {
-              state.narration_audio_url = 'active';
-            } else {
-              SQ.AudioDirector.hideControls();
-            }
-          });
+          SQ.AudioDirector.prepareForPassage(response.passage, state);
         } else {
           SQ.AudioDirector.stop();
           SQ.AudioDirector.hideControls();

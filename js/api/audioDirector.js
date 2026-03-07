@@ -33,6 +33,10 @@
   /** Abort controller for in-flight generation. */
   var _abortController = null;
 
+  /** On-demand generation: passage queued but not yet generated. */
+  var _pendingPassage = null;
+  var _pendingGameState = null;
+
   SQ.AudioDirector = {
     // ========================================================
     // PUBLIC API
@@ -90,6 +94,20 @@
           console.warn('  Error:', err.message || err);
           return false;
         });
+    },
+
+    /**
+     * Queue a passage for on-demand audio generation.
+     * Shows the play button without generating audio — generation
+     * happens when the user clicks play.
+     */
+    prepareForPassage: function (passage, gameState) {
+      this.stop();
+      _pendingPassage = passage;
+      _pendingGameState = gameState;
+      _segments = [];
+      this.showControls();
+      this._updateControls();
     },
 
     // ========================================================
@@ -631,12 +649,21 @@
     togglePlayPause: function () {
       if (_isPlaying) {
         this.pause();
-      } else {
-        if (_isPaused) {
-          this.resume();
-        } else {
-          this.play();
-        }
+      } else if (_isPaused) {
+        this.resume();
+      } else if (_pendingPassage) {
+        // First click: generate audio on demand, then auto-play
+        var self = this;
+        var passage = _pendingPassage;
+        var gameState = _pendingGameState;
+        _pendingPassage = null;
+        _pendingGameState = null;
+        self._setGeneratingState(true);
+        self.generate(passage, gameState).then(function () {
+          self._setGeneratingState(false);
+        });
+      } else if (_segments.length > 0) {
+        this.play();
       }
     },
 
@@ -699,6 +726,24 @@
     // ========================================================
     // UI CONTROLS
     // ========================================================
+
+    /**
+     * Show/hide the generating (loading) state on the play button.
+     * @private
+     */
+    _setGeneratingState: function (generating) {
+      var btn = document.getElementById('btn-audio-playpause');
+      if (btn) {
+        if (generating) {
+          btn.innerHTML = '&#8987;';
+          btn.title = 'Generating audio...';
+          btn.disabled = true;
+        } else {
+          btn.disabled = false;
+          this._updateControls();
+        }
+      }
+    },
 
     /**
      * Update the audio controls UI to reflect current playback state.

@@ -210,15 +210,9 @@
           });
         }
 
-        // Fire TTS narration for the opening passage (non-blocking)
+        // Queue TTS narration for the opening passage (on-demand: user clicks play)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
-          SQ.AudioDirector.generate(state.last_passage, state).then(function (success) {
-            if (success) {
-              state.narration_audio_url = 'active';
-            } else {
-              SQ.AudioDirector.hideControls();
-            }
-          });
+          SQ.AudioDirector.prepareForPassage(state.last_passage, state);
         }
 
         SQ.GameState.save();
