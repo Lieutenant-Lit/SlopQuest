@@ -394,7 +394,7 @@
           stability: settings.stability || 0.5,
           similarity_boost: settings.similarity_boost || 0.75,
           style: settings.style || 0.0,
-          use_speaker_boost: true
+          use_speaker_boost: false
         }
       };
 
@@ -422,6 +422,10 @@
           return response.arrayBuffer();
         })
         .then(function (buffer) {
+          console.log('AudioDirector: segment audio buffer size:', buffer.byteLength);
+          if (buffer.byteLength === 0) {
+            throw new Error('ElevenLabs returned empty audio');
+          }
           var blob = new Blob([buffer], { type: 'audio/mpeg' });
           return URL.createObjectURL(blob);
         })
@@ -444,12 +448,15 @@
       // Identify the player character for voice assignment
       var playerName = (gameState && gameState.player && gameState.player.name) || '';
       var playerVoiceGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
+      var playerVoiceDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
 
-      // Build a voice description for the player character based on their setup preferences
-      var playerVoiceDesc = '';
-      if (playerVoiceGender) {
-        playerVoiceDesc = playerVoiceGender + ', protagonist';
-      }
+      // Build voice description from player's setup preferences
+      var playerVoiceDesc = [playerVoiceGender, playerVoiceDirection, 'protagonist'].filter(Boolean).join(', ');
+
+      // Build narrator voice description from setup preferences
+      var narratorGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
+      var narratorDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
+      var narratorDesc = [narratorGender, narratorDirection, 'narrator, storytelling'].filter(Boolean).join(', ');
 
       // Pre-assign all voices before generating
       segments.forEach(function (seg) {
@@ -462,8 +469,8 @@
           }
         }
       });
-      // Ensure narrator has a voice
-      this._assignVoice('__narrator__', '');
+      // Assign narrator voice with user preferences
+      this._assignVoice('__narrator__', narratorDesc);
 
       var registry = this._loadRegistry();
 
@@ -554,14 +561,22 @@
       var audio = new Audio(seg.audioUrl);
       seg.audio = audio;
 
+      // Guard against both 'ended' and 'error' firing and double-advancing
+      var advanced = false;
+
       audio.addEventListener('ended', function () {
-        self._playSegment(index + 1);
+        if (!advanced) {
+          advanced = true;
+          self._playSegment(index + 1);
+        }
       });
 
       audio.addEventListener('error', function () {
-        console.warn('AudioDirector: playback error on segment', index);
-        // Try to continue with next segment
-        self._playSegment(index + 1);
+        if (!advanced) {
+          advanced = true;
+          console.warn('AudioDirector: playback error on segment', index);
+          self._playSegment(index + 1);
+        }
       });
 
       audio.play().catch(function (err) {

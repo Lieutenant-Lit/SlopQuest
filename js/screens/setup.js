@@ -131,7 +131,10 @@
         difficulty: this._selected.difficulty || 'normal',
         storyLength: this._selected.storyLength || 'medium',
         characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer',
-        voiceGender: document.getElementById('setup-voice-gender').value || ''
+        voiceGender: document.getElementById('setup-voice-gender').value || '',
+        voiceDirection: document.getElementById('setup-voice-direction').value.trim() || '',
+        narratorGender: document.getElementById('setup-narrator-gender').value || '',
+        narratorDirection: document.getElementById('setup-narrator-direction').value.trim() || ''
       };
     },
 
@@ -209,11 +212,11 @@
 
         // Fire TTS narration for the opening passage (non-blocking)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
-          SQ.AudioGenerator.generate(state.last_passage).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
+          SQ.AudioDirector.generate(state.last_passage, state).then(function (success) {
+            if (success) {
+              state.narration_audio_url = 'active';
+            } else {
+              SQ.AudioDirector.hideControls();
             }
           });
         }

@@ -122,10 +122,23 @@
         <input type="text" id="setup-name" placeholder="Character name (optional)">
         <select id="setup-voice-gender">
           <option value="">Character voice (optional)</option>
-          <option value="male">Male voice</option>
-          <option value="female">Female voice</option>
-          <option value="neutral">Neutral / androgynous voice</option>
+          <option value="masculine">Masculine</option>
+          <option value="feminine">Feminine</option>
+          <option value="non-binary">Non-Binary</option>
         </select>
+        <input type="text" id="setup-voice-direction" placeholder="Voice direction (e.g. British accent, elderly, raspy...)">
+      </div>
+
+      <div class="card">
+        <h2>Narrator Voice</h2>
+        <p>Voice style for the narrator (requires ElevenLabs key).</p>
+        <select id="setup-narrator-gender">
+          <option value="">Narrator voice (optional)</option>
+          <option value="masculine">Masculine</option>
+          <option value="feminine">Feminine</option>
+          <option value="non-binary">Non-Binary</option>
+        </select>
+        <input type="text" id="setup-narrator-direction" placeholder="Voice direction (e.g. warm baritone, British, young...)">
       </div>
 
       <div class="card">
