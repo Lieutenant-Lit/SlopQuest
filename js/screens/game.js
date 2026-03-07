@@ -411,23 +411,29 @@
         self.applyResponse(state, response);
 
         // Fire TTS narration for the new passage text (parallel with image).
-        // Text is already rendered by applyResponse → renderState, so audio plays
-        // over visible text per design doc Section 5 progressive rendering order.
+        // Segmentation is a separate API call so the passage LLM doesn't
+        // have to juggle prose quality AND segment decomposition.
         if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
           SQ.AudioGenerator.hideControls();
-          SQ.AudioGenerator.generate(
-            response.passage,
-            response.narration_segments || null,
-            state.npc_voices
-          ).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
-            } else {
-              SQ.AudioGenerator.hideControls();
-            }
-          });
+          SQ.PassageGenerator.generateSegments(response.passage, state)
+            .then(function (segments) {
+              state.narration_segments = segments;
+              return SQ.AudioGenerator.generate(
+                response.passage,
+                segments,
+                state.npc_voices
+              );
+            })
+            .then(function (audioUrl) {
+              if (audioUrl) {
+                state.narration_audio_url = audioUrl;
+                SQ.GameState.save();
+                SQ.AudioGenerator.showControls();
+                SQ.AudioGenerator.play(audioUrl);
+              } else {
+                SQ.AudioGenerator.hideControls();
+              }
+            });
         } else {
           SQ.AudioGenerator.stop();
           SQ.AudioGenerator.hideControls();
@@ -565,7 +571,7 @@
 
       // 10. Update passage, choices, and scene number
       state.last_passage = response.passage;
-      state.narration_segments = response.narration_segments || null;
+      state.narration_segments = null; // populated by separate segmentation call
       state.current_choices = response.choices;
       state.illustration_prompt = response.illustration_prompt || '';
       state.current.scene_number = (state.current.scene_number || 0) + 1;

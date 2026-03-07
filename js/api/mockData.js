@@ -357,6 +357,27 @@
     },
 
     /**
+     * Return mock segmentation for a passage.
+     * Simulates the separate segmentation API call by extracting
+     * segments from the matching mock passage response.
+     */
+    generateSegments: function (passageText) {
+      return new Promise(function (resolve) {
+        setTimeout(function () {
+          // Find matching passage response and return its segments
+          for (var i = 0; i < PASSAGE_RESPONSES.length; i++) {
+            if (PASSAGE_RESPONSES[i].passage === passageText && PASSAGE_RESPONSES[i].narration_segments) {
+              resolve(JSON.parse(JSON.stringify(PASSAGE_RESPONSES[i].narration_segments)));
+              return;
+            }
+          }
+          // No match — return null (single-voice fallback)
+          resolve(null);
+        }, 300);
+      });
+    },
+
+    /**
      * Reset the passage cycle index (useful for testing).
      */
     resetPassageIndex: function () {

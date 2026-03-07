@@ -3,9 +3,10 @@
  * Abstract interface: swap to ElevenLabs or another provider by replacing
  * the _callProvider method without changing game logic.
  *
- * Supports multi-voice narration: when narration_segments are provided,
- * each segment is generated in parallel with its assigned voice, then
- * all PCM16 buffers are stitched together into a single WAV file.
+ * Supports multi-voice narration: when narration_segments are provided
+ * (from a separate segmentation API call), each segment is generated
+ * in parallel with its assigned voice, then all PCM16 buffers are
+ * stitched together into a single WAV file.
  *
  * Design doc Section 5: fires in parallel with text + image generation,
  * audio plays as it streams in, gracefully degrades to text-only on failure.
@@ -38,12 +39,6 @@
         return this._mockGenerate();
       }
 
-      // Validate and repair segments against the actual passage text.
-      // LLMs sometimes lump dialogue together or drop narrator interstitials.
-      if (segments && segments.length > 0) {
-        segments = this._repairSegments(passageText, segments);
-      }
-
       // If we have segments with any NPC speakers, use multi-voice path.
       // Even if voice IDs overlap, different speakers have different styles.
       if (segments && segments.length > 1 && this._hasNpcSpeakers(segments)) {
@@ -73,115 +68,6 @@
       if (!npcVoiceEntry) return null;
       if (typeof npcVoiceEntry === 'string') return null;
       return npcVoiceEntry.style || null;
-    },
-
-    /**
-     * Validate LLM-generated segments against the passage text.
-     * If segments don't properly reconstruct the passage (missing text,
-     * dialogue lumped together, etc.), re-parse from scratch using
-     * quote-boundary detection and speaker hints from the LLM segments.
-     * @private
-     */
-    _repairSegments: function (passageText, segments) {
-      // Extract speaker hints from the LLM segments — maps quoted text to speakers.
-      // This is all we use from the LLM segments; the passage text is always the
-      // source of truth for segment boundaries and ordering.
-      var speakerHints = {};
-      for (var k = 0; k < segments.length; k++) {
-        if (segments[k].speaker) {
-          var quotes = segments[k].text.match(/"[^"]*"/g);
-          if (quotes) {
-            for (var q = 0; q < quotes.length; q++) {
-              speakerHints[quotes[q]] = segments[k].speaker;
-            }
-          }
-        }
-      }
-
-      // Always re-parse from passage text. LLM segments frequently contain
-      // phantom text, re-ordered lines, or lumped dialogue that cause audio
-      // to play lines that don't exist or in the wrong order.
-      return this._parsePassageIntoSegments(passageText, speakerHints);
-    },
-
-    /**
-     * Parse passage text into segments by splitting at quote boundaries.
-     * Quoted speech becomes speaker segments, everything else becomes narrator.
-     *
-     * Speaker attribution: only uses exact matches from speakerHints.
-     * If a quote can't be attributed, it falls back to narrator (null speaker)
-     * rather than guessing — a narrator voice reading dialogue is less jarring
-     * than the wrong character voice.
-     *
-     * @param {string} text - The full passage text
-     * @param {Object} speakerHints - Map of "quoted text" → speaker name
-     * @returns {Array} Repaired segments array
-     * @private
-     */
-    _parsePassageIntoSegments: function (text, speakerHints) {
-      var segments = [];
-      var pos = 0;
-
-      // Find all quoted strings in order
-      var quoteRegex = /"[^"]+"/g;
-      var match;
-
-      while ((match = quoteRegex.exec(text)) !== null) {
-        var quoteStart = match.index;
-        var quoteEnd = quoteStart + match[0].length;
-
-        // Everything before this quote is narrator text
-        if (quoteStart > pos) {
-          var narratorText = text.slice(pos, quoteStart);
-          if (narratorText.trim()) {
-            segments.push({ speaker: null, text: narratorText });
-          }
-        }
-
-        // The quote itself — look up speaker from hints (exact match only)
-        var quoteText = match[0];
-        var speaker = speakerHints[quoteText] || null;
-
-        // If no exact match, try finding a hint whose inner text is contained
-        // in this quote or vice versa — but only if there's a single candidate
-        if (!speaker) {
-          var hintKeys = Object.keys(speakerHints);
-          var candidates = [];
-          for (var h = 0; h < hintKeys.length; h++) {
-            var hintInner = hintKeys[h].slice(1, -1); // strip quotes
-            var quoteInner = quoteText.slice(1, -1);
-            if (hintInner.length > 10 && (quoteInner.indexOf(hintInner) !== -1 || hintInner.indexOf(quoteInner) !== -1)) {
-              candidates.push(speakerHints[hintKeys[h]]);
-            }
-          }
-          // Only use if exactly one candidate — avoid ambiguity
-          if (candidates.length === 1) {
-            speaker = candidates[0];
-          }
-        }
-
-        // Fall back to narrator (null) for unattributable quotes.
-        // This is intentional — narrator voice reading a line is far less
-        // jarring than assigning the wrong character's voice.
-        segments.push({ speaker: speaker, text: quoteText });
-        pos = quoteEnd;
-      }
-
-      // Any remaining text after the last quote
-      if (pos < text.length) {
-        var trailing = text.slice(pos);
-        if (trailing.trim()) {
-          segments.push({ speaker: null, text: trailing });
-        }
-      }
-
-      // If parsing produced nothing useful, return original-style single segment
-      if (segments.length === 0) {
-        return [{ speaker: null, text: text }];
-      }
-
-      console.log('AudioGenerator: repaired into ' + segments.length + ' segments');
-      return segments;
     },
 
     /**

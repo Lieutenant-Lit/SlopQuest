@@ -211,7 +211,7 @@
 
         // Apply passage response
         state.last_passage = passageResponse.passage;
-        state.narration_segments = passageResponse.narration_segments || null;
+        state.narration_segments = null; // populated by separate segmentation call
         state.current_choices = passageResponse.choices;
         state.illustration_prompt = passageResponse.illustration_prompt || '';
         if (passageResponse.state_updates) {
@@ -234,19 +234,26 @@
           });
         }
 
-        // Fire TTS narration for the opening passage (non-blocking)
+        // Fire TTS narration for the opening passage (non-blocking).
+        // Segmentation is a separate API call from passage generation.
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
-          SQ.AudioGenerator.generate(
-            state.last_passage,
-            passageResponse.narration_segments || null,
-            state.npc_voices
-          ).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
-            }
-          });
+          SQ.PassageGenerator.generateSegments(state.last_passage, state)
+            .then(function (segments) {
+              state.narration_segments = segments;
+              return SQ.AudioGenerator.generate(
+                state.last_passage,
+                segments,
+                state.npc_voices
+              );
+            })
+            .then(function (audioUrl) {
+              if (audioUrl) {
+                state.narration_audio_url = audioUrl;
+                SQ.GameState.save();
+                SQ.AudioGenerator.showControls();
+                SQ.AudioGenerator.play(audioUrl);
+              }
+            });
         }
 
         SQ.GameState.save();

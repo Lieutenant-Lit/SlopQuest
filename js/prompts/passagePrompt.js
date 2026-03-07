@@ -70,9 +70,6 @@
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
       p += '  "passage": "string — the narrative passage, 150-300 words",\n';
-      p += '  "narration_segments": [\n';
-      p += '    { "speaker": "string|null — NPC name for dialogue lines, null for narrator prose", "text": "string — the text for this segment" }\n';
-      p += '  ],\n';
       p += '  "illustration_prompt": "string — a concise visual description of the key moment for image generation",\n';
       p += '  "state_updates": {\n';
       p += '    "player_changes": { "health": number, "resources": {...}, "inventory": [...], "status_effects": [...], "skills": [...] },\n';
@@ -110,12 +107,6 @@
       p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
-      p += '- narration_segments MUST break the passage into sequential pieces at EVERY dialogue boundary. Rules:\n';
-      p += '  * Each quoted speech gets its OWN segment with the speaker\'s name.\n';
-      p += '  * ALL text between quotes (narrator attribution, action, description) gets its own narrator segment (speaker: null).\n';
-      p += '  * NEVER combine multiple quotes from the same speaker into one segment if there is narrator text between them.\n';
-      p += '  * The concatenation of all segment texts must exactly equal the full passage text — no text added or removed.\n';
-      p += '  * Example: \'He approached. "Hello!" said the guard. "Welcome."\' → 3 segments: narrator("He approached. "), guard("\\"Hello!\\""), narrator(" said the guard. "), guard("\\"Welcome.\\"")\n';
 
       // Tier-specific passage rules
       if (difficulty === 'chill') {
