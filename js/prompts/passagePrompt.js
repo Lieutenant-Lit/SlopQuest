@@ -110,7 +110,12 @@
       p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
-      p += '- narration_segments must break the passage into sequential pieces at dialogue boundaries. Each segment is either narrator prose (speaker: null) or a specific NPC\'s dialogue (speaker: NPC name). The concatenation of all segment texts must equal the full passage text. Dialogue attribution like "she says" goes in the narrator segment, the quoted speech goes in the character segment.\n';
+      p += '- narration_segments MUST break the passage into sequential pieces at EVERY dialogue boundary. Rules:\n';
+      p += '  * Each quoted speech gets its OWN segment with the speaker\'s name.\n';
+      p += '  * ALL text between quotes (narrator attribution, action, description) gets its own narrator segment (speaker: null).\n';
+      p += '  * NEVER combine multiple quotes from the same speaker into one segment if there is narrator text between them.\n';
+      p += '  * The concatenation of all segment texts must exactly equal the full passage text — no text added or removed.\n';
+      p += '  * Example: \'He approached. "Hello!" said the guard. "Welcome."\' → 3 segments: narrator("He approached. "), guard("\\"Hello!\\""), narrator(" said the guard. "), guard("\\"Welcome.\\"")\n';
 
       // Tier-specific passage rules
       if (difficulty === 'chill') {

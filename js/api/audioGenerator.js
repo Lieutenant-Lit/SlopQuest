@@ -38,6 +38,12 @@
         return this._mockGenerate();
       }
 
+      // Validate and repair segments against the actual passage text.
+      // LLMs sometimes lump dialogue together or drop narrator interstitials.
+      if (segments && segments.length > 0) {
+        segments = this._repairSegments(passageText, segments);
+      }
+
       // If we have segments with any NPC speakers, use multi-voice path.
       // Even if voice IDs overlap, different speakers have different styles.
       if (segments && segments.length > 1 && this._hasNpcSpeakers(segments)) {
@@ -67,6 +73,131 @@
       if (!npcVoiceEntry) return null;
       if (typeof npcVoiceEntry === 'string') return null;
       return npcVoiceEntry.style || null;
+    },
+
+    /**
+     * Validate LLM-generated segments against the passage text.
+     * If segments don't properly reconstruct the passage (missing text,
+     * dialogue lumped together, etc.), re-parse from scratch using
+     * quote-boundary detection and speaker hints from the LLM segments.
+     * @private
+     */
+    _repairSegments: function (passageText, segments) {
+      // Quick check: does concatenating segment texts match the passage?
+      var concat = '';
+      for (var i = 0; i < segments.length; i++) {
+        concat += segments[i].text;
+      }
+
+      // Normalize whitespace for comparison
+      var normalPass = passageText.replace(/\s+/g, ' ').trim();
+      var normalConcat = concat.replace(/\s+/g, ' ').trim();
+
+      if (normalConcat === normalPass) {
+        // Segments look complete — but check for lumped dialogue.
+        // A dialogue segment shouldn't contain narrator attribution between quotes.
+        var needsRepair = false;
+        for (var j = 0; j < segments.length; j++) {
+          if (segments[j].speaker) {
+            // Check if a dialogue segment contains text outside of quotes
+            // (i.e., narrator prose mixed in with dialogue)
+            var text = segments[j].text;
+            var stripped = text.replace(/"[^"]*"/g, '').replace(/\s+/g, ' ').trim();
+            // If there's significant non-quote text in a speaker segment, it's lumped
+            if (stripped.length > 20) {
+              needsRepair = true;
+              break;
+            }
+          }
+        }
+        if (!needsRepair) return segments;
+      }
+
+      console.log('AudioGenerator: repairing malformed narration_segments');
+
+      // Build a speaker map from the LLM's segments — maps quoted text snippets to speakers
+      var speakerHints = {};
+      for (var k = 0; k < segments.length; k++) {
+        if (segments[k].speaker) {
+          // Extract quoted strings from this segment to use as speaker hints
+          var quotes = segments[k].text.match(/"[^"]*"/g);
+          if (quotes) {
+            for (var q = 0; q < quotes.length; q++) {
+              speakerHints[quotes[q]] = segments[k].speaker;
+            }
+          }
+        }
+      }
+
+      return this._parsePassageIntoSegments(passageText, speakerHints);
+    },
+
+    /**
+     * Parse passage text into segments by splitting at quote boundaries.
+     * Quoted speech becomes speaker segments, everything else becomes narrator.
+     * @param {string} text - The full passage text
+     * @param {Object} speakerHints - Map of quoted string → speaker name
+     * @returns {Array} Repaired segments array
+     * @private
+     */
+    _parsePassageIntoSegments: function (text, speakerHints) {
+      var segments = [];
+      var lastSpeaker = null;
+      var pos = 0;
+
+      // Find all quoted strings in order
+      // Match: opening " ... closing " (non-greedy, respecting sentence boundaries)
+      var quoteRegex = /"[^"]+"/g;
+      var match;
+
+      while ((match = quoteRegex.exec(text)) !== null) {
+        var quoteStart = match.index;
+        var quoteEnd = quoteStart + match[0].length;
+
+        // Everything before this quote is narrator text
+        if (quoteStart > pos) {
+          var narratorText = text.slice(pos, quoteStart);
+          if (narratorText.trim()) {
+            segments.push({ speaker: null, text: narratorText });
+          }
+        }
+
+        // The quote itself — look up speaker from hints
+        var quoteText = match[0];
+        var speaker = speakerHints[quoteText] || lastSpeaker;
+
+        // If we still don't know the speaker, check if any hint is a substring
+        if (!speaker) {
+          var hintKeys = Object.keys(speakerHints);
+          for (var h = 0; h < hintKeys.length; h++) {
+            if (quoteText.indexOf(hintKeys[h].slice(1, -1)) !== -1 ||
+                hintKeys[h].indexOf(quoteText.slice(1, -1)) !== -1) {
+              speaker = speakerHints[hintKeys[h]];
+              break;
+            }
+          }
+        }
+
+        segments.push({ speaker: speaker || 'Unknown', text: quoteText });
+        if (speaker) lastSpeaker = speaker;
+        pos = quoteEnd;
+      }
+
+      // Any remaining text after the last quote
+      if (pos < text.length) {
+        var trailing = text.slice(pos);
+        if (trailing.trim()) {
+          segments.push({ speaker: null, text: trailing });
+        }
+      }
+
+      // If parsing produced nothing useful, return original-style single segment
+      if (segments.length === 0) {
+        return [{ speaker: null, text: text }];
+      }
+
+      console.log('AudioGenerator: repaired into ' + segments.length + ' segments');
+      return segments;
     },
 
     /**
