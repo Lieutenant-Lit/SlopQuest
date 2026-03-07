@@ -125,6 +125,12 @@ a {
   margin-top: var(--spacing-sm);
 }
 
+.card-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],

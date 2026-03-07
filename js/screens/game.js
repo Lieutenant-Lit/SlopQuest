@@ -42,10 +42,10 @@
 
       // Audio playback controls
       document.getElementById('btn-audio-playpause').addEventListener('click', function () {
-        SQ.AudioGenerator.togglePlayPause();
+        SQ.AudioDirector.togglePlayPause();
       });
       document.getElementById('btn-audio-replay').addEventListener('click', function () {
-        SQ.AudioGenerator.replay();
+        SQ.AudioDirector.replay();
       });
     },
 
@@ -56,7 +56,7 @@
 
     onHide: function () {
       // Stop narration when navigating away
-      SQ.AudioGenerator.stop();
+      SQ.AudioDirector.stop();
     },
 
     /**
@@ -81,9 +81,9 @@
 
       // Audio controls — show if narration is enabled and we have audio
       if (state.narration_audio_url && SQ.PlayerConfig.isNarrationEnabled()) {
-        SQ.AudioGenerator.showControls();
+        SQ.AudioDirector.showControls();
       } else {
-        SQ.AudioGenerator.hideControls();
+        SQ.AudioDirector.hideControls();
       }
 
       // Passage (with fade-in on new passages, instant on initial load/rewind)
@@ -243,23 +243,21 @@
         self.hideLoading();
         self.applyResponse(state, response);
 
-        // Fire TTS narration for the new passage text (parallel with image).
+        // Fire Audio Director for full-cast narration (parallel with image).
         // Text is already rendered by applyResponse → renderState, so audio plays
         // over visible text per design doc Section 5 progressive rendering order.
         if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
-          SQ.AudioGenerator.hideControls();
-          SQ.AudioGenerator.generate(response.passage).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
+          SQ.AudioDirector.hideControls();
+          SQ.AudioDirector.generate(response.passage, state).then(function (success) {
+            if (success) {
+              state.narration_audio_url = 'active';
             } else {
-              SQ.AudioGenerator.hideControls();
+              SQ.AudioDirector.hideControls();
             }
           });
         } else {
-          SQ.AudioGenerator.stop();
-          SQ.AudioGenerator.hideControls();
+          SQ.AudioDirector.stop();
+          SQ.AudioDirector.hideControls();
         }
 
         // If no image was started yet but the new response has an illustration_prompt,

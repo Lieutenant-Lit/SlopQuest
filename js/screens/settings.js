@@ -60,22 +60,9 @@
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
       });
 
-      // Audio model selection
-      document.getElementById('audio-model-select').addEventListener('change', function () {
-        var customInput = document.getElementById('audio-model-custom-input');
-        if (this.value === 'custom') {
-          customInput.classList.remove('hidden');
-          customInput.focus();
-        } else {
-          customInput.classList.add('hidden');
-          SQ.PlayerConfig.setModel('audio', this.value);
-        }
-      });
-
-      document.getElementById('audio-model-custom-input').addEventListener('change', function () {
-        if (this.value.trim()) {
-          SQ.PlayerConfig.setModel('audio', this.value.trim());
-        }
+      // ElevenLabs API key validation
+      document.getElementById('btn-validate-elevenlabs').addEventListener('click', function () {
+        self.validateElevenLabsKey();
       });
 
       // Save & continue to main menu
@@ -146,31 +133,82 @@
       document.getElementById('settings-narration-toggle').checked =
         SQ.PlayerConfig.isNarrationEnabled();
 
-      // Set audio model selector to current value
-      var currentAudioModel = SQ.PlayerConfig.getModel('audio');
-      var audioSelect = document.getElementById('audio-model-select');
-      var audioFound = false;
-      for (var k = 0; k < audioSelect.options.length; k++) {
-        if (audioSelect.options[k].value === currentAudioModel) {
-          audioSelect.selectedIndex = k;
-          audioFound = true;
-          break;
-        }
-      }
-      if (!audioFound && currentAudioModel) {
-        audioSelect.value = 'custom';
-        var audioCustomInput = document.getElementById('audio-model-custom-input');
-        audioCustomInput.classList.remove('hidden');
-        audioCustomInput.value = currentAudioModel;
+      // Populate ElevenLabs key field
+      var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
+      var elevenLabsInput = document.getElementById('elevenlabs-key-input');
+      if (elevenLabsKey) {
+        elevenLabsInput.value = elevenLabsKey;
       }
 
-      // Reset validation status
+      // Reset validation statuses
       var status = document.getElementById('key-status');
       status.textContent = '';
       status.className = 'status-message';
+
+      var elevenLabsStatus = document.getElementById('elevenlabs-key-status');
+      elevenLabsStatus.textContent = '';
+      elevenLabsStatus.className = 'status-message';
     },
 
     onHide: function () {},
+
+    validateElevenLabsKey: function () {
+      var keyInput = document.getElementById('elevenlabs-key-input');
+      var status = document.getElementById('elevenlabs-key-status');
+      var btn = document.getElementById('btn-validate-elevenlabs');
+      var key = keyInput.value.trim();
+
+      if (!key) {
+        status.textContent = 'Please enter an ElevenLabs API key.';
+        status.className = 'status-message error';
+        return;
+      }
+
+      if (SQ.useMockData) {
+        SQ.PlayerConfig.setElevenLabsApiKey(key);
+        status.textContent = 'Key saved (mock mode — no validation).';
+        status.className = 'status-message success';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+      status.textContent = 'Checking key with ElevenLabs...';
+      status.className = 'status-message';
+
+      fetch('https://api.elevenlabs.io/v1/user', {
+        method: 'GET',
+        headers: { 'xi-api-key': key }
+      })
+        .then(function (response) {
+          if (response.ok) {
+            SQ.PlayerConfig.setElevenLabsApiKey(key);
+            // Refresh voice cache with new key
+            SQ.AudioDirector.refreshVoices();
+            return response.json().then(function (data) {
+              var charLimit = data.subscription && data.subscription.character_limit;
+              var charUsed = data.subscription && data.subscription.character_count;
+              var info = '';
+              if (charLimit && typeof charUsed === 'number') {
+                info = ' (' + (charLimit - charUsed).toLocaleString() + ' characters remaining)';
+              }
+              status.textContent = 'Key validated successfully.' + info;
+              status.className = 'status-message success';
+            });
+          } else {
+            status.textContent = 'Invalid key. Check your ElevenLabs API key.';
+            status.className = 'status-message error';
+          }
+        })
+        .catch(function () {
+          status.textContent = 'Network error — could not reach ElevenLabs. Try again.';
+          status.className = 'status-message error';
+        })
+        .then(function () {
+          btn.disabled = false;
+          btn.textContent = 'Validate Key';
+        });
+    },
 
     validateKey: function () {
       var keyInput = document.getElementById('api-key-input');
