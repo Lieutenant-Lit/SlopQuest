@@ -5,8 +5,8 @@
  */
 (function () {
   var AVAILABLE_VOICES = [
-    'alloy', 'ash', 'ballad', 'cedar', 'coral',
-    'echo', 'fable', 'marin', 'nova', 'onyx',
+    'alloy', 'ash', 'ballad', 'coral',
+    'echo', 'fable', 'nova', 'onyx',
     'sage', 'shimmer', 'verse'
   ];
 
@@ -26,10 +26,10 @@
       var model = SQ.PlayerConfig.getModel('passage');
       var narratorGender = SQ.PlayerConfig.getNarratorGender();
 
-      // Build voice list filtered by gender for narrator recommendation
-      var genderLabel = narratorGender === 'feminine' ? 'female'
-        : narratorGender === 'non-binary' ? 'neutral/androgynous'
-        : 'male';
+      // Get the allowed voices for the narrator's gender
+      var narratorVoices = SQ.PlayerConfig.getVoicesForGender(narratorGender);
+      // Pick a random allowed voice to suggest (prevents LLM always picking the same one)
+      var suggestedNarrator = narratorVoices[Math.floor(Math.random() * narratorVoices.length)];
 
       var npcList = '';
       if (skeleton && skeleton.npcs && skeleton.npcs.length > 0) {
@@ -42,23 +42,16 @@
       var systemPrompt = 'You are a voice casting director for an audio drama. '
         + 'You assign distinct, memorable voice profiles to characters AND the narrator.\n\n'
         + 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences.\n\n'
-        + 'AVAILABLE VOICES (OpenAI TTS voice IDs):\n'
-        + '- alloy: Neutral, androgynous\n'
-        + '- ash: Clear, young male\n'
-        + '- ballad: Expressive, melodic\n'
-        + '- cedar: Warm, male\n'
-        + '- coral: Warm, young female\n'
-        + '- echo: Resonant, deep male\n'
-        + '- fable: Storyteller, male\n'
-        + '- marin: Clear, female\n'
-        + '- nova: Bright, young female\n'
-        + '- onyx: Deep, authoritative male\n'
-        + '- sage: Calm, female\n'
-        + '- shimmer: Cheerful, bright female\n'
-        + '- verse: Versatile, expressive\n\n'
+        + 'VOICE CATEGORIES — you MUST respect these gender assignments:\n'
+        + 'FEMININE voices: coral (warm, young), nova (bright, young), sage (calm, mature), shimmer (cheerful, bright)\n'
+        + 'MASCULINE voices: ash (clear, young), echo (resonant, deep), onyx (deep, authoritative)\n'
+        + 'NON-BINARY voices: alloy (neutral), ballad (expressive, melodic), fable (storyteller), verse (versatile, expressive)\n\n'
         + 'RULES:\n'
-        + '- The NARRATOR must use a ' + genderLabel + ' voice. Pick a voice that fits the story\'s tone and setting.\n'
+        + '- The NARRATOR must use one of these ' + narratorGender.toUpperCase() + ' voices: ' + narratorVoices.join(', ') + '\n'
+        + '  (Suggestion: try "' + suggestedNarrator + '" — but pick whichever best fits the story.)\n'
+        + '- NEVER assign a voice from the wrong gender category to the narrator.\n'
         + '- Each NPC should use a DIFFERENT voice from the narrator and from each other.\n'
+        + '- For NPCs, pick voices from ANY gender category that fits the character.\n'
         + '- Maximize variety in voice, accent, pacing, and energy.\n\n'
         + 'For EACH entry (narrator + every NPC), create a "style" string — a system prompt for the TTS model. '
         + 'Be specific about:\n'
@@ -104,17 +97,20 @@
 
           var result = { narrator: null, npcs: {} };
 
-          // Extract narrator profile
+          // Extract narrator profile — validate voice is in correct gender category
+          var allowedNarratorVoices = SQ.PlayerConfig.getVoicesForGender(narratorGender);
           var narratorEntry = parsed['__narrator__'] || parsed['narrator'] || parsed['Narrator'];
           if (narratorEntry && narratorEntry.voice && narratorEntry.style) {
             var nVoice = narratorEntry.voice.toLowerCase();
-            if (AVAILABLE_VOICES.indexOf(nVoice) === -1) {
-              nVoice = SQ.PlayerConfig._defaultVoiceForGender(narratorGender);
+            // Must be both a valid voice AND in the correct gender category
+            if (AVAILABLE_VOICES.indexOf(nVoice) === -1 || allowedNarratorVoices.indexOf(nVoice) === -1) {
+              console.warn('VoiceProfileGenerator: narrator voice "' + nVoice + '" not in ' + narratorGender + ' category, replacing');
+              nVoice = allowedNarratorVoices[Math.floor(Math.random() * allowedNarratorVoices.length)];
             }
             result.narrator = { voice: nVoice, style: narratorEntry.style };
           } else {
             result.narrator = {
-              voice: SQ.PlayerConfig._defaultVoiceForGender(narratorGender),
+              voice: allowedNarratorVoices[Math.floor(Math.random() * allowedNarratorVoices.length)],
               style: 'Speak as a skilled narrator. Use a dramatic, immersive reading voice appropriate for a story.'
             };
           }
@@ -171,7 +167,8 @@
      * @private
      */
     _fallbackGenerate: function (skeleton, narratorGender) {
-      var narratorVoice = SQ.PlayerConfig._defaultVoiceForGender(narratorGender);
+      var genderPool = SQ.PlayerConfig.getVoicesForGender(narratorGender);
+      var narratorVoice = genderPool[Math.floor(Math.random() * genderPool.length)];
       var pool = AVAILABLE_VOICES.filter(function (v) { return v !== narratorVoice; });
       var result = {
         narrator: {
@@ -196,9 +193,11 @@
      * @private
      */
     _mockGenerate: function (skeleton) {
+      var gender = SQ.PlayerConfig.getNarratorGender();
+      var mockVoice = SQ.PlayerConfig._defaultVoiceForGender(gender);
       var result = {
         narrator: {
-          voice: 'fable',
+          voice: mockVoice,
           style: 'Voice: Deep, rich, commanding. Tone: Dramatic, immersive, like a veteran storyteller. Pacing: Measured and deliberate. Accent: Refined British. Emotion: Gravitas and dark humor.'
         },
         npcs: {}

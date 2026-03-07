@@ -7,19 +7,17 @@
   var MOCK_KEY = 'slopquest_mock_mode';
 
   var VOICES = [
-    { id: 'alloy',   label: 'Alloy (neutral)',          gender: 'neutral' },
-    { id: 'ash',     label: 'Ash (clear, male)',         gender: 'masculine' },
-    { id: 'ballad',  label: 'Ballad (expressive)',       gender: 'neutral' },
-    { id: 'cedar',   label: 'Cedar (warm, male)',        gender: 'masculine' },
-    { id: 'coral',   label: 'Coral (warm, female)',      gender: 'feminine' },
-    { id: 'echo',    label: 'Echo (resonant, male)',     gender: 'masculine' },
-    { id: 'fable',   label: 'Fable (storyteller, male)', gender: 'masculine' },
-    { id: 'marin',   label: 'Marin (clear, female)',     gender: 'feminine' },
-    { id: 'nova',    label: 'Nova (bright, female)',     gender: 'feminine' },
-    { id: 'onyx',    label: 'Onyx (deep, male)',         gender: 'masculine' },
-    { id: 'sage',    label: 'Sage (calm, female)',       gender: 'feminine' },
-    { id: 'shimmer', label: 'Shimmer (cheerful, female)',gender: 'feminine' },
-    { id: 'verse',   label: 'Verse (versatile)',         gender: 'neutral' }
+    { id: 'alloy',   label: 'Alloy (neutral)',           gender: 'non-binary' },
+    { id: 'ash',     label: 'Ash (clear, male)',          gender: 'masculine' },
+    { id: 'ballad',  label: 'Ballad (expressive)',        gender: 'non-binary' },
+    { id: 'coral',   label: 'Coral (warm, female)',       gender: 'feminine' },
+    { id: 'echo',    label: 'Echo (resonant, male)',      gender: 'masculine' },
+    { id: 'fable',   label: 'Fable (storyteller)',        gender: 'non-binary' },
+    { id: 'nova',    label: 'Nova (bright, female)',      gender: 'feminine' },
+    { id: 'onyx',    label: 'Onyx (deep, male)',          gender: 'masculine' },
+    { id: 'sage',    label: 'Sage (calm, female)',        gender: 'feminine' },
+    { id: 'shimmer', label: 'Shimmer (cheerful, female)', gender: 'feminine' },
+    { id: 'verse',   label: 'Verse (versatile)',          gender: 'non-binary' }
   ];
 
   var DEFAULT_CONFIG = {
@@ -240,8 +238,16 @@
      */
     _defaultVoiceForGender: function (gender) {
       if (gender === 'feminine') return 'sage';
-      if (gender === 'non-binary') return 'alloy';
-      return 'fable'; // masculine default
+      if (gender === 'non-binary') return 'verse';
+      return 'onyx'; // masculine default
+    },
+
+    /**
+     * Get voice IDs that match a given gender category.
+     */
+    getVoicesForGender: function (gender) {
+      return VOICES.filter(function (v) { return v.gender === gender; })
+        .map(function (v) { return v.id; });
     }
   };
 })();
