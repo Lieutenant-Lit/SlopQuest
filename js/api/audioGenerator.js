@@ -263,29 +263,40 @@
         if (voiceId) usedVoices[voiceId] = true;
       }
 
-      // All available voices
-      var allVoices = SQ.PlayerConfig.VOICES.map(function (v) { return v.id; });
+      // Get the full passage text for gender detection
+      var gameState = SQ.GameState.get();
+      var passageText = (gameState && gameState.last_passage) || '';
 
       for (var k = 0; k < unknowns.length; k++) {
         var name = unknowns[k];
 
-        // Pick an unused voice, cycling through all if we run out
+        // Detect gender from passage context around this speaker's name
+        var gender = this._detectSpeakerGender(name, passageText);
+        var genderPool = SQ.PlayerConfig.getVoicesForGender(gender);
+
+        // Pick an unused voice from the appropriate gender pool
         var picked = null;
-        for (var m = 0; m < allVoices.length; m++) {
-          if (!usedVoices[allVoices[m]]) {
-            picked = allVoices[m];
+        for (var m = 0; m < genderPool.length; m++) {
+          if (!usedVoices[genderPool[m]]) {
+            picked = genderPool[m];
             break;
           }
         }
+        // If all voices in the gender pool are used, pick any unused voice
         if (!picked) {
-          // All voices used — pick one at random (excluding narrator)
-          var pool = allVoices.filter(function (v) {
-            return v !== SQ.PlayerConfig.getNarratorVoice();
-          });
-          picked = pool[Math.floor(Math.random() * pool.length)];
+          var allVoices = SQ.PlayerConfig.VOICES.map(function (v) { return v.id; });
+          for (var a = 0; a < allVoices.length; a++) {
+            if (!usedVoices[allVoices[a]]) {
+              picked = allVoices[a];
+              break;
+            }
+          }
+        }
+        // Last resort: random from gender pool
+        if (!picked) {
+          picked = genderPool[Math.floor(Math.random() * genderPool.length)];
         }
 
-        // Generate a basic style instruction from the speaker name
         var style = 'Speak as ' + name + ' would — give this character a distinctive, '
           + 'memorable voice. Use a unique accent, tone, and pacing that fits a '
           + 'character called "' + name + '". Make them sound completely different '
@@ -294,11 +305,10 @@
         npcVoices[name] = { voice: picked, style: style };
         usedVoices[picked] = true;
 
-        console.log('AudioGenerator: auto-assigned voice "' + picked + '" to unknown speaker "' + name + '"');
+        console.log('AudioGenerator: auto-assigned voice "' + picked + '" (' + gender + ') to unknown speaker "' + name + '"');
       }
 
       // Persist to game state so these assignments stick across passages
-      var gameState = SQ.GameState.get();
       if (gameState) {
         if (!gameState.npc_voices) gameState.npc_voices = {};
         for (var n = 0; n < unknowns.length; n++) {
@@ -306,6 +316,42 @@
         }
         SQ.GameState.save();
       }
+    },
+
+    /**
+     * Detect a speaker's likely gender from the passage text surrounding their name.
+     * Looks for pronouns and gendered nouns near the speaker's name.
+     * Returns 'masculine', 'feminine', or 'non-binary'.
+     * @private
+     */
+    _detectSpeakerGender: function (name, passageText) {
+      if (!passageText) return 'non-binary';
+
+      // Find text around the speaker's name (200 chars before/after each mention)
+      var context = '';
+      var lowerText = passageText.toLowerCase();
+      var lowerName = name.toLowerCase();
+      var searchPos = 0;
+      var idx;
+      while ((idx = lowerText.indexOf(lowerName, searchPos)) !== -1) {
+        var start = Math.max(0, idx - 200);
+        var end = Math.min(passageText.length, idx + lowerName.length + 200);
+        context += ' ' + passageText.slice(start, end).toLowerCase();
+        searchPos = idx + 1;
+      }
+
+      if (!context) return 'non-binary';
+
+      // Count masculine vs feminine cues
+      var mascPatterns = /\b(he |him |his |himself |man |boy |gentleman |lord |sir |king |prince |father |brother |mr\.? )\b/gi;
+      var femPatterns = /\b(she |her |hers |herself |woman |girl |lady |queen |princess |mother |sister |mrs\.? |miss |madam )\b/gi;
+
+      var mascCount = (context.match(mascPatterns) || []).length;
+      var femCount = (context.match(femPatterns) || []).length;
+
+      if (mascCount > femCount) return 'masculine';
+      if (femCount > mascCount) return 'feminine';
+      return 'non-binary';
     },
 
     /**
