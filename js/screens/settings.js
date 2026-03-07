@@ -196,8 +196,17 @@
               status.className = 'status-message success';
             });
           } else {
-            status.textContent = 'Invalid key. Check your ElevenLabs API key.';
-            status.className = 'status-message error';
+            return response.text().then(function (body) {
+              var detail = '';
+              try {
+                var json = JSON.parse(body);
+                detail = (json.detail && json.detail.message) ? json.detail.message : JSON.stringify(json.detail || json);
+              } catch (e) {
+                detail = body;
+              }
+              status.textContent = 'ElevenLabs error (HTTP ' + response.status + '): ' + detail;
+              status.className = 'status-message error';
+            });
           }
         })
         .catch(function () {
