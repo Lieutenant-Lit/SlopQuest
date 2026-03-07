@@ -32,6 +32,7 @@
         player: {
           name: setupConfig.characterName || 'The Wanderer',
           archetype: setupConfig.archetype || '',
+          voice_gender: setupConfig.voiceGender || '',
           health: 100,
           resources: {
             gold: startResources.gold,

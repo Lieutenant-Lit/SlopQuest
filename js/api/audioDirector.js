@@ -74,7 +74,7 @@
             console.warn('AudioDirector: LLM returned empty audio script');
             return false;
           }
-          return self._generateAllSegments(audioScript.segments);
+          return self._generateAllSegments(audioScript.segments, gameState);
         })
         .then(function (success) {
           if (success && _segments.length > 0) {
@@ -108,6 +108,14 @@
         return k !== '__narrator__';
       });
 
+      // Identify the player character for voice assignment
+      var playerName = '';
+      var playerVoiceGender = '';
+      if (gameState && gameState.player) {
+        playerName = gameState.player.name || 'The Wanderer';
+        playerVoiceGender = gameState.player.voice_gender || '';
+      }
+
       var systemPrompt = [
         'You are an Audio Director for an interactive narrative game.',
         'Your job is to break a story passage into audio segments for a full-cast audio play.',
@@ -116,7 +124,17 @@
         '- "narration": descriptive text read by the narrator',
         '- "dialogue": spoken lines by a specific character',
         '',
-        'For dialogue segments, identify the speaker name exactly as it appears in the text.',
+        'CRITICAL RULES:',
+        '- EVERY sentence in the passage MUST appear in exactly one segment. Do NOT skip or omit any text.',
+        '- Action beats and narrative between dialogue (e.g., "you call out cheerfully, continuing your approach")',
+        '  are NARRATION segments. They must be included.',
+        '- Preserve the EXACT text from the passage. Do not paraphrase or alter wording.',
+        '- Strip quotation marks from dialogue text (the voice actor speaks the words directly).',
+        '',
+        'The PLAYER CHARACTER is named "' + playerName + '". When the passage describes the player character',
+        'speaking (e.g., "you say", "you call out", "you reply"), use speaker name "' + playerName + '" for their dialogue.',
+        '',
+        'For other dialogue segments, identify the speaker name exactly as it appears in the text.',
         'For unnamed characters (e.g., "a guard", "the bartender"), use a descriptive identifier',
         'like "Gate Guard" or "Bartender" — be specific enough to distinguish different unnamed NPCs.',
         '',
@@ -126,9 +144,6 @@
         '- vocal quality (gruff, smooth, raspy, warm, cold, high-pitched, deep, etc.)',
         '- emotional tone for this line (angry, calm, amused, fearful, etc.)',
         '',
-        'IMPORTANT: Preserve the EXACT text from the passage. Do not paraphrase or alter wording.',
-        'Strip quotation marks from dialogue text (the voice actor speaks the words directly).',
-        '',
         'Known characters (already have assigned voices): ' + (knownCharacters.length > 0 ? knownCharacters.join(', ') : 'none yet'),
         '',
         'Respond with ONLY valid JSON in this format:',
@@ -137,7 +152,7 @@
         '    { "type": "narration", "text": "The guard stepped forward..." },',
         '    { "type": "dialogue", "speaker": "Gate Guard", "text": "Halt! Who goes there?", "voice_description": "gruff male, middle-aged, authoritative, stern" },',
         '    { "type": "narration", "text": "You raised your hands slowly." },',
-        '    { "type": "dialogue", "speaker": "Sera Blackwood", "text": "Easy, friend. This one is with me." }',
+        '    { "type": "dialogue", "speaker": "' + playerName + '", "text": "Easy now. I mean no trouble." }',
         '  ]',
         '}'
       ].join('\n');
@@ -148,6 +163,9 @@
       if (gameState && gameState.current) {
         userPrompt += '\n\nScene context: ' + (gameState.current.scene_context || 'unknown');
         userPrompt += '\nLocation: ' + (gameState.current.location || 'unknown');
+      }
+      if (playerName) {
+        userPrompt += '\nPlayer character: ' + playerName;
       }
 
       return SQ.API.call(ANALYSIS_MODEL, [
@@ -401,9 +419,10 @@
               throw new Error('ElevenLabs TTS failed: HTTP ' + response.status + ' - ' + text.slice(0, 200));
             });
           }
-          return response.blob();
+          return response.arrayBuffer();
         })
-        .then(function (blob) {
+        .then(function (buffer) {
+          var blob = new Blob([buffer], { type: 'audio/mpeg' });
           return URL.createObjectURL(blob);
         })
         .catch(function (err) {
@@ -418,14 +437,29 @@
      * (to avoid hammering the API and to respect rate limits).
      * @private
      */
-    _generateAllSegments: function (segments) {
+    _generateAllSegments: function (segments, gameState) {
       var self = this;
       _segments = [];
+
+      // Identify the player character for voice assignment
+      var playerName = (gameState && gameState.player && gameState.player.name) || '';
+      var playerVoiceGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
+
+      // Build a voice description for the player character based on their setup preferences
+      var playerVoiceDesc = '';
+      if (playerVoiceGender) {
+        playerVoiceDesc = playerVoiceGender + ', protagonist';
+      }
 
       // Pre-assign all voices before generating
       segments.forEach(function (seg) {
         if (seg.type === 'dialogue' && seg.speaker) {
-          self._assignVoice(seg.speaker, seg.voice_description || '');
+          // Use the player's voice preference if this is the player character
+          if (playerName && seg.speaker === playerName) {
+            self._assignVoice(seg.speaker, playerVoiceDesc || seg.voice_description || '');
+          } else {
+            self._assignVoice(seg.speaker, seg.voice_description || '');
+          }
         }
       });
       // Ensure narrator has a voice
@@ -459,9 +493,9 @@
             var narratorEntry = registry['__narrator__'];
             voiceId = narratorEntry ? narratorEntry.voice_id : null;
             // Narrator gets smooth, stable delivery
-            voiceSettings.stability = 0.6;
+            voiceSettings.stability = 0.75;
             voiceSettings.similarity_boost = 0.75;
-            voiceSettings.style = 0.15;
+            voiceSettings.style = 0.05;
           }
 
           if (!voiceId) {

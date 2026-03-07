@@ -130,7 +130,8 @@
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
         storyLength: this._selected.storyLength || 'medium',
-        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer'
+        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer',
+        voiceGender: document.getElementById('setup-voice-gender').value || ''
       };
     },
 
