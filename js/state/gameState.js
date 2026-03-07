@@ -56,6 +56,7 @@
         event_log: [],
         backstory_summary: '',
         narrator_voice_profile: null,
+        narration_segments: null,
         npc_voices: {},
         world_flags: {},
         last_passage: '',

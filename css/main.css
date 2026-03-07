@@ -983,6 +983,57 @@ select:focus {
   }
 }
 
+/* ===== NARRATION DEBUG ===== */
+.narration-debug-key {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.debug-key-entry {
+  padding: var(--spacing-xs) 0;
+  border-bottom: 1px solid var(--color-border);
+  line-height: 1.4;
+}
+
+.debug-key-entry:last-child {
+  border-bottom: none;
+}
+
+.debug-key-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: var(--spacing-xs);
+}
+
+.debug-key-entry code {
+  background: var(--color-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+.debug-key-style {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  display: block;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.debug-dialogue {
+  display: inline;
+  border-radius: 2px;
+}
+
 /* ===== DESKTOP ===== */
 @media (min-width: 1024px) {
   :root {

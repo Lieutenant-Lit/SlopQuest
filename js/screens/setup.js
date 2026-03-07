@@ -211,6 +211,7 @@
 
         // Apply passage response
         state.last_passage = passageResponse.passage;
+        state.narration_segments = passageResponse.narration_segments || null;
         state.current_choices = passageResponse.choices;
         state.illustration_prompt = passageResponse.illustration_prompt || '';
         if (passageResponse.state_updates) {

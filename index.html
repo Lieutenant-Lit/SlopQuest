@@ -80,6 +80,12 @@
             <option value="non-binary">Non-binary</option>
           </select>
           <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: var(--spacing-xs);">Voice profile is auto-generated to match your story's setting and tone.</p>
+
+          <label class="setup-toggle" style="margin-top: var(--spacing-md)">
+            <input type="checkbox" id="settings-narration-debug-toggle">
+            <span>Narration debug</span>
+          </label>
+          <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: var(--spacing-xs);">Color-highlights character dialogue and shows voice profiles above the passage.</p>
         </div>
       </div>
 
@@ -273,6 +279,7 @@
         <button class="btn-icon btn-audio" id="btn-audio-playpause" title="Play narration">&#9654;</button>
         <button class="btn-icon btn-audio" id="btn-audio-replay" title="Replay narration">&#8634;</button>
       </div>
+      <div id="narration-debug-key" class="narration-debug-key hidden"></div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>
       </div>

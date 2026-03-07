@@ -83,6 +83,11 @@
         SQ.PlayerConfig.setNarratorGender(this.value);
       });
 
+      // Narration debug toggle
+      document.getElementById('settings-narration-debug-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setNarrationDebug(this.checked);
+      });
+
       // Save & continue to main menu
       document.getElementById('btn-save-settings').addEventListener('click', function () {
         SQ.showScreen('mainmenu');
@@ -172,6 +177,10 @@
       // Set narrator gender selector
       document.getElementById('narrator-gender-select').value =
         SQ.PlayerConfig.getNarratorGender();
+
+      // Set narration debug toggle
+      document.getElementById('settings-narration-debug-toggle').checked =
+        SQ.PlayerConfig.isNarrationDebug();
 
       // Character voices — show when a game is active with NPCs and narration enabled
       var charCard = document.getElementById('character-voices-card');

@@ -33,7 +33,8 @@
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
     narration_enabled: false,
-    narrator_gender: 'masculine'
+    narrator_gender: 'masculine',
+    narration_debug: false
   };
 
   // Mock mode flag — default true for development
@@ -166,6 +167,23 @@
      * Available TTS voices for narrator and NPC assignment.
      */
     VOICES: VOICES,
+
+    /**
+     * Check if narration debug mode is enabled.
+     */
+    isNarrationDebug: function () {
+      var config = this.load();
+      return config.narration_debug === true;
+    },
+
+    /**
+     * Toggle narration debug mode.
+     */
+    setNarrationDebug: function (enabled) {
+      var config = this.load();
+      config.narration_debug = !!enabled;
+      this.save(config);
+    },
 
     /**
      * Get the narrator gender preference.

@@ -141,36 +141,190 @@
      * Render passage text into the passage container.
      * Splits on double-newlines into paragraphs.
      * If animate=true, paragraphs fade in with a staggered delay.
+     * In debug mode, highlights character dialogue with distinct colors.
      * @private
      */
     _renderPassage: function (text, animate) {
       var passageEl = document.getElementById('passage-text');
+      var debugKeyEl = document.getElementById('narration-debug-key');
 
       if (!text) return;
 
-      passageEl.innerHTML = '';
-      var paragraphs = text.split(/\n\n+/);
+      var state = SQ.GameState.get();
+      var isDebug = SQ.PlayerConfig.isNarrationDebug() && SQ.PlayerConfig.isNarrationEnabled();
 
-      paragraphs.forEach(function (p, i) {
-        var trimmed = p.trim();
+      // Render debug key and highlighted passage
+      if (isDebug && state) {
+        this._renderDebugKey(debugKeyEl, state);
+        this._renderDebugPassage(passageEl, text, state, animate);
+      } else {
+        debugKeyEl.classList.add('hidden');
+        debugKeyEl.innerHTML = '';
+        passageEl.innerHTML = '';
+        var paragraphs = text.split(/\n\n+/);
+
+        paragraphs.forEach(function (p, i) {
+          var trimmed = p.trim();
+          if (!trimmed) return;
+
+          var el = document.createElement('p');
+          el.textContent = trimmed;
+
+          if (animate) {
+            el.classList.add('passage-paragraph-enter');
+            setTimeout(function () {
+              el.classList.add('passage-paragraph-visible');
+            }, i * PARAGRAPH_STAGGER_MS);
+          }
+
+          passageEl.appendChild(el);
+        });
+      }
+
+      passageEl.scrollTop = 0;
+    },
+
+    /** Distinct colors for character dialogue highlighting. */
+    _debugColors: [
+      '#ff6b6b', '#4ecdc4', '#ffe66d', '#a29bfe',
+      '#fd79a8', '#00cec9', '#fab1a0', '#74b9ff',
+      '#ffeaa7', '#dfe6e9', '#55efc4', '#e17055'
+    ],
+
+    /**
+     * Build the debug voice key showing narrator + character profiles.
+     * @private
+     */
+    _renderDebugKey: function (el, state) {
+      el.classList.remove('hidden');
+      el.innerHTML = '';
+
+      var narratorProfile = SQ.PlayerConfig.getNarratorProfile();
+
+      // Narrator entry
+      var narratorRow = document.createElement('div');
+      narratorRow.className = 'debug-key-entry';
+      narratorRow.innerHTML = '<span class="debug-key-swatch" style="background:#888"></span>'
+        + '<strong>Narrator</strong> &mdash; voice: <code>' + this._escHtml(narratorProfile.voice)
+        + '</code><br><span class="debug-key-style">' + this._escHtml(narratorProfile.style || '(no style)') + '</span>';
+      el.appendChild(narratorRow);
+
+      // Character entries
+      var npcVoices = state.npc_voices || {};
+      var speakers = Object.keys(npcVoices);
+      var colors = this._debugColors;
+
+      for (var i = 0; i < speakers.length; i++) {
+        var name = speakers[i];
+        var entry = npcVoices[name];
+        var voice = typeof entry === 'string' ? entry : (entry && entry.voice || '?');
+        var style = (entry && typeof entry === 'object' && entry.style) || '(no style)';
+        var color = colors[i % colors.length];
+
+        var row = document.createElement('div');
+        row.className = 'debug-key-entry';
+        row.innerHTML = '<span class="debug-key-swatch" style="background:' + color + '"></span>'
+          + '<strong>' + this._escHtml(name) + '</strong> &mdash; voice: <code>' + this._escHtml(voice)
+          + '</code><br><span class="debug-key-style">' + this._escHtml(style) + '</span>';
+        el.appendChild(row);
+      }
+    },
+
+    /**
+     * Render the passage with color-highlighted character dialogue.
+     * Uses narration_segments from game state to identify dialogue boundaries.
+     * Falls back to quote-boundary parsing if segments aren't available.
+     * @private
+     */
+    _renderDebugPassage: function (passageEl, text, state, animate) {
+      passageEl.innerHTML = '';
+
+      var npcVoices = state.npc_voices || {};
+      var speakers = Object.keys(npcVoices);
+      var colors = this._debugColors;
+
+      // Build speaker → color map
+      var colorMap = {};
+      for (var i = 0; i < speakers.length; i++) {
+        colorMap[speakers[i]] = colors[i % colors.length];
+      }
+
+      // Use stored segments if available, otherwise parse from text
+      var segments = state.narration_segments;
+      if (!segments || segments.length === 0) {
+        // Fallback: parse quotes from text
+        segments = this._parseQuoteSegments(text, npcVoices);
+      }
+
+      // Build highlighted HTML from segments, splitting on paragraph boundaries
+      var html = '';
+      for (var s = 0; s < segments.length; s++) {
+        var seg = segments[s];
+        var segText = seg.text || '';
+        if (seg.speaker && colorMap[seg.speaker]) {
+          html += '<span class="debug-dialogue" style="background:' + colorMap[seg.speaker] + '22;border-left:3px solid ' + colorMap[seg.speaker] + ';padding-left:4px">'
+            + this._escHtml(segText) + '</span>';
+        } else if (seg.speaker) {
+          // Unknown speaker — use a default highlight
+          html += '<span class="debug-dialogue" style="background:#ffffff11;border-left:3px solid #666;padding-left:4px">'
+            + this._escHtml(segText) + '</span>';
+        } else {
+          html += this._escHtml(segText);
+        }
+      }
+
+      // Split into paragraphs on double-newlines within the HTML
+      // Since we escaped the text, newlines are literal \n in the output
+      var paragraphs = html.split(/\n\n+/);
+
+      paragraphs.forEach(function (pHtml, idx) {
+        var trimmed = pHtml.trim();
         if (!trimmed) return;
 
         var el = document.createElement('p');
-        el.textContent = trimmed;
+        el.innerHTML = trimmed;
 
         if (animate) {
           el.classList.add('passage-paragraph-enter');
-          // Stagger each paragraph's appearance
           setTimeout(function () {
             el.classList.add('passage-paragraph-visible');
-          }, i * PARAGRAPH_STAGGER_MS);
+          }, idx * PARAGRAPH_STAGGER_MS);
         }
 
         passageEl.appendChild(el);
       });
+    },
 
-      // Scroll passage to top when new content arrives
-      passageEl.scrollTop = 0;
+    /**
+     * Simple quote-boundary parser for debug highlighting when segments aren't stored.
+     * @private
+     */
+    _parseQuoteSegments: function (text, npcVoices) {
+      var segments = [];
+      var quoteRegex = /"[^"]+"/g;
+      var match;
+      var pos = 0;
+
+      while ((match = quoteRegex.exec(text)) !== null) {
+        if (match.index > pos) {
+          segments.push({ speaker: null, text: text.slice(pos, match.index) });
+        }
+        // Try to match this quote to a known speaker (basic heuristic)
+        segments.push({ speaker: null, text: match[0] });
+        pos = match.index + match[0].length;
+      }
+      if (pos < text.length) {
+        segments.push({ speaker: null, text: text.slice(pos) });
+      }
+      return segments;
+    },
+
+    /**
+     * Escape HTML special characters.
+     * @private
+     */
+    _escHtml: function (str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     },
 
     /**
@@ -398,6 +552,7 @@
 
       // 10. Update passage, choices, and scene number
       state.last_passage = response.passage;
+      state.narration_segments = response.narration_segments || null;
       state.current_choices = response.choices;
       state.illustration_prompt = response.illustration_prompt || '';
       state.current.scene_number = (state.current.scene_number || 0) + 1;
