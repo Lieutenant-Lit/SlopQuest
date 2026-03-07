@@ -389,7 +389,7 @@
       settings = settings || {};
       var body = {
         text: text,
-        model_id: 'eleven_multilingual_v2',
+        model_id: 'eleven_flash_v2_5',
         voice_settings: {
           stability: settings.stability || 0.5,
           similarity_boost: settings.similarity_boost || 0.75,
