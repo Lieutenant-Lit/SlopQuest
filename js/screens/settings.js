@@ -78,31 +78,9 @@
         }
       });
 
-      // Narrator profile dropdown — populate from VOICE_PROFILES
-      var profileSelect = document.getElementById('narrator-profile-select');
-      SQ.PlayerConfig.VOICE_PROFILES.forEach(function (p) {
-        var opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.label;
-        profileSelect.appendChild(opt);
-      });
-      profileSelect.addEventListener('change', function () {
-        SQ.PlayerConfig.setNarratorProfile(this.value);
-        // Update the voice override dropdown to match the profile's voice
-        var voiceSelect = document.getElementById('narrator-voice-select');
-        voiceSelect.value = SQ.PlayerConfig.getNarratorVoice();
-      });
-
-      // Narrator voice override dropdown — populate from VOICES
-      var voiceSelect = document.getElementById('narrator-voice-select');
-      SQ.PlayerConfig.VOICES.forEach(function (v) {
-        var opt = document.createElement('option');
-        opt.value = v.id;
-        opt.textContent = v.label;
-        voiceSelect.appendChild(opt);
-      });
-      voiceSelect.addEventListener('change', function () {
-        SQ.PlayerConfig.setNarratorVoice(this.value);
+      // Narrator gender selector
+      document.getElementById('narrator-gender-select').addEventListener('change', function () {
+        SQ.PlayerConfig.setNarratorGender(this.value);
       });
 
       // Save & continue to main menu
@@ -191,11 +169,9 @@
         audioCustomInput.value = currentAudioModel;
       }
 
-      // Set narrator profile and voice selectors
-      var profileSelect = document.getElementById('narrator-profile-select');
-      profileSelect.value = SQ.PlayerConfig.getNarratorProfileId();
-      var voiceSelect = document.getElementById('narrator-voice-select');
-      voiceSelect.value = SQ.PlayerConfig.getNarratorVoice();
+      // Set narrator gender selector
+      document.getElementById('narrator-gender-select').value =
+        SQ.PlayerConfig.getNarratorGender();
 
       // Character voices — show when a game is active with NPCs and narration enabled
       var charCard = document.getElementById('character-voices-card');

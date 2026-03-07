@@ -55,6 +55,7 @@
         current_choices: null,
         event_log: [],
         backstory_summary: '',
+        narrator_voice_profile: null,
         npc_voices: {},
         world_flags: {},
         last_passage: '',

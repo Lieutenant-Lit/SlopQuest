@@ -73,15 +73,13 @@
           </select>
           <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
 
-          <label class="card-label" style="margin-top: var(--spacing-md)">Narrator Profile</label>
-          <select id="narrator-profile-select">
-            <!-- Populated dynamically from SQ.PlayerConfig.VOICE_PROFILES -->
+          <label class="card-label" style="margin-top: var(--spacing-md)">Narrator Voice</label>
+          <select id="narrator-gender-select">
+            <option value="masculine">Masculine</option>
+            <option value="feminine">Feminine</option>
+            <option value="non-binary">Non-binary</option>
           </select>
-
-          <label class="card-label" style="margin-top: var(--spacing-sm)">Narrator Voice Override</label>
-          <select id="narrator-voice-select">
-            <!-- Populated dynamically from SQ.PlayerConfig.VOICES -->
-          </select>
+          <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: var(--spacing-xs);">Voice profile is auto-generated to match your story's setting and tone.</p>
         </div>
       </div>
 

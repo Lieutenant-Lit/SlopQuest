@@ -172,10 +172,10 @@
 
         SQ.GameState.save();
 
-        // Generate voice profiles for NPCs via LLM (parallel with passage gen)
-        var voiceProfilePromise = Promise.resolve({});
-        if (skeleton.npcs && skeleton.npcs.length > 0 && SQ.PlayerConfig.isNarrationEnabled()) {
-          if (loadingStatus) loadingStatus.textContent = 'Casting character voices...';
+        // Generate voice profiles for narrator + NPCs via LLM (parallel with passage gen)
+        var voiceProfilePromise = Promise.resolve({ narrator: null, npcs: {} });
+        if (SQ.PlayerConfig.isNarrationEnabled()) {
+          if (loadingStatus) loadingStatus.textContent = 'Casting voices...';
           voiceProfilePromise = SQ.VoiceProfileGenerator.generate(skeleton, state.meta);
         }
 
@@ -193,11 +193,16 @@
         var voiceProfiles = combined.voiceProfiles;
         var state = SQ.GameState.get();
 
-        // Apply LLM-generated voice profiles to NPC voices
-        if (voiceProfiles && Object.keys(voiceProfiles).length > 0) {
-          var profileKeys = Object.keys(voiceProfiles);
-          for (var vp = 0; vp < profileKeys.length; vp++) {
-            state.npc_voices[profileKeys[vp]] = voiceProfiles[profileKeys[vp]];
+        // Apply LLM-generated narrator voice profile
+        if (voiceProfiles.narrator) {
+          state.narrator_voice_profile = voiceProfiles.narrator;
+        }
+
+        // Apply LLM-generated NPC voice profiles
+        if (voiceProfiles.npcs) {
+          var npcKeys = Object.keys(voiceProfiles.npcs);
+          for (var vp = 0; vp < npcKeys.length; vp++) {
+            state.npc_voices[npcKeys[vp]] = voiceProfiles.npcs[npcKeys[vp]];
           }
         }
 
