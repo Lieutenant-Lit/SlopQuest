@@ -60,22 +60,14 @@
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
       });
 
-      // Audio model selection
-      document.getElementById('audio-model-select').addEventListener('change', function () {
-        var customInput = document.getElementById('audio-model-custom-input');
-        if (this.value === 'custom') {
-          customInput.classList.remove('hidden');
-          customInput.focus();
-        } else {
-          customInput.classList.add('hidden');
-          SQ.PlayerConfig.setModel('audio', this.value);
-        }
+      // ElevenLabs API key
+      document.getElementById('elevenlabs-api-key-input').addEventListener('change', function () {
+        SQ.PlayerConfig.setElevenLabsApiKey(this.value.trim());
       });
 
-      document.getElementById('audio-model-custom-input').addEventListener('change', function () {
-        if (this.value.trim()) {
-          SQ.PlayerConfig.setModel('audio', this.value.trim());
-        }
+      // ElevenLabs model selection
+      document.getElementById('elevenlabs-model-select').addEventListener('change', function () {
+        SQ.PlayerConfig.setElevenLabsModel(this.value);
       });
 
       // Narrator gender selector
@@ -170,23 +162,15 @@
       document.getElementById('settings-narration-toggle').checked =
         SQ.PlayerConfig.isNarrationEnabled();
 
-      // Set audio model selector to current value
-      var currentAudioModel = SQ.PlayerConfig.getModel('audio');
-      var audioSelect = document.getElementById('audio-model-select');
-      var audioFound = false;
-      for (var k = 0; k < audioSelect.options.length; k++) {
-        if (audioSelect.options[k].value === currentAudioModel) {
-          audioSelect.selectedIndex = k;
-          audioFound = true;
-          break;
-        }
+      // Set ElevenLabs API key
+      var elApiKey = SQ.PlayerConfig.getElevenLabsApiKey();
+      if (elApiKey) {
+        document.getElementById('elevenlabs-api-key-input').value = elApiKey;
       }
-      if (!audioFound && currentAudioModel) {
-        audioSelect.value = 'custom';
-        var audioCustomInput = document.getElementById('audio-model-custom-input');
-        audioCustomInput.classList.remove('hidden');
-        audioCustomInput.value = currentAudioModel;
-      }
+
+      // Set ElevenLabs model selector
+      document.getElementById('elevenlabs-model-select').value =
+        SQ.PlayerConfig.getElevenLabsModel();
 
       // Set narrator gender selector
       document.getElementById('narrator-gender-select').value =

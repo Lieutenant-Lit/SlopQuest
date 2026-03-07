@@ -6,27 +6,36 @@
   var STORAGE_KEY = 'slopquest_player_config';
   var MOCK_KEY = 'slopquest_mock_mode';
 
+  // ElevenLabs curated voices for fantasy narration.
+  // Each voice_id is a premade ElevenLabs voice chosen for its suitability
+  // to audiobook-quality multi-character narration.
   var VOICES = [
-    { id: 'alloy',   label: 'Alloy (neutral)',           gender: 'non-binary' },
-    { id: 'ash',     label: 'Ash (clear, male)',          gender: 'masculine' },
-    { id: 'ballad',  label: 'Ballad (expressive)',        gender: 'non-binary' },
-    { id: 'coral',   label: 'Coral (warm, female)',       gender: 'feminine' },
-    { id: 'echo',    label: 'Echo (resonant, male)',      gender: 'masculine' },
-    { id: 'fable',   label: 'Fable (storyteller)',        gender: 'non-binary' },
-    { id: 'nova',    label: 'Nova (bright, female)',      gender: 'feminine' },
-    { id: 'onyx',    label: 'Onyx (deep, male)',          gender: 'masculine' },
-    { id: 'sage',    label: 'Sage (calm, female)',        gender: 'feminine' },
-    { id: 'shimmer', label: 'Shimmer (cheerful, female)', gender: 'feminine' },
-    { id: 'verse',   label: 'Verse (versatile)',          gender: 'non-binary' }
+    { id: 'onwK4e9ZLuTAKqWW03F9', label: 'Daniel (deep, British)',       gender: 'masculine' },
+    { id: 'nPczCjzI2devNBz1zQrb', label: 'Brian (deep, American)',       gender: 'masculine' },
+    { id: '2EiwWnXFnvU5JabPnv8n', label: 'Clyde (war veteran)',          gender: 'masculine' },
+    { id: 'N2lVS1w4EtoT3dr4eOWO', label: 'Callum (hoarse)',             gender: 'masculine' },
+    { id: 'D38z5RcWu1voky8WS1ja', label: 'Fin (Irish, sailor)',          gender: 'masculine' },
+    { id: 'ErXwobaYiN019PkySvjV', label: 'Antoni (clear, young)',        gender: 'masculine' },
+    { id: 'JBFqnCBsd6RMkjVDRZzb', label: 'George (raspy, British)',      gender: 'masculine' },
+    { id: 'pqHfZKP75CvOlQylNhV4', label: 'Bill (strong, American)',      gender: 'masculine' },
+    { id: 'XrExE9yKIg1WjnnlVkGX', label: 'Matilda (warm)',              gender: 'feminine' },
+    { id: '21m00Tcm4TlvDq8ikWAM', label: 'Rachel (calm, American)',      gender: 'feminine' },
+    { id: 'ThT5KcBeYPX3keUQqHPh', label: 'Dorothy (pleasant, British)',  gender: 'feminine' },
+    { id: 'pFZP5JQG7iQjIQuC4Bku', label: 'Lily (raspy, British)',        gender: 'feminine' },
+    { id: 'jsCqWAovK2LkecY7zXl4', label: 'Freya (American)',             gender: 'feminine' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah (soft, American)',       gender: 'feminine' },
+    { id: 'Xb7hH8MSUJpSbSDYk0k2', label: 'Alice (confident, British)',   gender: 'feminine' },
+    { id: 'XB0fDUnXU5powFXDhCwa', label: 'Charlotte (seductive, Swedish)', gender: 'feminine' }
   ];
 
   var DEFAULT_CONFIG = {
     openrouter_api_key: '',
+    elevenlabs_api_key: '',
+    elevenlabs_model: 'eleven_multilingual_v2',
     models: {
       skeleton: 'anthropic/claude-sonnet-4',
       passage: 'anthropic/claude-sonnet-4',
-      image: 'google/gemini-3.1-flash-image-preview',
-      audio: 'openai/gpt-4o-audio-preview'
+      image: 'google/gemini-3.1-flash-image-preview'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
@@ -257,9 +266,8 @@
      * @private
      */
     _defaultVoiceForGender: function (gender) {
-      if (gender === 'feminine') return 'sage';
-      if (gender === 'non-binary') return 'verse';
-      return 'onyx'; // masculine default
+      if (gender === 'feminine') return 'XrExE9yKIg1WjnnlVkGX'; // Matilda
+      return 'onwK4e9ZLuTAKqWW03F9'; // Daniel (deep, British) — default for masculine and non-binary
     },
 
     /**
@@ -268,6 +276,46 @@
     getVoicesForGender: function (gender) {
       return VOICES.filter(function (v) { return v.gender === gender; })
         .map(function (v) { return v.id; });
+    },
+
+    /**
+     * Get the ElevenLabs API key.
+     */
+    getElevenLabsApiKey: function () {
+      return this.load().elevenlabs_api_key || '';
+    },
+
+    /**
+     * Set and persist the ElevenLabs API key.
+     */
+    setElevenLabsApiKey: function (key) {
+      var config = this.load();
+      config.elevenlabs_api_key = key;
+      this.save(config);
+    },
+
+    /**
+     * Check if a non-empty ElevenLabs API key is stored.
+     */
+    hasElevenLabsApiKey: function () {
+      return this.getElevenLabsApiKey().length > 0;
+    },
+
+    /**
+     * Get the ElevenLabs model ID.
+     */
+    getElevenLabsModel: function () {
+      var config = this.load();
+      return config.elevenlabs_model || DEFAULT_CONFIG.elevenlabs_model;
+    },
+
+    /**
+     * Set the ElevenLabs model ID.
+     */
+    setElevenLabsModel: function (modelId) {
+      var config = this.load();
+      config.elevenlabs_model = modelId;
+      this.save(config);
     }
   };
 })();

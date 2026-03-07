@@ -4,11 +4,10 @@
  * tailored to their personality and the game's setting.
  */
 (function () {
-  var AVAILABLE_VOICES = [
-    'alloy', 'ash', 'ballad', 'coral',
-    'echo', 'fable', 'nova', 'onyx',
-    'sage', 'shimmer', 'verse'
-  ];
+  // Build AVAILABLE_VOICES from the curated ElevenLabs list at runtime
+  function getAvailableVoiceIds() {
+    return SQ.PlayerConfig.VOICES.map(function (v) { return v.id; });
+  }
 
   SQ.VoiceProfileGenerator = {
     /**
@@ -39,27 +38,33 @@
         }).join('\n');
       }
 
-      var systemPrompt = 'You are a voice casting director for an audio drama. '
-        + 'You assign distinct, memorable voice profiles to characters AND the narrator.\n\n'
+      // Build a voice catalog string for the LLM from the curated ElevenLabs list
+      var voiceCatalog = SQ.PlayerConfig.VOICES.map(function (v) {
+        return v.id + ' = ' + v.label + ' [' + v.gender + ']';
+      }).join('\n');
+
+      var narratorVoiceLabels = SQ.PlayerConfig.VOICES
+        .filter(function (v) { return narratorVoices.indexOf(v.id) !== -1; })
+        .map(function (v) { return v.id + ' (' + v.label + ')'; })
+        .join(', ');
+
+      var systemPrompt = 'You are a voice casting director for a high-budget full-cast audiobook. '
+        + 'You assign distinct, memorable ElevenLabs voice profiles to characters AND the narrator.\n\n'
         + 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences.\n\n'
-        + 'VOICE CATEGORIES — you MUST respect these gender assignments:\n'
-        + 'FEMININE voices: coral (warm, young), nova (bright, young), sage (calm, mature), shimmer (cheerful, bright)\n'
-        + 'MASCULINE voices: ash (clear, young), echo (resonant, deep), onyx (deep, authoritative)\n'
-        + 'NON-BINARY voices: alloy (neutral), ballad (expressive, melodic), fable (storyteller), verse (versatile, expressive)\n\n'
+        + 'AVAILABLE ELEVENLABS VOICES:\n' + voiceCatalog + '\n\n'
         + 'RULES:\n'
-        + '- The NARRATOR must use one of these ' + narratorGender.toUpperCase() + ' voices: ' + narratorVoices.join(', ') + '\n'
+        + '- The NARRATOR must use one of these ' + narratorGender.toUpperCase() + ' voices: ' + narratorVoiceLabels + '\n'
         + '  (Suggestion: try "' + suggestedNarrator + '" — but pick whichever best fits the story.)\n'
-        + '- NEVER assign a voice from the wrong gender category to the narrator.\n'
+        + '- NEVER assign a voice from the wrong gender to the narrator.\n'
         + '- Each NPC should use a DIFFERENT voice from the narrator and from each other.\n'
-        + '- For NPCs, pick voices from ANY gender category that fits the character.\n'
-        + '- Maximize variety in voice, accent, pacing, and energy.\n\n'
-        + 'For EACH entry (narrator + every NPC), create a "style" string — a system prompt for the TTS model. '
-        + 'Be specific about:\n'
-        + '- Voice quality (gravelly, silky, raspy, clear, rich, warm, etc.)\n'
-        + '- Tone (cold, warm, menacing, cheerful, weary, dramatic, intimate, etc.)\n'
+        + '- For NPCs, pick voices from ANY gender that fits the character.\n'
+        + '- Maximize variety — use the voice characteristics (deep, raspy, warm, etc.) to match character personality.\n\n'
+        + 'For EACH entry (narrator + every NPC), create a "style" string — a performance direction for the TTS. '
+        + 'This gets prepended as [bracketed acting instruction] before the text. Be specific about:\n'
+        + '- Emotional delivery (cold, warm, menacing, cheerful, weary, dramatic, intimate, etc.)\n'
         + '- Pacing (fast/slow, clipped/flowing, deliberate, hurried, measured)\n'
-        + '- Accent (British, Irish, Scottish, Cockney, archaic, etc. — choose accents fitting the setting)\n'
-        + '- Emotion (what simmers beneath the surface)\n'
+        + '- Accent hints (British, Irish, Scottish, Cockney, archaic, etc.)\n'
+        + '- Character energy (simmering anger, nervous tension, calm authority)\n'
         + '- Any speech quirks or mannerisms\n\n'
         + 'The narrator style should be crafted for reading prose — dramatic, immersive, suited to the setting.';
 
@@ -98,12 +103,13 @@
           var result = { narrator: null, npcs: {} };
 
           // Extract narrator profile — validate voice is in correct gender category
+          var availableVoices = getAvailableVoiceIds();
           var allowedNarratorVoices = SQ.PlayerConfig.getVoicesForGender(narratorGender);
           var narratorEntry = parsed['__narrator__'] || parsed['narrator'] || parsed['Narrator'];
           if (narratorEntry && narratorEntry.voice && narratorEntry.style) {
-            var nVoice = narratorEntry.voice.toLowerCase();
+            var nVoice = narratorEntry.voice;
             // Must be both a valid voice AND in the correct gender category
-            if (AVAILABLE_VOICES.indexOf(nVoice) === -1 || allowedNarratorVoices.indexOf(nVoice) === -1) {
+            if (availableVoices.indexOf(nVoice) === -1 || allowedNarratorVoices.indexOf(nVoice) === -1) {
               console.warn('VoiceProfileGenerator: narrator voice "' + nVoice + '" not in ' + narratorGender + ' category, replacing');
               nVoice = allowedNarratorVoices[Math.floor(Math.random() * allowedNarratorVoices.length)];
             }
@@ -121,8 +127,8 @@
             skeleton.npcs.forEach(function (npc) {
               var entry = parsed[npc.name];
               if (entry && entry.voice && entry.style) {
-                var voiceId = entry.voice.toLowerCase();
-                if (AVAILABLE_VOICES.indexOf(voiceId) === -1) {
+                var voiceId = entry.voice;
+                if (availableVoices.indexOf(voiceId) === -1) {
                   voiceId = SQ.VoiceProfileGenerator._pickFallbackVoice(result.npcs, narratorVoice);
                 }
                 result.npcs[npc.name] = { voice: voiceId, style: entry.style };
@@ -149,6 +155,7 @@
      * @private
      */
     _pickFallbackVoice: function (usedMap, narratorVoice) {
+      var voices = getAvailableVoiceIds();
       var usedVoices = {};
       usedVoices[narratorVoice] = true;
       var keys = Object.keys(usedMap);
@@ -156,10 +163,10 @@
         var v = usedMap[keys[i]];
         usedVoices[typeof v === 'string' ? v : v.voice] = true;
       }
-      for (var j = 0; j < AVAILABLE_VOICES.length; j++) {
-        if (!usedVoices[AVAILABLE_VOICES[j]]) return AVAILABLE_VOICES[j];
+      for (var j = 0; j < voices.length; j++) {
+        if (!usedVoices[voices[j]]) return voices[j];
       }
-      return AVAILABLE_VOICES[0];
+      return voices[0];
     },
 
     /**
@@ -169,7 +176,7 @@
     _fallbackGenerate: function (skeleton, narratorGender) {
       var genderPool = SQ.PlayerConfig.getVoicesForGender(narratorGender);
       var narratorVoice = genderPool[Math.floor(Math.random() * genderPool.length)];
-      var pool = AVAILABLE_VOICES.filter(function (v) { return v !== narratorVoice; });
+      var pool = getAvailableVoiceIds().filter(function (v) { return v !== narratorVoice; });
       var result = {
         narrator: {
           voice: narratorVoice,
@@ -203,11 +210,11 @@
         npcs: {}
       };
       var mockProfiles = [
-        { voice: 'coral', style: 'Voice: Warm but hardened. Tone: Passionate, determined. Pacing: Measured but urgent. Accent: Slight Irish lilt. Emotion: Fierce conviction tempered by weariness.' },
-        { voice: 'onyx', style: 'Voice: Deep, gravelly. Tone: Cold, clipped military precision. Pacing: Short sharp sentences. Accent: Northern English gruffness. Emotion: Stoic, controlled anger.' },
-        { voice: 'sage', style: 'Voice: Quiet, deliberate, ethereal. Tone: Detached, contemplative. Pacing: Very slow and precise. Accent: Refined old-world. Emotion: Cold curiosity.' },
-        { voice: 'verse', style: 'Voice: Smooth, refined, condescending. Tone: Theatrical, self-important. Pacing: Languid, unhurried. Accent: Upper-class British. Emotion: Barely concealed ambition.' },
-        { voice: 'nova', style: 'Voice: Quick, bright, scrappy. Tone: Cheeky, streetwise. Pacing: Fast and darting. Accent: Cockney-influenced. Emotion: Wary bravado masking vulnerability.' }
+        { voice: 'XrExE9yKIg1WjnnlVkGX', style: 'Warm but hardened. Passionate, determined. Measured but urgent. Slight Irish lilt. Fierce conviction tempered by weariness.' },
+        { voice: '2EiwWnXFnvU5JabPnv8n', style: 'Deep, gravelly. Cold, clipped military precision. Short sharp sentences. Northern English gruffness. Stoic, controlled anger.' },
+        { voice: 'ThT5KcBeYPX3keUQqHPh', style: 'Quiet, deliberate, ethereal. Detached, contemplative. Very slow and precise. Refined old-world. Cold curiosity.' },
+        { voice: 'JBFqnCBsd6RMkjVDRZzb', style: 'Smooth, refined, condescending. Theatrical, self-important. Languid, unhurried. Upper-class British. Barely concealed ambition.' },
+        { voice: 'pFZP5JQG7iQjIQuC4Bku', style: 'Quick, bright, scrappy. Cheeky, streetwise. Fast and darting. Cockney-influenced. Wary bravado masking vulnerability.' }
       ];
 
       if (skeleton && skeleton.npcs) {

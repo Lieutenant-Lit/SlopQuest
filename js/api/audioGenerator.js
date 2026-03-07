@@ -1,15 +1,13 @@
 /**
- * SQ.AudioGenerator — TTS narration via OpenRouter audio modality.
- * Abstract interface: swap to ElevenLabs or another provider by replacing
- * the _callProvider method without changing game logic.
+ * SQ.AudioGenerator — TTS narration via ElevenLabs text-to-speech API.
  *
  * Supports multi-voice narration: when narration_segments are provided
  * (from a separate segmentation API call), each segment is generated
- * in parallel with its assigned voice, then all PCM16 buffers are
- * stitched together into a single WAV file.
+ * in parallel with its assigned ElevenLabs voice, then all PCM16 buffers
+ * are stitched together into a single WAV file.
  *
  * Design doc Section 5: fires in parallel with text + image generation,
- * audio plays as it streams in, gracefully degrades to text-only on failure.
+ * audio plays when ready, gracefully degrades to text-only on failure.
  */
 (function () {
   var AUDIO_TIMEOUT_MS = 60000;
@@ -37,6 +35,11 @@
 
       if (SQ.useMockData) {
         return this._mockGenerate();
+      }
+
+      if (!SQ.PlayerConfig.hasElevenLabsApiKey()) {
+        console.warn('AudioGenerator: narration enabled but no ElevenLabs API key configured');
+        return Promise.resolve(null);
       }
 
       // If we have segments with any NPC speakers, use multi-voice path.
@@ -490,56 +493,55 @@
     },
 
     /**
-     * Fetch raw PCM16 audio data for a text segment with a given voice and style.
-     * This is the core API call — returns a Uint8Array of PCM16 bytes.
+     * Fetch raw PCM16 audio data for a text segment via ElevenLabs TTS API.
+     * Returns a Uint8Array of signed 16-bit PCM at 24 kHz.
      * @param {string} text - Text to narrate
-     * @param {string} voice - OpenAI voice ID
-     * @param {string|null} style - Style instruction for voice characterization
+     * @param {string} voiceId - ElevenLabs voice ID
+     * @param {string|null} style - Style/acting instruction for voice characterization
      * @returns {Promise<Uint8Array|null>}
      * @private
      */
-    _fetchPcm16: function (text, voice, style) {
-      var model = SQ.PlayerConfig.getModel('audio');
-      var apiKey = SQ.PlayerConfig.getApiKey();
+    _fetchPcm16: function (text, voiceId, style) {
+      var apiKey = SQ.PlayerConfig.getElevenLabsApiKey();
 
       if (!apiKey) {
-        console.warn('AudioGenerator: no API key configured');
+        console.warn('AudioGenerator: no ElevenLabs API key configured');
         return Promise.resolve(null);
       }
 
-      var messages = [];
+      // Use the first voice in our curated list as fallback
+      if (!voiceId) voiceId = SQ.PlayerConfig.VOICES[0].id;
+
+      var model = SQ.PlayerConfig.getElevenLabsModel();
+      var url = 'https://api.elevenlabs.io/v1/text-to-speech/'
+        + encodeURIComponent(voiceId) + '?output_format=pcm_24000';
+
+      // Prepend style instruction as a bracketed performance direction.
+      // ElevenLabs models interpret contextual cues for emotion and delivery.
+      var spokenText = text;
       if (style) {
-        messages.push({
-          role: 'system',
-          content: style + '\nDo not add any commentary or extra text. Just read the passage aloud.'
-        });
+        spokenText = '[' + style + ']\n\n' + text;
       }
-      messages.push({
-        role: 'user',
-        content: 'Read the following passage aloud. '
-          + 'Use a natural, dramatic reading voice appropriate for a story. '
-          + 'Do not add any commentary or extra text — just narrate:\n\n'
-          + text
-      });
 
       var body = {
-        model: model,
-        stream: true,
-        modalities: ['text', 'audio'],
-        audio: { voice: voice || 'alloy', format: 'pcm16' },
-        messages: messages
+        text: spokenText,
+        model_id: model,
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+          style: 0.4,
+          use_speaker_boost: true
+        }
       };
 
       var controller = new AbortController();
       var timeoutId = setTimeout(function () { controller.abort(); }, AUDIO_TIMEOUT_MS);
 
-      return fetch('https://openrouter.ai/api/v1/chat/completions', {
+      return fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + apiKey,
-          'HTTP-Referer': window.location.href,
-          'X-Title': 'SlopQuest'
+          'xi-api-key': apiKey
         },
         body: JSON.stringify(body),
         signal: controller.signal
@@ -549,96 +551,28 @@
 
           if (!response.ok) {
             return response.text().then(function (respText) {
-              throw new Error('HTTP ' + response.status + ': ' + respText.slice(0, 200));
+              throw new Error('ElevenLabs HTTP ' + response.status + ': ' + respText.slice(0, 200));
             });
           }
 
-          return SQ.AudioGenerator._parseSSEPcm16(response);
+          return response.arrayBuffer();
+        })
+        .then(function (buffer) {
+          return new Uint8Array(buffer);
         })
         .catch(function (err) {
           clearTimeout(timeoutId);
-          console.warn('AudioGenerator: segment fetch failed.');
-          console.warn('  Voice:', voice);
+          console.warn('AudioGenerator: ElevenLabs segment fetch failed.');
+          console.warn('  Voice:', voiceId);
           console.warn('  Error:', err.message || err);
           return null;
         });
     },
 
     /**
-     * Parse an SSE stream response and return raw PCM16 bytes (Uint8Array).
-     * @private
-     */
-    _parseSSEPcm16: function (response) {
-      var reader = response.body.getReader();
-      var decoder = new TextDecoder();
-      var buffer = '';
-      var audioChunks = [];
-
-      function processLines(text) {
-        buffer += text;
-        var lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (var i = 0; i < lines.length; i++) {
-          var line = lines[i].trim();
-          if (!line || line === 'data: [DONE]') continue;
-          if (line.indexOf('data: ') !== 0) continue;
-
-          try {
-            var data = JSON.parse(line.slice(6));
-            var delta = data.choices && data.choices[0] && data.choices[0].delta;
-            if (!delta) continue;
-
-            if (delta.audio && delta.audio.data) {
-              audioChunks.push(delta.audio.data);
-            }
-          } catch (e) {
-            // Skip malformed SSE lines
-          }
-        }
-      }
-
-      function read() {
-        return reader.read().then(function (result) {
-          if (result.done) {
-            if (buffer.trim()) processLines('\n');
-            return;
-          }
-          processLines(decoder.decode(result.value, { stream: true }));
-          return read();
-        });
-      }
-
-      return read().then(function () {
-        if (audioChunks.length === 0) return null;
-
-        // Decode all base64 PCM16 chunks into a single Uint8Array
-        var arrays = audioChunks.map(function (chunk) {
-          var binary = atob(chunk);
-          var bytes = new Uint8Array(binary.length);
-          for (var j = 0; j < binary.length; j++) {
-            bytes[j] = binary.charCodeAt(j);
-          }
-          return bytes;
-        });
-
-        var totalLength = 0;
-        for (var k = 0; k < arrays.length; k++) totalLength += arrays[k].length;
-        var pcmData = new Uint8Array(totalLength);
-        var offset = 0;
-        for (var m = 0; m < arrays.length; m++) {
-          pcmData.set(arrays[m], offset);
-          offset += arrays[m].length;
-        }
-
-        return pcmData;
-      });
-    },
-
-    /**
      * Wrap raw PCM16 (signed 16-bit little-endian) data in a WAV container.
      * @param {Uint8Array} pcmData - Raw PCM16 audio bytes
-     * @param {number} sampleRate - Sample rate (OpenAI audio uses 24000 Hz)
+     * @param {number} sampleRate - Sample rate (ElevenLabs pcm_24000 = 24000 Hz)
      * @returns {Blob} WAV file blob
      * @private
      */
