@@ -176,7 +176,9 @@
       status.textContent = 'Checking key with ElevenLabs...';
       status.className = 'status-message';
 
-      fetch('https://api.elevenlabs.io/v1/user', {
+      // Validate using /v1/voices (not /v1/user) because restricted API keys
+      // may not have User read permission but will have Voices access.
+      fetch('https://api.elevenlabs.io/v1/voices', {
         method: 'GET',
         headers: { 'xi-api-key': key }
       })
@@ -186,13 +188,8 @@
             // Refresh voice cache with new key
             SQ.AudioDirector.refreshVoices();
             return response.json().then(function (data) {
-              var charLimit = data.subscription && data.subscription.character_limit;
-              var charUsed = data.subscription && data.subscription.character_count;
-              var info = '';
-              if (charLimit && typeof charUsed === 'number') {
-                info = ' (' + (charLimit - charUsed).toLocaleString() + ' characters remaining)';
-              }
-              status.textContent = 'Key validated successfully.' + info;
+              var voiceCount = (data.voices && data.voices.length) || 0;
+              status.textContent = 'Key validated successfully. ' + voiceCount + ' voices available.';
               status.className = 'status-message success';
             });
           } else {
