@@ -85,11 +85,15 @@
 
       // Voice speed slider
       var speedSlider = document.getElementById('narration-speed-slider');
-      var speedValue = document.getElementById('narration-speed-value');
+      var speedLabel = document.getElementById('narration-speed-value');
+      function updateSpeedLabel(val) {
+        speedLabel.textContent = parseFloat(val).toFixed(1) + 'x';
+      }
       speedSlider.addEventListener('input', function () {
-        speedValue.textContent = parseFloat(this.value).toFixed(1) + 'x';
+        updateSpeedLabel(this.value);
       });
       speedSlider.addEventListener('change', function () {
+        updateSpeedLabel(this.value);
         SQ.PlayerConfig.setNarrationSpeed(parseFloat(this.value));
       });
 

@@ -83,7 +83,8 @@
 
           <label class="card-label" style="margin-top: var(--spacing-md)">Voice Speed</label>
           <div class="speed-control">
-            <input type="range" id="narration-speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+            <input type="range" id="narration-speed-slider" min="0.5" max="2.0" step="0.1" value="1.0"
+              oninput="document.getElementById('narration-speed-value').textContent = parseFloat(this.value).toFixed(1) + 'x'">
             <span id="narration-speed-value" class="speed-value">1.0x</span>
           </div>
 

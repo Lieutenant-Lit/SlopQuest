@@ -846,7 +846,6 @@
 
       this.stop();
       _audio = new Audio(audioUrl);
-      _audio.playbackRate = SQ.PlayerConfig.getNarrationSpeed();
       _isPlaying = true;
 
       _audio.addEventListener('ended', function () {
@@ -860,7 +859,12 @@
         SQ.AudioGenerator._updateControls();
       });
 
-      _audio.play().catch(function (err) {
+      var speed = SQ.PlayerConfig.getNarrationSpeed();
+      _audio.play().then(function () {
+        // Set playbackRate after play starts — avoids browser quirks with
+        // setting rate on unstarted audio for some WAV/PCM formats.
+        if (_audio) _audio.playbackRate = speed;
+      }).catch(function (err) {
         // Autoplay blocked — user must interact first
         console.warn('AudioGenerator: autoplay blocked, user gesture required', err.message);
         _isPlaying = false;
@@ -909,6 +913,7 @@
     replay: function () {
       if (_audio) {
         _audio.currentTime = 0;
+        _audio.playbackRate = SQ.PlayerConfig.getNarrationSpeed();
         _audio.play().catch(function () {});
         _isPlaying = true;
         this._updateControls();
