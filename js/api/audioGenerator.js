@@ -238,7 +238,9 @@
 
     /**
      * Find speakers in segments that don't have voice profiles yet and
-     * instantly assign them a unique voice + basic style instruction.
+     * assign them a unique voice + contextual style instruction built from
+     * the passage text, their dialogue, the game setting, and character cues.
+     * No extra API calls — everything is derived from data already available.
      * Caches the assignment in npcVoices (and game state) so the same
      * character reuses their voice if they speak again later.
      * @private
@@ -263,16 +265,44 @@
         if (voiceId) usedVoices[voiceId] = true;
       }
 
-      // Get the full passage text for gender detection
+      // Get full context: passage text, game state, setting info
       var gameState = SQ.GameState.get();
       var passageText = (gameState && gameState.last_passage) || '';
+      var meta = (gameState && gameState.meta) || {};
+      var setting = meta.setting || 'fantasy';
+      var tone = meta.tone || 'dark and atmospheric';
+
+      // Check skeleton NPCs for role/motivation info on this character
+      var skeletonNpcs = {};
+      if (gameState && gameState.skeleton && gameState.skeleton.npcs) {
+        gameState.skeleton.npcs.forEach(function (npc) {
+          skeletonNpcs[npc.name.toLowerCase()] = npc;
+        });
+      }
 
       for (var k = 0; k < unknowns.length; k++) {
         var name = unknowns[k];
 
-        // Detect gender from passage context around this speaker's name
+        // Detect gender from passage context
         var gender = this._detectSpeakerGender(name, passageText);
         var genderPool = SQ.PlayerConfig.getVoicesForGender(gender);
+
+        // Extract this speaker's dialogue lines from segments
+        var speakerLines = [];
+        for (var s = 0; s < segments.length; s++) {
+          if (segments[s].speaker === name) {
+            speakerLines.push(segments[s].text.replace(/"/g, '').trim());
+          }
+        }
+
+        // Extract descriptions/context around the speaker from the passage
+        var descriptors = this._extractSpeakerContext(name, passageText);
+
+        // Check if this character exists in the skeleton NPC roster
+        var skeletonNpc = skeletonNpcs[name.toLowerCase()];
+
+        // Build a rich style instruction from all available context
+        var style = this._buildStyleInstruction(name, gender, descriptors, speakerLines, skeletonNpc, setting, tone);
 
         // Pick an unused voice from the appropriate gender pool
         var picked = null;
@@ -297,15 +327,11 @@
           picked = genderPool[Math.floor(Math.random() * genderPool.length)];
         }
 
-        var style = 'Speak as ' + name + ' would — give this character a distinctive, '
-          + 'memorable voice. Use a unique accent, tone, and pacing that fits a '
-          + 'character called "' + name + '". Make them sound completely different '
-          + 'from a standard narrator.';
-
         npcVoices[name] = { voice: picked, style: style };
         usedVoices[picked] = true;
 
-        console.log('AudioGenerator: auto-assigned voice "' + picked + '" (' + gender + ') to unknown speaker "' + name + '"');
+        console.log('AudioGenerator: auto-assigned voice "' + picked + '" (' + gender + ') to "' + name + '"');
+        console.log('  Style:', style.slice(0, 120) + '...');
       }
 
       // Persist to game state so these assignments stick across passages
@@ -316,6 +342,190 @@
         }
         SQ.GameState.save();
       }
+    },
+
+    /**
+     * Extract descriptive context about a speaker from the passage text.
+     * Pulls adjectives, titles, descriptions, and action verbs near their name.
+     * Returns an object with role cues, manner of speaking, and descriptions.
+     * @private
+     */
+    _extractSpeakerContext: function (name, passageText) {
+      var result = { titles: [], descriptions: [], actions: [], manner: [] };
+      if (!passageText) return result;
+
+      var lowerText = passageText.toLowerCase();
+      var lowerName = name.toLowerCase();
+
+      // Find all text windows around the speaker's name
+      var windows = [];
+      var searchPos = 0;
+      var idx;
+      while ((idx = lowerText.indexOf(lowerName, searchPos)) !== -1) {
+        var start = Math.max(0, idx - 150);
+        var end = Math.min(passageText.length, idx + lowerName.length + 150);
+        windows.push(passageText.slice(start, end));
+        searchPos = idx + 1;
+      }
+      var context = windows.join(' ').toLowerCase();
+
+      // Detect titles and rank (e.g., "Captain Voss", "the old merchant")
+      var titlePatterns = /\b(captain|commander|sergeant|lieutenant|general|colonel|soldier|guard|officer|official|lord|lady|duke|duchess|king|queen|prince|princess|knight|squire|elder|chief|master|apprentice|scholar|sage|priest|priestess|monk|cleric|mage|sorcerer|sorceress|wizard|witch|merchant|trader|innkeeper|tavern|barkeep|thief|rogue|assassin|hunter|ranger|healer|farmer|peasant|noble|baron|count|councilor|advisor|servant|slave|beggar|urchin|spy|scout|smith|blacksmith|alchemist|bard|jester|warden|sheriff|mayor|governor|ambassador|envoy|messenger|herald|executioner|jailer)\b/gi;
+      var titleMatches = context.match(titlePatterns);
+      if (titleMatches) {
+        result.titles = titleMatches.map(function (t) { return t.toLowerCase(); })
+          .filter(function (t, i, arr) { return arr.indexOf(t) === i; }); // unique
+      }
+
+      // Detect manner of speaking (e.g., "growled", "whispered", "barked")
+      var mannerPatterns = /\b(growl|snarl|bark|snap|hiss|whisper|murmur|mutter|shout|yell|bellow|boom|rasp|drawl|purr|coo|stammer|stutter|slur|croak|wheeze|thunder|rumble|whimper|plead|demand|command|sneer|scoff|mock|taunt|laugh|chuckle|giggle|sob|cry|wail|groan|sigh|intone|drone|lilt|sing|chant)s?\b|(?:said|spoke|replied|answered|asked)\s+(?:in\s+a\s+)?(quiet|loud|soft|harsh|gruff|gentle|cold|warm|deep|high|thin|rich|smooth|rough|raspy|silky|husky|shrill|booming|thunderous|hushed|breathy)/gi;
+      var mannerMatches = context.match(mannerPatterns);
+      if (mannerMatches) {
+        result.manner = mannerMatches.map(function (m) { return m.toLowerCase().trim(); })
+          .filter(function (m, i, arr) { return arr.indexOf(m) === i; });
+      }
+
+      // Detect physical/personality descriptors near the name
+      var descPatterns = /\b(old|young|ancient|grizzled|scarred|weathered|tall|short|broad|thin|gaunt|massive|wiry|stocky|burly|frail|elegant|rough|ragged|armored|cloaked|hooded|masked|bearded|bald|grey-haired|stern|cold|warm|kind|cruel|cunning|nervous|confident|weary|tired|alert|suspicious|friendly|hostile|fearful|calm|agitated|stoic|emotional|proud|humble|arrogant|meek)\b/gi;
+      var descMatches = context.match(descPatterns);
+      if (descMatches) {
+        result.descriptions = descMatches.map(function (d) { return d.toLowerCase(); })
+          .filter(function (d, i, arr) { return arr.indexOf(d) === i; });
+      }
+
+      return result;
+    },
+
+    /**
+     * Build a detailed TTS style instruction from all available character context.
+     * Produces a system prompt that tells the TTS model exactly how to voice this character.
+     * @private
+     */
+    _buildStyleInstruction: function (name, gender, descriptors, dialogue, skeletonNpc, setting, tone) {
+      var parts = [];
+
+      // Character identity
+      parts.push('You are voicing the character "' + name + '" in a ' + setting + ' story with a ' + tone + ' tone.');
+
+      // Role from skeleton NPC data or title detection
+      var role = '';
+      if (skeletonNpc && skeletonNpc.role) {
+        role = skeletonNpc.role;
+        parts.push('Role: ' + role + '.');
+      } else if (descriptors.titles.length > 0) {
+        role = descriptors.titles[0];
+        parts.push('This character is a ' + descriptors.titles.join(', ') + '.');
+      }
+
+      // Motivation from skeleton
+      if (skeletonNpc && skeletonNpc.motivation) {
+        parts.push('Motivation: ' + skeletonNpc.motivation + '.');
+      }
+
+      // Physical/personality descriptors
+      if (descriptors.descriptions.length > 0) {
+        parts.push('Character traits: ' + descriptors.descriptions.join(', ') + '.');
+      }
+
+      // Manner of speaking from narration cues
+      if (descriptors.manner.length > 0) {
+        parts.push('Speaking manner: ' + descriptors.manner.join(', ') + '.');
+      }
+
+      // Infer voice quality from role/descriptors
+      var voiceQuality = this._inferVoiceQuality(role, descriptors, gender);
+      parts.push(voiceQuality);
+
+      // Dialogue sample for tone reference
+      if (dialogue.length > 0) {
+        var sample = dialogue[0].slice(0, 100);
+        parts.push('Example line: "' + sample + '"');
+      }
+
+      parts.push('Make this character sound completely distinct from the narrator and other characters.');
+
+      return parts.join(' ');
+    },
+
+    /**
+     * Infer voice quality descriptors from character role and traits.
+     * Returns a string describing how the voice should sound.
+     * @private
+     */
+    _inferVoiceQuality: function (role, descriptors, gender) {
+      var roleLower = (role || '').toLowerCase();
+      var descs = descriptors.descriptions || [];
+      var titles = descriptors.titles || [];
+      var allContext = roleLower + ' ' + descs.join(' ') + ' ' + titles.join(' ');
+
+      // Military/authority figures
+      if (/captain|commander|sergeant|general|colonel|soldier|guard|officer|official|knight|warden|sheriff/.test(allContext)) {
+        if (descs.indexOf('old') !== -1 || descs.indexOf('grizzled') !== -1 || descs.indexOf('weathered') !== -1) {
+          return 'Voice: Gravelly and commanding. Tone: Clipped, no-nonsense military precision. Pacing: Short, sharp sentences.';
+        }
+        return 'Voice: Firm and authoritative. Tone: Professional, direct. Pacing: Measured, deliberate. Brooking no argument.';
+      }
+
+      // Nobles/royalty
+      if (/lord|lady|duke|duchess|king|queen|prince|princess|noble|baron|count|councilor|ambassador/.test(allContext)) {
+        if (descs.indexOf('cruel') !== -1 || descs.indexOf('cunning') !== -1 || descs.indexOf('arrogant') !== -1) {
+          return 'Voice: Smooth, refined, dripping with condescension. Tone: Theatrical, superior. Pacing: Languid and unhurried.';
+        }
+        return 'Voice: Refined and cultured. Tone: Formal, measured. Pacing: Unhurried, every word deliberate. Accent: Upper-class.';
+      }
+
+      // Magical/scholarly
+      if (/mage|sorcerer|sorceress|wizard|witch|scholar|sage|alchemist/.test(allContext)) {
+        if (descs.indexOf('ancient') !== -1 || descs.indexOf('old') !== -1) {
+          return 'Voice: Thin, ethereal, and otherworldly. Tone: Ominous, words carrying weight of centuries. Pacing: Extremely slow and deliberate.';
+        }
+        return 'Voice: Quiet, precise, slightly detached. Tone: Contemplative, intellectual. Pacing: Measured, choosing each word carefully.';
+      }
+
+      // Religious/spiritual
+      if (/priest|priestess|monk|cleric/.test(allContext)) {
+        return 'Voice: Calm, resonant, carrying quiet authority. Tone: Solemn, contemplative. Pacing: Measured and rhythmic, almost ceremonial.';
+      }
+
+      // Street/criminal
+      if (/thief|rogue|assassin|urchin|spy|scout|beggar/.test(allContext)) {
+        return 'Voice: Quick, sharp, streetwise. Tone: Wary, guarded. Pacing: Fast, words tumbling out. Accent: Common, rough-edged.';
+      }
+
+      // Merchants/innkeepers
+      if (/merchant|trader|innkeeper|tavern|barkeep|smith|blacksmith/.test(allContext)) {
+        return 'Voice: Warm, practical, down-to-earth. Tone: Friendly but shrewd. Pacing: Relaxed, conversational. Accent: Rural, working-class warmth.';
+      }
+
+      // Elder/mentor
+      if (/elder|mentor|master/.test(allContext) || descs.indexOf('old') !== -1 || descs.indexOf('ancient') !== -1 || descs.indexOf('weathered') !== -1) {
+        return 'Voice: Weathered but warm. Tone: Patient, knowing, gentle authority. Pacing: Slow, deliberate, pausing for emphasis.';
+      }
+
+      // Young characters
+      if (descs.indexOf('young') !== -1 || /squire|apprentice/.test(allContext)) {
+        return 'Voice: Clear, eager, youthful. Tone: Earnest, slightly nervous. Pacing: Quick when excited, halting when uncertain.';
+      }
+
+      // Hostile/aggressive descriptors
+      if (descs.indexOf('hostile') !== -1 || descs.indexOf('cruel') !== -1 || descs.indexOf('cold') !== -1) {
+        return 'Voice: Hard, clipped, menacing. Tone: Cold and threatening. Pacing: Deliberate, each word a warning.';
+      }
+
+      // Nervous/fearful
+      if (descs.indexOf('nervous') !== -1 || descs.indexOf('fearful') !== -1 || descs.indexOf('frail') !== -1) {
+        return 'Voice: Thin, uncertain, wavering. Tone: Anxious, hesitant. Pacing: Halting, with nervous pauses.';
+      }
+
+      // Confident/proud
+      if (descs.indexOf('confident') !== -1 || descs.indexOf('proud') !== -1 || descs.indexOf('arrogant') !== -1) {
+        return 'Voice: Strong, self-assured. Tone: Bold, carrying natural authority. Pacing: Unhurried, commanding attention.';
+      }
+
+      // Default fallback — still better than the old generic one
+      var genderHint = gender === 'feminine' ? 'a distinctive feminine' : gender === 'masculine' ? 'a distinctive masculine' : 'a distinctive';
+      return 'Voice: Give this character ' + genderHint + ' voice that fits their role in a ' + (role || 'story') + '. '
+        + 'Tone: Natural, in-character. Pacing: Suited to their personality. Make them memorable and distinct.';
     },
 
     /**
