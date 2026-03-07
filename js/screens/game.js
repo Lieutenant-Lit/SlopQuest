@@ -232,8 +232,8 @@
 
     /**
      * Render the passage with color-highlighted character dialogue.
-     * Uses narration_segments from game state to identify dialogue boundaries.
-     * Falls back to quote-boundary parsing if segments aren't available.
+     * ALWAYS uses the passage text as the source of truth — never the segments.
+     * Segments are only used as a lookup to know which speaker said which quote.
      * @private
      */
     _renderDebugPassage: function (passageEl, text, state, animate) {
@@ -249,32 +249,69 @@
         colorMap[speakers[i]] = colors[i % colors.length];
       }
 
-      // Use stored segments if available, otherwise parse from text
+      // Build a quote → speaker lookup from narration_segments.
+      // We only use segments as a hint table — the passage text is always the source.
+      var quoteSpeaker = {};
       var segments = state.narration_segments;
-      if (!segments || segments.length === 0) {
-        // Fallback: parse quotes from text
-        segments = this._parseQuoteSegments(text, npcVoices);
-      }
-
-      // Build highlighted HTML from segments, splitting on paragraph boundaries
-      var html = '';
-      for (var s = 0; s < segments.length; s++) {
-        var seg = segments[s];
-        var segText = seg.text || '';
-        if (seg.speaker && colorMap[seg.speaker]) {
-          html += '<span class="debug-dialogue" style="background:' + colorMap[seg.speaker] + '22;border-left:3px solid ' + colorMap[seg.speaker] + ';padding-left:4px">'
-            + this._escHtml(segText) + '</span>';
-        } else if (seg.speaker) {
-          // Unknown speaker — use a default highlight
-          html += '<span class="debug-dialogue" style="background:#ffffff11;border-left:3px solid #666;padding-left:4px">'
-            + this._escHtml(segText) + '</span>';
-        } else {
-          html += this._escHtml(segText);
+      if (segments && segments.length > 0) {
+        for (var s = 0; s < segments.length; s++) {
+          if (segments[s].speaker) {
+            var segQuotes = (segments[s].text || '').match(/"[^"]*"/g);
+            if (segQuotes) {
+              for (var q = 0; q < segQuotes.length; q++) {
+                quoteSpeaker[segQuotes[q]] = segments[s].speaker;
+              }
+            }
+          }
         }
       }
 
-      // Split into paragraphs on double-newlines within the HTML
-      // Since we escaped the text, newlines are literal \n in the output
+      // Walk through the passage text, wrapping quoted strings in colored spans.
+      // Everything else (narrator prose) is left as plain escaped text.
+      var quoteRegex = /"[^"]+"/g;
+      var match;
+      var pos = 0;
+      var html = '';
+
+      while ((match = quoteRegex.exec(text)) !== null) {
+        // Narrator text before this quote
+        if (match.index > pos) {
+          html += this._escHtml(text.slice(pos, match.index));
+        }
+
+        var quoteText = match[0];
+        var speaker = quoteSpeaker[quoteText] || null;
+
+        // If no exact match, try substring matching against hints
+        if (!speaker) {
+          var hintKeys = Object.keys(quoteSpeaker);
+          for (var h = 0; h < hintKeys.length; h++) {
+            var hintInner = hintKeys[h].slice(1, -1);
+            var quoteInner = quoteText.slice(1, -1);
+            if (hintInner.length > 10 && (quoteInner.indexOf(hintInner) !== -1 || hintInner.indexOf(quoteInner) !== -1)) {
+              speaker = quoteSpeaker[hintKeys[h]];
+              break;
+            }
+          }
+        }
+
+        var color = speaker ? (colorMap[speaker] || '#666') : null;
+        if (color) {
+          html += '<span class="debug-dialogue" style="background:' + color + '22;border-left:3px solid ' + color + ';padding-left:4px">'
+            + this._escHtml(quoteText) + '</span>';
+        } else {
+          html += this._escHtml(quoteText);
+        }
+
+        pos = match.index + match[0].length;
+      }
+
+      // Trailing text after last quote
+      if (pos < text.length) {
+        html += this._escHtml(text.slice(pos));
+      }
+
+      // Split into paragraphs on double-newlines and render
       var paragraphs = html.split(/\n\n+/);
 
       paragraphs.forEach(function (pHtml, idx) {
@@ -293,30 +330,6 @@
 
         passageEl.appendChild(el);
       });
-    },
-
-    /**
-     * Simple quote-boundary parser for debug highlighting when segments aren't stored.
-     * @private
-     */
-    _parseQuoteSegments: function (text, npcVoices) {
-      var segments = [];
-      var quoteRegex = /"[^"]+"/g;
-      var match;
-      var pos = 0;
-
-      while ((match = quoteRegex.exec(text)) !== null) {
-        if (match.index > pos) {
-          segments.push({ speaker: null, text: text.slice(pos, match.index) });
-        }
-        // Try to match this quote to a known speaker (basic heuristic)
-        segments.push({ speaker: null, text: match[0] });
-        pos = match.index + match[0].length;
-      }
-      if (pos < text.length) {
-        segments.push({ speaker: null, text: text.slice(pos) });
-      }
-      return segments;
     },
 
     /**
