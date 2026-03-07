@@ -16,7 +16,8 @@
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
-    narration_enabled: false
+    narration_enabled: false,
+    audio_debug_enabled: false
   };
 
   // Mock mode flag — default true for development
@@ -165,6 +166,17 @@
     setNarrationEnabled: function (enabled) {
       var config = this.load();
       config.narration_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isAudioDebugEnabled: function () {
+      var config = this.load();
+      return config.audio_debug_enabled === true;
+    },
+
+    setAudioDebugEnabled: function (enabled) {
+      var config = this.load();
+      config.audio_debug_enabled = !!enabled;
       this.save(config);
     }
   };

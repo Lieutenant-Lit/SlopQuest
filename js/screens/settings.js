@@ -60,6 +60,11 @@
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
       });
 
+      // Audio debug toggle
+      document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
+      });
+
       // ElevenLabs API key validation
       document.getElementById('btn-validate-elevenlabs').addEventListener('click', function () {
         self.validateElevenLabsKey();
@@ -132,6 +137,10 @@
       // Set narration toggle state
       document.getElementById('settings-narration-toggle').checked =
         SQ.PlayerConfig.isNarrationEnabled();
+
+      // Set audio debug toggle state
+      document.getElementById('settings-audio-debug-toggle').checked =
+        SQ.PlayerConfig.isAudioDebugEnabled();
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();

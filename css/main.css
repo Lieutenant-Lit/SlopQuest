@@ -365,6 +365,96 @@ select:focus {
   border-color: var(--color-primary);
 }
 
+/* --- Audio Debug Panel --- */
+.audio-debug-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.8125rem;
+}
+
+.audio-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.audio-debug-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.audio-debug-collapse {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.audio-debug-panel.collapsed .audio-debug-collapse {
+  transform: rotate(-90deg);
+}
+
+.audio-debug-panel.collapsed .audio-debug-cast {
+  display: none;
+}
+
+.audio-debug-cast {
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  border-top: 1px solid var(--color-border);
+}
+
+.audio-debug-character {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+}
+
+.audio-debug-color-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+}
+
+.audio-debug-character-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.audio-debug-character-name {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.audio-debug-voice-name {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.audio-debug-voice-desc {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.passage span[data-speaker] {
+  border-radius: 2px;
+  padding: 1px 2px;
+  margin: 0 -2px;
+}
+
 /* --- Passage --- */
 .passage {
   font-size: 1.05rem;

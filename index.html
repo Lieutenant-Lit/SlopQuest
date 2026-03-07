@@ -72,6 +72,10 @@
           <button id="btn-validate-elevenlabs" class="btn btn-secondary">Validate Key</button>
           <div id="elevenlabs-key-status" class="status-message"></div>
         </div>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-audio-debug-toggle">
+          <span>Audio debug overlay</span>
+        </label>
       </div>
 
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
@@ -276,6 +280,13 @@
       <div id="audio-controls" class="audio-controls hidden">
         <button class="btn-icon btn-audio" id="btn-audio-playpause" title="Play narration">&#9654;</button>
         <button class="btn-icon btn-audio" id="btn-audio-replay" title="Replay narration">&#8634;</button>
+      </div>
+      <div id="audio-debug-panel" class="audio-debug-panel hidden">
+        <div class="audio-debug-header" id="audio-debug-header">
+          <span class="audio-debug-title">Voice Cast</span>
+          <span class="audio-debug-collapse">&#9660;</span>
+        </div>
+        <div id="audio-debug-cast" class="audio-debug-cast"></div>
       </div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>

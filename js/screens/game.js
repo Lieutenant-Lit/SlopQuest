@@ -8,6 +8,14 @@
   /** Delay (ms) between each paragraph fade-in. */
   var PARAGRAPH_STAGGER_MS = 120;
 
+  /** Audio debug color palette for dark theme. */
+  var DEBUG_COLORS = [
+    '#7c6ff0', '#e06070', '#40b8d0', '#e0a030',
+    '#60c870', '#d080e0', '#e08050', '#50a0e0'
+  ];
+  var DEBUG_NARRATION_COLOR = '#6a6a80';
+  var _debugColorMap = {};
+
   SQ.Screens.Game = {
     /** Tracks whether the current render is the initial load (no animation). */
     _isInitialRender: true,
@@ -47,6 +55,16 @@
       document.getElementById('btn-audio-replay').addEventListener('click', function () {
         SQ.AudioDirector.replay();
       });
+
+      // Audio debug overlay
+      document.addEventListener('audiodebug', function (e) {
+        if (SQ.PlayerConfig.isAudioDebugEnabled()) {
+          self._renderAudioDebug(e.detail);
+        }
+      });
+      document.getElementById('audio-debug-header').addEventListener('click', function () {
+        document.getElementById('audio-debug-panel').classList.toggle('collapsed');
+      });
     },
 
     onShow: function () {
@@ -55,8 +73,9 @@
     },
 
     onHide: function () {
-      // Stop narration when navigating away
       SQ.AudioDirector.stop();
+      var debugPanel = document.getElementById('audio-debug-panel');
+      if (debugPanel) debugPanel.classList.add('hidden');
     },
 
     /**
@@ -85,6 +104,10 @@
       } else {
         SQ.AudioDirector.hideControls();
       }
+
+      // Hide audio debug panel until next analysis
+      var debugPanel = document.getElementById('audio-debug-panel');
+      if (debugPanel) debugPanel.classList.add('hidden');
 
       // Passage (with fade-in on new passages, instant on initial load/rewind)
       this._renderPassage(state.last_passage, !this._isInitialRender);
@@ -472,6 +495,179 @@
       var container = document.getElementById('illustration-container');
       container.classList.add('hidden');
       container.classList.remove('illustration-visible', 'illustration-loading');
+    },
+
+    // ========================================================
+    // AUDIO DEBUG OVERLAY
+    // ========================================================
+
+    _getDebugColor: function (speaker) {
+      if (!speaker || speaker === 'Narrator') return DEBUG_NARRATION_COLOR;
+      if (_debugColorMap[speaker]) return _debugColorMap[speaker];
+      var idx = Object.keys(_debugColorMap).length;
+      _debugColorMap[speaker] = DEBUG_COLORS[idx % DEBUG_COLORS.length];
+      return _debugColorMap[speaker];
+    },
+
+    _escapeHtml: function (str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    },
+
+    _renderAudioDebug: function (detail) {
+      var panel = document.getElementById('audio-debug-panel');
+      var castEl = document.getElementById('audio-debug-cast');
+      if (!panel || !castEl) return;
+
+      var segments = detail.segments || [];
+      var registry = detail.registry || {};
+
+      _debugColorMap = {};
+
+      // Collect unique speakers in appearance order
+      var speakers = [];
+      var seen = {};
+      segments.forEach(function (seg) {
+        var name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        if (!seen[name]) {
+          seen[name] = true;
+          speakers.push(name);
+        }
+      });
+
+      // Build cast list
+      castEl.innerHTML = '';
+      var self = this;
+      speakers.forEach(function (name) {
+        var color = self._getDebugColor(name);
+        var regKey = (name === 'Narrator') ? '__narrator__' : name;
+        var entry = registry[regKey] || {};
+
+        var row = document.createElement('div');
+        row.className = 'audio-debug-character';
+
+        var dot = document.createElement('span');
+        dot.className = 'audio-debug-color-dot';
+        dot.style.backgroundColor = color;
+
+        var info = document.createElement('div');
+        info.className = 'audio-debug-character-info';
+
+        var nameEl = document.createElement('span');
+        nameEl.className = 'audio-debug-character-name';
+        nameEl.textContent = name;
+        nameEl.style.color = color;
+        info.appendChild(nameEl);
+
+        if (entry.voice_name) {
+          var voiceEl = document.createElement('span');
+          voiceEl.className = 'audio-debug-voice-name';
+          voiceEl.textContent = 'Voice: ' + entry.voice_name;
+          info.appendChild(voiceEl);
+        }
+
+        if (entry.description) {
+          var descEl = document.createElement('span');
+          descEl.className = 'audio-debug-voice-desc';
+          descEl.textContent = entry.description;
+          info.appendChild(descEl);
+        }
+
+        // Show voice_description from LLM analysis for dialogue speakers
+        var llmDesc = null;
+        segments.forEach(function (seg) {
+          if (seg.speaker === name && seg.voice_description && !llmDesc) {
+            llmDesc = seg.voice_description;
+          }
+        });
+        if (llmDesc && llmDesc !== (entry.description || '')) {
+          var llmEl = document.createElement('span');
+          llmEl.className = 'audio-debug-voice-desc';
+          llmEl.textContent = 'LLM requested: ' + llmDesc;
+          info.appendChild(llmEl);
+        }
+
+        row.appendChild(dot);
+        row.appendChild(info);
+        castEl.appendChild(row);
+      });
+
+      panel.classList.remove('hidden');
+      this._highlightPassage(segments);
+    },
+
+    _highlightPassage: function (segments) {
+      var state = SQ.GameState.get();
+      if (!state || !state.last_passage) return;
+
+      var passageEl = document.getElementById('passage-text');
+      var paragraphs = state.last_passage.split(/\n\n+/);
+      var self = this;
+
+      passageEl.innerHTML = '';
+      paragraphs.forEach(function (para) {
+        var trimmed = para.trim();
+        if (!trimmed) return;
+
+        var el = document.createElement('p');
+        el.innerHTML = self._applySegmentColors(trimmed, segments);
+        passageEl.appendChild(el);
+      });
+    },
+
+    _applySegmentColors: function (text, segments) {
+      var ranges = [];
+      var self = this;
+
+      segments.forEach(function (seg) {
+        var needle = (seg.text || '').trim();
+        if (!needle) return;
+
+        var speaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : null;
+        var idx = text.indexOf(needle);
+
+        if (idx === -1) {
+          // Try matching first 40 chars (LLM may have slightly altered text)
+          var short = needle.substring(0, 40);
+          idx = text.indexOf(short);
+          if (idx !== -1) {
+            ranges.push({ start: idx, end: Math.min(idx + needle.length, text.length), speaker: speaker });
+          }
+          return;
+        }
+        ranges.push({ start: idx, end: idx + needle.length, speaker: speaker });
+      });
+
+      if (ranges.length === 0) return self._escapeHtml(text);
+
+      ranges.sort(function (a, b) { return a.start - b.start; });
+
+      // Remove overlapping ranges
+      var cleaned = [ranges[0]];
+      for (var i = 1; i < ranges.length; i++) {
+        if (ranges[i].start >= cleaned[cleaned.length - 1].end) {
+          cleaned.push(ranges[i]);
+        }
+      }
+
+      var result = '';
+      var cursor = 0;
+      cleaned.forEach(function (r) {
+        if (r.start > cursor) {
+          result += self._escapeHtml(text.substring(cursor, r.start));
+        }
+        var color = self._getDebugColor(r.speaker);
+        var speakerAttr = self._escapeHtml(r.speaker || 'Narrator');
+        result += '<span data-speaker="' + speakerAttr + '" style="color:' + color + '">';
+        result += self._escapeHtml(text.substring(Math.max(r.start, cursor), r.end));
+        result += '</span>';
+        cursor = r.end;
+      });
+      if (cursor < text.length) {
+        result += self._escapeHtml(text.substring(cursor));
+      }
+      return result;
     },
 
     showLoading: function () {

@@ -37,6 +37,9 @@
   var _pendingPassage = null;
   var _pendingGameState = null;
 
+  /** Last analysis result for audio debug overlay. */
+  var _lastAnalysis = null;
+
   SQ.AudioDirector = {
     // ========================================================
     // PUBLIC API
@@ -78,6 +81,9 @@
             console.warn('AudioDirector: LLM returned empty audio script');
             return false;
           }
+          // Capture analysis for debug overlay and notify listeners
+          _lastAnalysis = { segments: audioScript.segments, registry: self._loadRegistry() };
+          document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
           return self._generateAllSegments(audioScript.segments, gameState);
         })
         .then(function (success) {
@@ -106,8 +112,13 @@
       _pendingPassage = passage;
       _pendingGameState = gameState;
       _segments = [];
+      _lastAnalysis = null;
       this.showControls();
       this._updateControls();
+    },
+
+    getLastAnalysis: function () {
+      return _lastAnalysis;
     },
 
     // ========================================================
