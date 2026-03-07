@@ -89,37 +89,47 @@
         concat += segments[i].text;
       }
 
-      // Normalize whitespace for comparison
-      var normalPass = passageText.replace(/\s+/g, ' ').trim();
-      var normalConcat = concat.replace(/\s+/g, ' ').trim();
-
-      if (normalConcat === normalPass) {
-        // Segments look complete — but check for lumped dialogue.
-        // A dialogue segment shouldn't contain narrator attribution between quotes.
-        var needsRepair = false;
-        for (var j = 0; j < segments.length; j++) {
-          if (segments[j].speaker) {
-            // Check if a dialogue segment contains text outside of quotes
-            // (i.e., narrator prose mixed in with dialogue)
-            var text = segments[j].text;
-            var stripped = text.replace(/"[^"]*"/g, '').replace(/\s+/g, ' ').trim();
-            // If there's significant non-quote text in a speaker segment, it's lumped
-            if (stripped.length > 20) {
-              needsRepair = true;
-              break;
-            }
+      // Check for lumped dialogue first — a dialogue segment with narrator
+      // attribution between quotes needs splitting regardless of text match.
+      var needsRepair = false;
+      for (var j = 0; j < segments.length; j++) {
+        if (segments[j].speaker) {
+          var text = segments[j].text;
+          // Count how many separate quoted strings are in this segment
+          var quoteCount = (text.match(/"[^"]*"/g) || []).length;
+          // Check for significant non-quote text (narrator prose mixed in)
+          var stripped = text.replace(/"[^"]*"/g, '').replace(/\s+/g, ' ').trim();
+          // Lumped if: multiple quotes with narrator text between them,
+          // or a single quote with a lot of non-quote text
+          if (quoteCount > 1 && stripped.length > 10) {
+            needsRepair = true;
+            break;
           }
         }
-        if (!needsRepair) return segments;
       }
+
+      // If segments look structurally fine, check text completeness.
+      // Use a lenient comparison — only repair if significant text is missing.
+      if (!needsRepair) {
+        var normalPass = passageText.replace(/\s+/g, ' ').trim();
+        var normalConcat = concat.replace(/\s+/g, ' ').trim();
+        // Allow minor differences (whitespace, trailing punctuation, etc.)
+        // Only repair if more than 5% of the passage text is missing
+        if (normalConcat.length >= normalPass.length * 0.95) {
+          return segments;
+        }
+        // Significant text missing — need repair
+        needsRepair = true;
+      }
+
+      if (!needsRepair) return segments;
 
       console.log('AudioGenerator: repairing malformed narration_segments');
 
-      // Build a speaker map from the LLM's segments — maps quoted text snippets to speakers
+      // Build a speaker map from the LLM's segments — maps quoted text to speakers
       var speakerHints = {};
       for (var k = 0; k < segments.length; k++) {
         if (segments[k].speaker) {
-          // Extract quoted strings from this segment to use as speaker hints
           var quotes = segments[k].text.match(/"[^"]*"/g);
           if (quotes) {
             for (var q = 0; q < quotes.length; q++) {
@@ -135,18 +145,22 @@
     /**
      * Parse passage text into segments by splitting at quote boundaries.
      * Quoted speech becomes speaker segments, everything else becomes narrator.
+     *
+     * Speaker attribution: only uses exact matches from speakerHints.
+     * If a quote can't be attributed, it falls back to narrator (null speaker)
+     * rather than guessing — a narrator voice reading dialogue is less jarring
+     * than the wrong character voice.
+     *
      * @param {string} text - The full passage text
-     * @param {Object} speakerHints - Map of quoted string → speaker name
+     * @param {Object} speakerHints - Map of "quoted text" → speaker name
      * @returns {Array} Repaired segments array
      * @private
      */
     _parsePassageIntoSegments: function (text, speakerHints) {
       var segments = [];
-      var lastSpeaker = null;
       var pos = 0;
 
       // Find all quoted strings in order
-      // Match: opening " ... closing " (non-greedy, respecting sentence boundaries)
       var quoteRegex = /"[^"]+"/g;
       var match;
 
@@ -162,24 +176,32 @@
           }
         }
 
-        // The quote itself — look up speaker from hints
+        // The quote itself — look up speaker from hints (exact match only)
         var quoteText = match[0];
-        var speaker = speakerHints[quoteText] || lastSpeaker;
+        var speaker = speakerHints[quoteText] || null;
 
-        // If we still don't know the speaker, check if any hint is a substring
+        // If no exact match, try finding a hint whose inner text is contained
+        // in this quote or vice versa — but only if there's a single candidate
         if (!speaker) {
           var hintKeys = Object.keys(speakerHints);
+          var candidates = [];
           for (var h = 0; h < hintKeys.length; h++) {
-            if (quoteText.indexOf(hintKeys[h].slice(1, -1)) !== -1 ||
-                hintKeys[h].indexOf(quoteText.slice(1, -1)) !== -1) {
-              speaker = speakerHints[hintKeys[h]];
-              break;
+            var hintInner = hintKeys[h].slice(1, -1); // strip quotes
+            var quoteInner = quoteText.slice(1, -1);
+            if (hintInner.length > 10 && (quoteInner.indexOf(hintInner) !== -1 || hintInner.indexOf(quoteInner) !== -1)) {
+              candidates.push(speakerHints[hintKeys[h]]);
             }
+          }
+          // Only use if exactly one candidate — avoid ambiguity
+          if (candidates.length === 1) {
+            speaker = candidates[0];
           }
         }
 
-        segments.push({ speaker: speaker || 'Unknown', text: quoteText });
-        if (speaker) lastSpeaker = speaker;
+        // Fall back to narrator (null) for unattributable quotes.
+        // This is intentional — narrator voice reading a line is far less
+        // jarring than assigning the wrong character's voice.
+        segments.push({ speaker: speaker, text: quoteText });
         pos = quoteEnd;
       }
 
