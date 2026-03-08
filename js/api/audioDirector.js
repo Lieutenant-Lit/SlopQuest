@@ -174,7 +174,11 @@
         '  "you call out cheerfully, continuing your approach") are NARRATION segments. NEVER skip them.',
         '  Every phrase between dialogue quotes must be captured as a narration segment.',
         '- Preserve the EXACT text from the passage. Do not paraphrase or alter wording.',
-        '- Strip quotation marks from dialogue text (the voice actor speaks the words directly).',
+        '- For dialogue, include the EXACT text from the passage INCLUDING quotation marks.',
+        '  The system will strip quotes automatically before sending to the voice actor.',
+        '- IMPORTANT: Action beats between dialogue lines (e.g., "she says, wiping her hands",',
+        '  "he mutters darkly", "you call out cheerfully") MUST be their own narration segments.',
+        '  Do NOT merge them into dialogue or skip them.',
         '',
         'The PLAYER CHARACTER is named "' + playerName + '". When the passage describes the player character',
         'speaking (e.g., "you say", "you call out", "you reply"), use speaker name "' + playerName + '" for their dialogue.',
@@ -194,10 +198,11 @@
         'Respond with ONLY valid JSON in this format:',
         '{',
         '  "segments": [',
-        '    { "type": "narration", "text": "The guard stepped forward..." },',
-        '    { "type": "dialogue", "speaker": "Gate Guard", "text": "Halt! Who goes there?", "voice_description": "gruff male, middle-aged, authoritative, stern" },',
+        '    { "type": "narration", "text": "The guard stepped forward." },',
+        '    { "type": "dialogue", "speaker": "Gate Guard", "text": "\\\"Halt! Who goes there?\\\"", "voice_description": "gruff male, middle-aged, authoritative, stern" },',
+        '    { "type": "narration", "text": "he barked, leveling his spear." },',
         '    { "type": "narration", "text": "You raised your hands slowly." },',
-        '    { "type": "dialogue", "speaker": "' + playerName + '", "text": "Easy now. I mean no trouble." }',
+        '    { "type": "dialogue", "speaker": "' + playerName + '", "text": "\\\"Easy now. I mean no trouble.\\\"" }',
         '  ]',
         '}'
       ].join('\n');
@@ -597,11 +602,15 @@
           var text = (seg.text || '').trim();
           if (!text) return;
 
-          return self._generateSegmentAudio(text, voiceId, voiceSettings)
+          // Strip leading/trailing quotation marks for TTS (voices speak directly)
+          var ttsText = text.replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
+          if (!ttsText) return;
+
+          return self._generateSegmentAudio(ttsText, voiceId, voiceSettings)
             .then(function (audioUrl) {
               _segments.push({
                 audioUrl: audioUrl,
-                text: text,
+                text: text,  // Original text with quotes (for highlighting)
                 speaker: speaker,
                 index: i
               });

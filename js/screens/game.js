@@ -652,26 +652,13 @@
     _findSegmentInText: function (needle, text, startFrom) {
       var start = startFrom || 0;
 
-      // Direct match first
+      // Direct match — segments now preserve exact passage text including quotes
       var idx = text.indexOf(needle, start);
       if (idx !== -1) return { start: idx, end: idx + needle.length };
 
-      // Dialogue text has quotes stripped — scan for needle after a quote char
-      var openQuotes = '"\u201c\u2018\'';
-      var closeChars = '"\u201d\u2019\',.!?\u2014';
-      var limit = text.length - needle.length;
-      for (var i = start; i <= limit; i++) {
-        if (openQuotes.indexOf(text.charAt(i)) !== -1 &&
-            text.substring(i + 1, i + 1 + needle.length) === needle) {
-          var end = i + 1 + needle.length;
-          while (end < text.length && closeChars.indexOf(text.charAt(end)) !== -1) end++;
-          return { start: i, end: end };
-        }
-      }
-
-      // Fuzzy fallback: first 30 chars
-      if (needle.length > 30) {
-        var short = needle.substring(0, 30);
+      // Fuzzy fallback: match first 40 chars
+      if (needle.length > 40) {
+        var short = needle.substring(0, 40);
         idx = text.indexOf(short, start);
         if (idx !== -1) return { start: idx, end: Math.min(idx + needle.length, text.length) };
       }
