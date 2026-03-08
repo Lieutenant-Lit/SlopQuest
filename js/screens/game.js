@@ -588,7 +588,6 @@
           if (catVoice.name) catParts.push('"' + catVoice.name + '"');
           var traits = [catLabels.gender, catLabels.age, catLabels.accent].filter(Boolean).join(', ');
           if (traits) catParts.push(traits);
-          if (catLabels.description) catParts.push('"' + catLabels.description + '"');
           if (catLabels.use_case) catParts.push(catLabels.use_case);
           var catStr = catParts.join(' | ');
           if (catStr) {
@@ -597,6 +596,21 @@
             catEl.textContent = 'Catalog: ' + catStr;
             info.appendChild(catEl);
           }
+          // Show the full ElevenLabs voice description blurb
+          if (catVoice.description) {
+            var blurbEl = document.createElement('span');
+            blurbEl.className = 'audio-debug-voice-desc';
+            blurbEl.textContent = 'ElevenLabs: ' + catVoice.description;
+            info.appendChild(blurbEl);
+          }
+        }
+
+        // Show LLM casting justification
+        if (entry.justification) {
+          var justEl = document.createElement('span');
+          justEl.className = 'audio-debug-voice-desc';
+          justEl.textContent = 'Justification: ' + entry.justification;
+          info.appendChild(justEl);
         }
 
         // Show voice_description from LLM analysis for dialogue speakers

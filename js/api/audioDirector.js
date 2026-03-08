@@ -163,9 +163,12 @@
       return voices.map(function (v) {
         var labels = v.labels || {};
         var traits = [labels.gender, labels.age, labels.accent].filter(Boolean).join(', ');
-        var desc = labels.description || '';
         var useCase = labels.use_case || '';
-        return 'ID:' + v.voice_id + ' | "' + v.name + '" | ' + traits + ' | "' + desc + '" | ' + useCase;
+        var parts = ['ID:' + v.voice_id, '"' + v.name + '"', traits];
+        if (useCase) parts.push(useCase);
+        // Include the rich voice description from ElevenLabs (full blurb)
+        if (v.description) parts.push('— ' + v.description);
+        return parts.filter(Boolean).join(' | ');
       }).join('\n');
     },
 
@@ -255,7 +258,7 @@
       var self = this;
 
       // Helper: assign a voice by ID, with fallback to keyword matching
-      var applyAssignment = function (characterKey, voiceId, description) {
+      var applyAssignment = function (characterKey, voiceId, description, justification) {
         // Skip if already in registry
         if (registry[characterKey] && registry[characterKey].voice_id) {
           var cachedId = registry[characterKey].voice_id;
@@ -267,25 +270,31 @@
           registry[characterKey] = {
             voice_id: voiceId,
             voice_name: voiceNameMap[voiceId] || '',
-            description: description || ''
+            description: description || '',
+            justification: justification || ''
           };
           usedVoiceIds[voiceId] = true;
           changed = true;
           console.log('AudioDirector: LLM assigned ' + characterKey + ' -> ' + (voiceNameMap[voiceId] || voiceId));
+          if (justification) console.log('  Justification: ' + justification);
         } else {
           // Fallback to keyword matching
           if (voiceId) {
-            console.warn('AudioDirector: LLM returned invalid voice_id "' + voiceId + '" for ' + characterKey);
+            console.warn('AudioDirector: FALLBACK — LLM returned invalid voice_id "' + voiceId + '" for ' + characterKey + ', using keyword matching instead');
+          } else {
+            console.warn('AudioDirector: FALLBACK — no voice_id from LLM for ' + characterKey + ', using keyword matching instead');
           }
           var bestVoice = self._fallbackMatchVoice(description || '', usedVoiceIds);
           if (bestVoice) {
             registry[characterKey] = {
               voice_id: bestVoice.voice_id,
               voice_name: bestVoice.name,
-              description: description || ''
+              description: description || '',
+              justification: '(FALLBACK: keyword matching — LLM did not provide a valid voice_id)'
             };
             usedVoiceIds[bestVoice.voice_id] = true;
             changed = true;
+            console.warn('AudioDirector: FALLBACK assigned ' + characterKey + ' -> ' + bestVoice.name);
           }
         }
       };
@@ -297,7 +306,7 @@
       var narratorDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
       var narratorFallbackDesc = [narratorGender, narratorDirection, 'narrator, storytelling'].filter(Boolean).join(', ');
       var narratorDesc = narratorVoice.voice_description || narratorFallbackDesc;
-      applyAssignment('__narrator__', narratorVoiceId, narratorDesc);
+      applyAssignment('__narrator__', narratorVoiceId, narratorDesc, narratorVoice.justification);
 
       // Apply player character voice (support both object and bare ID formats)
       var playerName = (gameState && gameState.player && gameState.player.name) || '';
@@ -308,7 +317,7 @@
         var playerDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
         var playerFallbackDesc = [playerGender, playerDirection, 'protagonist'].filter(Boolean).join(', ');
         var playerDesc = playerVoice.voice_description || playerFallbackDesc;
-        applyAssignment(playerName, playerVoiceId, playerDesc);
+        applyAssignment(playerName, playerVoiceId, playerDesc, playerVoice.justification);
       }
 
       // Apply NPC voice assignments
@@ -316,7 +325,7 @@
       for (var charName in assignments) {
         if (assignments.hasOwnProperty(charName)) {
           var entry = assignments[charName];
-          applyAssignment(charName, entry.voice_id, entry.voice_description || '');
+          applyAssignment(charName, entry.voice_id, entry.voice_description || '', entry.justification || '');
         }
       }
 
@@ -402,19 +411,22 @@
         var nGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
         var nDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
         p += '- SELECT a narrator voice. User preference: gender="' + nGender + '", direction="' + nDirection + '".\n';
-        p += '  Return as "narrator_voice" object with voice_id and voice_description.\n';
+        p += '  RESPECT the user\'s accent/style preferences. Return as "narrator_voice" object.\n';
       }
       if (needsPlayer) {
         var pGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
         var pDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
         var pArchetype = (gameState && gameState.player && gameState.player.archetype) || '';
         p += '- SELECT a voice for player character "' + playerName + '". User preference: gender="' + pGender + '", direction="' + pDirection + '", archetype="' + pArchetype + '".\n';
-        p += '  Return as "player_voice" object with voice_id and voice_description.\n';
+        p += '  RESPECT the user\'s accent/style preferences. Return as "player_voice" object.\n';
       }
       p += '- For any NEW speaking character not already assigned above, select a voice_id from the catalog.\n';
       p += '- Use the game\'s genre, tone, setting, and each character\'s role/personality to make intelligent casting decisions.\n';
       p += '- STRONGLY prefer voice diversity — avoid reusing voice IDs already assigned to other characters.\n';
-      p += '- For each new character, also provide a brief voice_description for the casting record.\n\n';
+      p += '- For EVERY voice assignment, provide:\n';
+      p += '  - voice_description: brief description of the voice qualities\n';
+      p += '  - justification: explain WHY you chose this specific voice over alternatives,\n';
+      p += '    referencing the voice\'s catalog description, the character/role, and user preferences if applicable.\n\n';
 
       // Section 6: Response schema
       p += 'Respond with ONLY valid JSON in this format:\n';
@@ -424,10 +436,10 @@
       p += '    { "type": "dialogue", "speaker": "Gate Guard", "text": "\\"Halt! Who goes there?\\"" }\n';
       p += '  ],\n';
       p += '  "voice_assignments": {\n';
-      p += '    "Gate Guard": { "voice_id": "<id from catalog>", "voice_description": "gruff male, middle-aged, stern" }\n';
+      p += '    "Gate Guard": { "voice_id": "<id>", "voice_description": "gruff male, middle-aged, stern", "justification": "why this voice fits" }\n';
       p += '  }';
-      if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id from catalog>", "voice_description": "brief description of why this voice fits the narrator" }';
-      if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id from catalog>", "voice_description": "brief description of why this voice fits the player character" }';
+      if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the narrator, referencing user preferences" }';
+      if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the player character" }';
       p += '\n}\n';
       p += 'voice_assignments should ONLY contain NEW characters not in the already-assigned list.\n';
 
@@ -609,6 +621,7 @@
             return {
               voice_id: v.voice_id,
               name: v.name,
+              description: v.description || '',
               category: v.category || 'premade',
               labels: v.labels || {},
               preview_url: v.preview_url
