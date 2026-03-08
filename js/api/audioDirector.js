@@ -75,15 +75,22 @@
 
       return this._ensureVoicesLoaded()
         .then(function () {
-          return self._analyzePassage(passage, gameState);
+          // Run segmentation and voice casting in parallel
+          return Promise.all([
+            self._segmentPassage(passage, gameState),
+            self._castVoices(passage, gameState)
+          ]);
         })
-        .then(function (audioScript) {
-          if (!audioScript || !audioScript.segments || audioScript.segments.length === 0) {
+        .then(function (results) {
+          var segmentResult = results[0];
+          // results[1] = casting (already applied to registry via _validateAndApplyVoiceAssignments)
+
+          if (!segmentResult || !segmentResult.segments || segmentResult.segments.length === 0) {
             console.warn('AudioDirector: LLM returned empty audio script');
             return false;
           }
-          _lastAnalysisSegments = audioScript.segments;
-          return self._generateAllSegments(audioScript.segments, gameState);
+          _lastAnalysisSegments = segmentResult.segments;
+          return self._generateAllSegments(segmentResult.segments, gameState);
         })
         .then(function (success) {
           // Fire debug event AFTER voice assignment so registry has actual voices
@@ -337,56 +344,108 @@
     },
 
     /**
-     * Analyze a passage using Claude Sonnet to produce an audio script.
-     * Splits the passage into narration and dialogue segments,
-     * identifies speakers, and directly assigns ElevenLabs voices
-     * using full game context and the available voice catalog.
+     * Segment a passage into narration and dialogue chunks.
+     * This is a focused, lean LLM call — no voice casting, no catalog.
      * @private
      */
-    _analyzePassage: function (passage, gameState) {
-      var self = this;
-      var registry = this._loadRegistry();
-
-      // Identify the player character
+    _segmentPassage: function (passage, gameState) {
       var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
 
-      // Build the system prompt with full context
-      var p = '';
+      // Build known character names from registry for speaker identification
+      var registry = this._loadRegistry();
+      var knownNames = Object.keys(registry).filter(function (k) {
+        return k !== '__narrator__';
+      });
 
-      // Section 1: Role and segmentation rules
+      var p = '';
       p += 'You are an Audio Director for an interactive narrative game.\n';
-      p += 'Your job is to break a story passage into audio segments for a full-cast audio play,\n';
-      p += 'and to cast appropriate voices for each character from the available voice catalog.\n\n';
+      p += 'Your ONLY job is to break a story passage into audio segments for a full-cast audio play.\n';
+      p += 'You do NOT assign voices — only segment the text.\n\n';
 
       p += 'SEGMENT RULES:\n';
       p += '- Break the passage into "narration" (descriptive text) and "dialogue" (spoken lines) segments.\n';
       p += '- EVERY sentence MUST appear in exactly one segment. Do NOT skip or omit any text.\n';
       p += '- Action beats and narrative between dialogue (e.g., "she says", "he mutters",\n';
-      p += '  "you call out cheerfully") are NARRATION segments. NEVER skip them.\n';
+      p += '  "you call out cheerfully") are NARRATION segments. NEVER merge them into dialogue.\n';
       p += '- Preserve the EXACT text from the passage. Do not paraphrase or alter wording.\n';
       p += '- For dialogue, include the EXACT text INCLUDING quotation marks.\n';
       p += '- Action beats between dialogue lines MUST be their own narration segments.\n';
-      p += '  Do NOT merge them into dialogue or skip them.\n\n';
+      p += '  Do NOT merge them into the preceding or following dialogue segment.\n';
+      p += '- Attribution phrases like "he said" or "she whispered" are NARRATION, not dialogue.\n\n';
 
       p += 'The PLAYER CHARACTER is named "' + playerName + '". When the passage describes the player\n';
       p += 'speaking (e.g., "you say", "you call out", "you reply"), use speaker name "' + playerName + '".\n';
       p += 'For unnamed characters use descriptive identifiers like "Gate Guard" or "Bartender".\n\n';
 
-      // Section 2: Game context
-      var gameContext = this._buildGameContext(gameState);
-      if (gameContext) {
-        p += 'GAME CONTEXT (use this to inform your voice casting decisions):\n';
-        p += gameContext + '\n\n';
+      if (knownNames.length > 0) {
+        p += 'KNOWN CHARACTERS (use these exact names if they appear): ' + knownNames.join(', ') + '\n\n';
       }
 
-      // Section 3: Voice catalog
+      // Minimal scene context for speaker identification
+      var cur = (gameState && gameState.current) || {};
+      if (cur.location || cur.scene_context) {
+        p += 'SCENE CONTEXT: ';
+        if (cur.location) p += 'Location: ' + cur.location + '. ';
+        if (cur.scene_context) p += cur.scene_context;
+        p += '\n\n';
+      }
+
+      p += 'Respond with ONLY valid JSON in this format:\n';
+      p += '{\n';
+      p += '  "segments": [\n';
+      p += '    { "type": "narration", "text": "The guard stepped forward." },\n';
+      p += '    { "type": "dialogue", "speaker": "Gate Guard", "text": "\\"Halt! Who goes there?\\"" },\n';
+      p += '    { "type": "narration", "text": "he barked, gripping his spear." }\n';
+      p += '  ]\n';
+      p += '}\n';
+
+      var userPrompt = 'Break this passage into audio segments:\n\n' + passage;
+
+      return SQ.API.call(ANALYSIS_MODEL, [
+        { role: 'system', content: p },
+        { role: 'user', content: userPrompt }
+      ], {
+        temperature: 0.3,
+        max_tokens: 2000
+      }).then(function (response) {
+        try {
+          return SQ.API.parseJSON(response);
+        } catch (e) {
+          console.warn('AudioDirector: failed to parse segmentation JSON', e);
+          return { segments: [{ type: 'narration', text: passage }] };
+        }
+      });
+    },
+
+    /**
+     * Cast voices for characters in a passage.
+     * This is a focused LLM call — no segmentation, only voice assignment.
+     * Runs in parallel with _segmentPassage.
+     * @private
+     */
+    _castVoices: function (passage, gameState) {
+      var self = this;
+      var registry = this._loadRegistry();
+      var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
+
+      var p = '';
+      p += 'You are a Casting Director for an interactive narrative audio play.\n';
+      p += 'Your ONLY job is to assign ElevenLabs voices to characters. You do NOT segment text.\n\n';
+
+      // Game context for intelligent casting
+      var gameContext = this._buildGameContext(gameState);
+      if (gameContext) {
+        p += 'GAME CONTEXT:\n' + gameContext + '\n\n';
+      }
+
+      // Voice catalog
       var voiceCatalog = this._buildVoiceCatalog();
       if (voiceCatalog) {
         p += 'AVAILABLE ELEVENLABS VOICES (you MUST select from these only):\n';
         p += voiceCatalog + '\n\n';
       }
 
-      // Section 4: Already-assigned voices
+      // Already-assigned voices
       var assignedLines = [];
       var registryKeys = Object.keys(registry);
       registryKeys.forEach(function (k) {
@@ -402,7 +461,7 @@
         p += assignedLines.join('\n') + '\n\n';
       }
 
-      // Section 5: Assignment instructions
+      // Assignment instructions
       var needsNarrator = !registry['__narrator__'] || !registry['__narrator__'].voice_id;
       var needsPlayer = !registry[playerName] || !registry[playerName].voice_id;
 
@@ -420,7 +479,7 @@
         p += '- SELECT a voice for player character "' + playerName + '". User preference: gender="' + pGender + '", direction="' + pDirection + '", archetype="' + pArchetype + '".\n';
         p += '  RESPECT the user\'s accent/style preferences. Return as "player_voice" object.\n';
       }
-      p += '- For any NEW speaking character not already assigned above, select a voice_id from the catalog.\n';
+      p += '- For any NEW speaking character in the passage not already assigned above, select a voice_id from the catalog.\n';
       p += '- Use the game\'s genre, tone, setting, and each character\'s role/personality to make intelligent casting decisions.\n';
       p += '- STRONGLY prefer voice diversity — avoid reusing voice IDs already assigned to other characters.\n';
       p += '- For EVERY voice assignment, provide:\n';
@@ -428,39 +487,34 @@
       p += '  - justification: explain WHY you chose this specific voice over alternatives,\n';
       p += '    referencing the voice\'s catalog description, the character/role, and user preferences if applicable.\n\n';
 
-      // Section 6: Response schema
+      // Response schema — voice assignments only
       p += 'Respond with ONLY valid JSON in this format:\n';
       p += '{\n';
-      p += '  "segments": [\n';
-      p += '    { "type": "narration", "text": "The guard stepped forward." },\n';
-      p += '    { "type": "dialogue", "speaker": "Gate Guard", "text": "\\"Halt! Who goes there?\\"" }\n';
-      p += '  ],\n';
       p += '  "voice_assignments": {\n';
-      p += '    "Gate Guard": { "voice_id": "<id>", "voice_description": "gruff male, middle-aged, stern", "justification": "why this voice fits" }\n';
+      p += '    "Character Name": { "voice_id": "<id>", "voice_description": "gruff male, middle-aged, stern", "justification": "why this voice fits" }\n';
       p += '  }';
       if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the narrator, referencing user preferences" }';
       if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the player character" }';
       p += '\n}\n';
       p += 'voice_assignments should ONLY contain NEW characters not in the already-assigned list.\n';
 
-      var userPrompt = 'Break this passage into audio segments and assign voices for any new characters:\n\n' + passage;
+      var userPrompt = 'Read this passage and assign voices for any characters who speak:\n\n' + passage;
 
       return SQ.API.call(ANALYSIS_MODEL, [
         { role: 'system', content: p },
         { role: 'user', content: userPrompt }
       ], {
         temperature: 0.3,
-        max_tokens: 3000
+        max_tokens: 2000
       }).then(function (response) {
         try {
-          var audioScript = SQ.API.parseJSON(response);
+          var castResult = SQ.API.parseJSON(response);
           // Validate and apply voice assignments to registry
-          return self._validateAndApplyVoiceAssignments(audioScript, gameState);
+          self._validateAndApplyVoiceAssignments(castResult, gameState);
+          return castResult;
         } catch (e) {
-          console.warn('AudioDirector: failed to parse audio script JSON', e);
-          return {
-            segments: [{ type: 'narration', text: passage }]
-          };
+          console.warn('AudioDirector: failed to parse casting JSON', e);
+          return { voice_assignments: {} };
         }
       });
     },
