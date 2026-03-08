@@ -514,6 +514,7 @@
         p += '  RESPECT the user\'s accent/style preferences. Return as "player_voice" object.\n';
       }
       p += '- For any NEW speaking character in the passage not already assigned above, select a voice_id from the catalog.\n';
+      p += '- For unnamed characters, use descriptive identifiers like "Gate Guard" or "Bartender" as the character key in voice_assignments.\n';
       p += '- Use the game\'s genre, tone, setting, and each character\'s role/personality to make intelligent casting decisions.\n';
       p += '- STRONGLY prefer voice diversity — avoid reusing voice IDs already assigned to other characters.\n';
       p += '- For EVERY voice assignment, provide:\n';
@@ -578,6 +579,63 @@
      */
     _saveRegistry: function (registry) {
       localStorage.setItem(VOICE_REGISTRY_KEY, JSON.stringify(registry));
+    },
+
+    /**
+     * Fuzzy-match a speaker name against registry keys.
+     * Handles name mismatches between parallel segmentation/casting calls
+     * (e.g. "Gate Guard" vs "Guard").
+     * @private
+     */
+    _fuzzyRegistryLookup: function (registry, speaker) {
+      var speakerLower = speaker.toLowerCase();
+      var keys = Object.keys(registry).filter(function (k) {
+        return k !== '__narrator__';
+      });
+
+      // 1. Case-insensitive exact match
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].toLowerCase() === speakerLower) {
+          console.log('AudioDirector: fuzzy match (case) "' + speaker + '" -> "' + keys[i] + '"');
+          return registry[keys[i]];
+        }
+      }
+
+      // 2. Substring containment (only if exactly 1 match to avoid ambiguity)
+      var substringMatches = [];
+      for (var j = 0; j < keys.length; j++) {
+        var keyLower = keys[j].toLowerCase();
+        if (speakerLower.indexOf(keyLower) !== -1 || keyLower.indexOf(speakerLower) !== -1) {
+          substringMatches.push(keys[j]);
+        }
+      }
+      if (substringMatches.length === 1) {
+        console.log('AudioDirector: fuzzy match (substring) "' + speaker + '" -> "' + substringMatches[0] + '"');
+        return registry[substringMatches[0]];
+      }
+
+      // 3. Word overlap scoring (e.g. "Gate Guard" vs "Guard" = 1/2 = 0.5)
+      var speakerWords = speakerLower.split(/\s+/);
+      var bestKey = null;
+      var bestScore = 0;
+      for (var k = 0; k < keys.length; k++) {
+        var keyWords = keys[k].toLowerCase().split(/\s+/);
+        var overlap = 0;
+        for (var w = 0; w < speakerWords.length; w++) {
+          if (keyWords.indexOf(speakerWords[w]) !== -1) overlap++;
+        }
+        var score = overlap / Math.max(speakerWords.length, keyWords.length);
+        if (score > bestScore && score >= 0.5) {
+          bestScore = score;
+          bestKey = keys[k];
+        }
+      }
+      if (bestKey) {
+        console.log('AudioDirector: fuzzy match (word overlap) "' + speaker + '" -> "' + bestKey + '"');
+        return registry[bestKey];
+      }
+
+      return null;
     },
 
     /**
@@ -823,7 +881,7 @@
 
           if (seg.type === 'dialogue' && seg.speaker) {
             speaker = seg.speaker;
-            var entry = registry[seg.speaker];
+            var entry = registry[seg.speaker] || self._fuzzyRegistryLookup(registry, seg.speaker);
             voiceId = entry ? entry.voice_id : null;
             // Dialogue: expressive character performance
             voiceSettings.stability = 0.30;
