@@ -290,19 +290,25 @@
         }
       };
 
-      // Apply narrator voice
+      // Apply narrator voice (support both object and bare ID formats)
+      var narratorVoice = audioScript.narrator_voice || {};
+      var narratorVoiceId = narratorVoice.voice_id || audioScript.narrator_voice_id;
       var narratorGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
       var narratorDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
-      var narratorDesc = [narratorGender, narratorDirection, 'narrator, storytelling'].filter(Boolean).join(', ');
-      applyAssignment('__narrator__', audioScript.narrator_voice_id, narratorDesc);
+      var narratorFallbackDesc = [narratorGender, narratorDirection, 'narrator, storytelling'].filter(Boolean).join(', ');
+      var narratorDesc = narratorVoice.voice_description || narratorFallbackDesc;
+      applyAssignment('__narrator__', narratorVoiceId, narratorDesc);
 
-      // Apply player character voice
+      // Apply player character voice (support both object and bare ID formats)
       var playerName = (gameState && gameState.player && gameState.player.name) || '';
       if (playerName) {
+        var playerVoice = audioScript.player_voice || {};
+        var playerVoiceId = playerVoice.voice_id || audioScript.player_voice_id;
         var playerGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
         var playerDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
-        var playerDesc = [playerGender, playerDirection, 'protagonist'].filter(Boolean).join(', ');
-        applyAssignment(playerName, audioScript.player_voice_id, playerDesc);
+        var playerFallbackDesc = [playerGender, playerDirection, 'protagonist'].filter(Boolean).join(', ');
+        var playerDesc = playerVoice.voice_description || playerFallbackDesc;
+        applyAssignment(playerName, playerVoiceId, playerDesc);
       }
 
       // Apply NPC voice assignments
@@ -396,14 +402,14 @@
         var nGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
         var nDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
         p += '- SELECT a narrator voice. User preference: gender="' + nGender + '", direction="' + nDirection + '".\n';
-        p += '  Return the voice_id as "narrator_voice_id" in your response.\n';
+        p += '  Return as "narrator_voice" object with voice_id and voice_description.\n';
       }
       if (needsPlayer) {
         var pGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
         var pDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
         var pArchetype = (gameState && gameState.player && gameState.player.archetype) || '';
         p += '- SELECT a voice for player character "' + playerName + '". User preference: gender="' + pGender + '", direction="' + pDirection + '", archetype="' + pArchetype + '".\n';
-        p += '  Return the voice_id as "player_voice_id" in your response.\n';
+        p += '  Return as "player_voice" object with voice_id and voice_description.\n';
       }
       p += '- For any NEW speaking character not already assigned above, select a voice_id from the catalog.\n';
       p += '- Use the game\'s genre, tone, setting, and each character\'s role/personality to make intelligent casting decisions.\n';
@@ -420,8 +426,8 @@
       p += '  "voice_assignments": {\n';
       p += '    "Gate Guard": { "voice_id": "<id from catalog>", "voice_description": "gruff male, middle-aged, stern" }\n';
       p += '  }';
-      if (needsNarrator) p += ',\n  "narrator_voice_id": "<id from catalog>"';
-      if (needsPlayer) p += ',\n  "player_voice_id": "<id from catalog>"';
+      if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id from catalog>", "voice_description": "brief description of why this voice fits the narrator" }';
+      if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id from catalog>", "voice_description": "brief description of why this voice fits the player character" }';
       p += '\n}\n';
       p += 'voice_assignments should ONLY contain NEW characters not in the already-assigned list.\n';
 

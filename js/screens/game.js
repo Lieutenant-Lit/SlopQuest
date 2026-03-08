@@ -580,14 +580,17 @@
           info.appendChild(descEl);
         }
 
-        // Show the ElevenLabs voice catalog labels for the chosen voice
+        // Show the ElevenLabs voice catalog entry for the chosen voice
         if (entry.voice_id && voiceCatalog[entry.voice_id]) {
           var catVoice = voiceCatalog[entry.voice_id];
           var catLabels = catVoice.labels || {};
-          var catParts = [catLabels.gender, catLabels.age, catLabels.accent].filter(Boolean);
-          var catStr = catParts.join(', ');
-          if (catLabels.description) catStr += ' | "' + catLabels.description + '"';
-          if (catLabels.use_case) catStr += ' | ' + catLabels.use_case;
+          var catParts = [];
+          if (catVoice.name) catParts.push('"' + catVoice.name + '"');
+          var traits = [catLabels.gender, catLabels.age, catLabels.accent].filter(Boolean).join(', ');
+          if (traits) catParts.push(traits);
+          if (catLabels.description) catParts.push('"' + catLabels.description + '"');
+          if (catLabels.use_case) catParts.push(catLabels.use_case);
+          var catStr = catParts.join(' | ');
           if (catStr) {
             var catEl = document.createElement('span');
             catEl.className = 'audio-debug-voice-desc';
