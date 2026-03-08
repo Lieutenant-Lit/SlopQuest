@@ -247,11 +247,15 @@
       var validVoiceIds = {};
       var voiceNameMap = {};
       var nameToVoiceId = {};
+      var normalizedNameToVoiceId = {};
       if (_availableVoices) {
         _availableVoices.forEach(function (v) {
           validVoiceIds[v.voice_id] = v;
           voiceNameMap[v.voice_id] = v.name;
           nameToVoiceId[v.name.toLowerCase()] = v.voice_id;
+          // Normalized: strip all non-alphanumeric for fuzzy matching
+          var norm = v.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          normalizedNameToVoiceId[norm] = v.voice_id;
         });
       }
 
@@ -277,7 +281,26 @@
 
         // If voiceId is actually a name, resolve it to the real ID
         if (voiceId && !validVoiceIds[voiceId]) {
-          var resolved = nameToVoiceId[voiceId.toLowerCase()];
+          var lower = voiceId.toLowerCase();
+          // Try exact name match first
+          var resolved = nameToVoiceId[lower];
+          // Try normalized match (strips dashes, spaces, punctuation)
+          if (!resolved) {
+            var norm = lower.replace(/[^a-z0-9]/g, '');
+            resolved = normalizedNameToVoiceId[norm];
+          }
+          // Try matching just the first word (e.g. "Valory" from "Valory - Intimate, Warm...")
+          if (!resolved) {
+            var firstWord = lower.split(/[\s\-\u2013\u2014,]+/)[0];
+            if (firstWord && firstWord.length > 2) {
+              for (var nm in nameToVoiceId) {
+                if (nm.split(/[\s\-\u2013\u2014,]+/)[0] === firstWord) {
+                  resolved = nameToVoiceId[nm];
+                  break;
+                }
+              }
+            }
+          }
           if (resolved) {
             console.log('AudioDirector: resolved voice name "' + voiceId + '" to ID ' + resolved);
             voiceId = resolved;
