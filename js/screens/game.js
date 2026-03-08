@@ -8,6 +8,14 @@
   /** Delay (ms) between each paragraph fade-in. */
   var PARAGRAPH_STAGGER_MS = 120;
 
+  /** Audio debug color palette for dark theme. */
+  var DEBUG_COLORS = [
+    '#7c6ff0', '#e06070', '#40b8d0', '#e0a030',
+    '#60c870', '#d080e0', '#e08050', '#50a0e0'
+  ];
+  var DEBUG_NARRATION_COLOR = '#6a6a80';
+  var _debugColorMap = {};
+
   SQ.Screens.Game = {
     /** Tracks whether the current render is the initial load (no animation). */
     _isInitialRender: true,
@@ -42,10 +50,20 @@
 
       // Audio playback controls
       document.getElementById('btn-audio-playpause').addEventListener('click', function () {
-        SQ.AudioGenerator.togglePlayPause();
+        SQ.AudioDirector.togglePlayPause();
       });
       document.getElementById('btn-audio-replay').addEventListener('click', function () {
-        SQ.AudioGenerator.replay();
+        SQ.AudioDirector.replay();
+      });
+
+      // Audio debug overlay
+      document.addEventListener('audiodebug', function (e) {
+        if (SQ.PlayerConfig.isAudioDebugEnabled()) {
+          self._renderAudioDebug(e.detail);
+        }
+      });
+      document.getElementById('audio-debug-header').addEventListener('click', function () {
+        document.getElementById('audio-debug-panel').classList.toggle('collapsed');
       });
     },
 
@@ -55,8 +73,9 @@
     },
 
     onHide: function () {
-      // Stop narration when navigating away
-      SQ.AudioGenerator.stop();
+      SQ.AudioDirector.stop();
+      var debugPanel = document.getElementById('audio-debug-panel');
+      if (debugPanel) debugPanel.classList.add('hidden');
     },
 
     /**
@@ -79,12 +98,16 @@
         this._hideIllustration();
       }
 
-      // Audio controls — show if narration is enabled and we have audio
-      if (state.narration_audio_url && SQ.PlayerConfig.isNarrationEnabled()) {
-        SQ.AudioGenerator.showControls();
+      // Audio controls — show if narration is enabled and audio is pending or active
+      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
+        SQ.AudioDirector.showControls();
       } else {
-        SQ.AudioGenerator.hideControls();
+        SQ.AudioDirector.hideControls();
       }
+
+      // Hide audio debug panel until next analysis
+      var debugPanel = document.getElementById('audio-debug-panel');
+      if (debugPanel) debugPanel.classList.add('hidden');
 
       // Passage (with fade-in on new passages, instant on initial load/rewind)
       this._renderPassage(state.last_passage, !this._isInitialRender);
@@ -243,23 +266,12 @@
         self.hideLoading();
         self.applyResponse(state, response);
 
-        // Fire TTS narration for the new passage text (parallel with image).
-        // Text is already rendered by applyResponse → renderState, so audio plays
-        // over visible text per design doc Section 5 progressive rendering order.
+        // Queue Audio Director for on-demand narration (user clicks play to generate).
         if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
-          SQ.AudioGenerator.hideControls();
-          SQ.AudioGenerator.generate(response.passage).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
-            } else {
-              SQ.AudioGenerator.hideControls();
-            }
-          });
+          SQ.AudioDirector.prepareForPassage(response.passage, state);
         } else {
-          SQ.AudioGenerator.stop();
-          SQ.AudioGenerator.hideControls();
+          SQ.AudioDirector.stop();
+          SQ.AudioDirector.hideControls();
         }
 
         // If no image was started yet but the new response has an illustration_prompt,
@@ -483,6 +495,175 @@
       var container = document.getElementById('illustration-container');
       container.classList.add('hidden');
       container.classList.remove('illustration-visible', 'illustration-loading');
+    },
+
+    // ========================================================
+    // AUDIO DEBUG OVERLAY
+    // ========================================================
+
+    _getDebugColor: function (speaker) {
+      if (!speaker || speaker === 'Narrator') return DEBUG_NARRATION_COLOR;
+      if (_debugColorMap[speaker]) return _debugColorMap[speaker];
+      var idx = Object.keys(_debugColorMap).length;
+      _debugColorMap[speaker] = DEBUG_COLORS[idx % DEBUG_COLORS.length];
+      return _debugColorMap[speaker];
+    },
+
+    _escapeHtml: function (str) {
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    },
+
+    _renderAudioDebug: function (detail) {
+      var panel = document.getElementById('audio-debug-panel');
+      var castEl = document.getElementById('audio-debug-cast');
+      if (!panel || !castEl) return;
+
+      var segments = detail.segments || [];
+      var registry = detail.registry || {};
+
+      _debugColorMap = {};
+
+      // Collect unique speakers in appearance order
+      var speakers = [];
+      var seen = {};
+      segments.forEach(function (seg) {
+        var name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        if (!seen[name]) {
+          seen[name] = true;
+          speakers.push(name);
+        }
+      });
+
+      // Build cast list
+      castEl.innerHTML = '';
+      var self = this;
+      speakers.forEach(function (name) {
+        var color = self._getDebugColor(name);
+        var regKey = (name === 'Narrator') ? '__narrator__' : name;
+        var entry = registry[regKey] || {};
+
+        var row = document.createElement('div');
+        row.className = 'audio-debug-character';
+
+        var dot = document.createElement('span');
+        dot.className = 'audio-debug-color-dot';
+        dot.style.backgroundColor = color;
+
+        var info = document.createElement('div');
+        info.className = 'audio-debug-character-info';
+
+        var nameEl = document.createElement('span');
+        nameEl.className = 'audio-debug-character-name';
+        nameEl.textContent = name;
+        nameEl.style.color = color;
+        info.appendChild(nameEl);
+
+        if (entry.voice_name) {
+          var voiceEl = document.createElement('span');
+          voiceEl.className = 'audio-debug-voice-name';
+          voiceEl.textContent = 'Voice: ' + entry.voice_name;
+          info.appendChild(voiceEl);
+        }
+
+        if (entry.description) {
+          var descEl = document.createElement('span');
+          descEl.className = 'audio-debug-voice-desc';
+          descEl.textContent = entry.description;
+          info.appendChild(descEl);
+        }
+
+        // Show voice_description from LLM analysis for dialogue speakers
+        var llmDesc = null;
+        segments.forEach(function (seg) {
+          if (seg.speaker === name && seg.voice_description && !llmDesc) {
+            llmDesc = seg.voice_description;
+          }
+        });
+        if (llmDesc && llmDesc !== (entry.description || '')) {
+          var llmEl = document.createElement('span');
+          llmEl.className = 'audio-debug-voice-desc';
+          llmEl.textContent = 'LLM requested: ' + llmDesc;
+          info.appendChild(llmEl);
+        }
+
+        row.appendChild(dot);
+        row.appendChild(info);
+        castEl.appendChild(row);
+      });
+
+      panel.classList.remove('hidden');
+      this._highlightPassage(detail.ttsSegments || []);
+    },
+
+    _highlightPassage: function (ttsSegments) {
+      var state = SQ.GameState.get();
+      if (!state || !state.last_passage) return;
+
+      var fullText = state.last_passage;
+      var self = this;
+
+      // Build ranges from actual TTS segments (exact text sent to ElevenLabs)
+      var ranges = [];
+      var cursor = 0;
+      ttsSegments.forEach(function (seg) {
+        var needle = (seg.text || '').trim();
+        if (!needle) return;
+        var speaker = (seg.speaker === 'Narrator') ? null : seg.speaker;
+        var match = self._findSegmentInText(needle, fullText, cursor);
+        if (match) {
+          ranges.push({ start: match.start, end: match.end, speaker: speaker });
+          cursor = match.end;
+        }
+      });
+
+      // Build the full highlighted HTML
+      var html = '';
+      var pos = 0;
+      ranges.forEach(function (r) {
+        if (r.start > pos) {
+          html += self._escapeHtml(fullText.substring(pos, r.start));
+        }
+        var color = self._getDebugColor(r.speaker);
+        var speakerAttr = self._escapeHtml(r.speaker || 'Narrator');
+        html += '<span data-speaker="' + speakerAttr + '" style="color:' + color + '">';
+        html += self._escapeHtml(fullText.substring(Math.max(r.start, pos), r.end));
+        html += '</span>';
+        pos = r.end;
+      });
+      if (pos < fullText.length) {
+        html += self._escapeHtml(fullText.substring(pos));
+      }
+
+      // Split on double newlines to preserve paragraph structure
+      var passageEl = document.getElementById('passage-text');
+      passageEl.innerHTML = '';
+      var parts = html.split(/\n\n+/);
+      parts.forEach(function (part) {
+        var trimmed = part.trim();
+        if (!trimmed) return;
+        var el = document.createElement('p');
+        el.innerHTML = trimmed;
+        passageEl.appendChild(el);
+      });
+    },
+
+    _findSegmentInText: function (needle, text, startFrom) {
+      var start = startFrom || 0;
+
+      // Direct match — segments now preserve exact passage text including quotes
+      var idx = text.indexOf(needle, start);
+      if (idx !== -1) return { start: idx, end: idx + needle.length };
+
+      // Fuzzy fallback: match first 40 chars
+      if (needle.length > 40) {
+        var short = needle.substring(0, 40);
+        idx = text.indexOf(short, start);
+        if (idx !== -1) return { start: idx, end: Math.min(idx + needle.length, text.length) };
+      }
+
+      return null;
     },
 
     showLoading: function () {

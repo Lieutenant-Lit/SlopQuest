@@ -60,22 +60,20 @@
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
       });
 
-      // Audio model selection
-      document.getElementById('audio-model-select').addEventListener('change', function () {
-        var customInput = document.getElementById('audio-model-custom-input');
-        if (this.value === 'custom') {
-          customInput.classList.remove('hidden');
-          customInput.focus();
-        } else {
-          customInput.classList.add('hidden');
-          SQ.PlayerConfig.setModel('audio', this.value);
-        }
+      // Disable default voices toggle
+      document.getElementById('settings-disable-default-voices').addEventListener('change', function () {
+        SQ.PlayerConfig.setDisableDefaultVoicesEnabled(this.checked);
+        SQ.AudioDirector.refreshVoices();
       });
 
-      document.getElementById('audio-model-custom-input').addEventListener('change', function () {
-        if (this.value.trim()) {
-          SQ.PlayerConfig.setModel('audio', this.value.trim());
-        }
+      // Audio debug toggle
+      document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
+      });
+
+      // ElevenLabs API key validation
+      document.getElementById('btn-validate-elevenlabs').addEventListener('click', function () {
+        self.validateElevenLabsKey();
       });
 
       // Save & continue to main menu
@@ -146,31 +144,96 @@
       document.getElementById('settings-narration-toggle').checked =
         SQ.PlayerConfig.isNarrationEnabled();
 
-      // Set audio model selector to current value
-      var currentAudioModel = SQ.PlayerConfig.getModel('audio');
-      var audioSelect = document.getElementById('audio-model-select');
-      var audioFound = false;
-      for (var k = 0; k < audioSelect.options.length; k++) {
-        if (audioSelect.options[k].value === currentAudioModel) {
-          audioSelect.selectedIndex = k;
-          audioFound = true;
-          break;
-        }
-      }
-      if (!audioFound && currentAudioModel) {
-        audioSelect.value = 'custom';
-        var audioCustomInput = document.getElementById('audio-model-custom-input');
-        audioCustomInput.classList.remove('hidden');
-        audioCustomInput.value = currentAudioModel;
+      // Set disable default voices toggle state
+      document.getElementById('settings-disable-default-voices').checked =
+        SQ.PlayerConfig.isDisableDefaultVoicesEnabled();
+
+      // Set audio debug toggle state
+      document.getElementById('settings-audio-debug-toggle').checked =
+        SQ.PlayerConfig.isAudioDebugEnabled();
+
+      // Populate ElevenLabs key field
+      var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
+      var elevenLabsInput = document.getElementById('elevenlabs-key-input');
+      if (elevenLabsKey) {
+        elevenLabsInput.value = elevenLabsKey;
       }
 
-      // Reset validation status
+      // Reset validation statuses
       var status = document.getElementById('key-status');
       status.textContent = '';
       status.className = 'status-message';
+
+      var elevenLabsStatus = document.getElementById('elevenlabs-key-status');
+      elevenLabsStatus.textContent = '';
+      elevenLabsStatus.className = 'status-message';
     },
 
     onHide: function () {},
+
+    validateElevenLabsKey: function () {
+      var keyInput = document.getElementById('elevenlabs-key-input');
+      var status = document.getElementById('elevenlabs-key-status');
+      var btn = document.getElementById('btn-validate-elevenlabs');
+      var key = keyInput.value.trim();
+
+      if (!key) {
+        status.textContent = 'Please enter an ElevenLabs API key.';
+        status.className = 'status-message error';
+        return;
+      }
+
+      if (SQ.useMockData) {
+        SQ.PlayerConfig.setElevenLabsApiKey(key);
+        status.textContent = 'Key saved (mock mode — no validation).';
+        status.className = 'status-message success';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Validating...';
+      status.textContent = 'Checking key with ElevenLabs...';
+      status.className = 'status-message';
+
+      // Validate using /v1/voices (not /v1/user) because restricted API keys
+      // may not have User read permission but will have Voices access.
+      fetch('https://api.elevenlabs.io/v1/voices', {
+        method: 'GET',
+        headers: { 'xi-api-key': key }
+      })
+        .then(function (response) {
+          if (response.ok) {
+            SQ.PlayerConfig.setElevenLabsApiKey(key);
+            // Refresh voice cache with new key
+            SQ.AudioDirector.refreshVoices();
+            return response.json().then(function (data) {
+              var voiceCount = (data.voices && data.voices.length) || 0;
+              status.textContent = 'Key validated successfully. ' + voiceCount + ' voices available.';
+              status.className = 'status-message success';
+            });
+          } else {
+            return response.text().then(function (body) {
+              var detail = '';
+              try {
+                var json = JSON.parse(body);
+                detail = (json.detail && json.detail.message) ? json.detail.message : JSON.stringify(json.detail || json);
+              } catch (e) {
+                detail = body;
+              }
+              status.textContent = 'ElevenLabs error (HTTP ' + response.status + '): ' + detail;
+              status.className = 'status-message error';
+            });
+          }
+        })
+        .catch(function () {
+          status.textContent = 'Network error — could not reach ElevenLabs. Try again.';
+          status.className = 'status-message error';
+        })
+        .then(function () {
+          btn.disabled = false;
+          btn.textContent = 'Validate Key';
+        });
+    },
 
     validateKey: function () {
       var keyInput = document.getElementById('api-key-input');

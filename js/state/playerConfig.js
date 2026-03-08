@@ -8,15 +8,17 @@
 
   var DEFAULT_CONFIG = {
     openrouter_api_key: '',
+    elevenlabs_api_key: '',
     models: {
       skeleton: 'anthropic/claude-sonnet-4',
       passage: 'anthropic/claude-sonnet-4',
-      image: 'google/gemini-3.1-flash-image-preview',
-      audio: 'openai/gpt-4o-audio-preview'
+      image: 'google/gemini-3.1-flash-image-preview'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
-    narration_enabled: false
+    narration_enabled: false,
+    audio_debug_enabled: false,
+    disable_default_voices: false
   };
 
   // Mock mode flag — default true for development
@@ -62,7 +64,30 @@
     },
 
     /**
-     * Get model ID for a given type: 'skeleton', 'passage', 'image', 'audio'.
+     * Get the stored ElevenLabs API key, or empty string.
+     */
+    getElevenLabsApiKey: function () {
+      return this.load().elevenlabs_api_key || '';
+    },
+
+    /**
+     * Set and persist the ElevenLabs API key.
+     */
+    setElevenLabsApiKey: function (key) {
+      var config = this.load();
+      config.elevenlabs_api_key = key;
+      this.save(config);
+    },
+
+    /**
+     * Check if we have a non-empty ElevenLabs API key stored.
+     */
+    hasElevenLabsApiKey: function () {
+      return this.getElevenLabsApiKey().length > 0;
+    },
+
+    /**
+     * Get model ID for a given type: 'skeleton', 'passage', 'image'.
      */
     getModel: function (type) {
       var config = this.load();
@@ -142,6 +167,28 @@
     setNarrationEnabled: function (enabled) {
       var config = this.load();
       config.narration_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isAudioDebugEnabled: function () {
+      var config = this.load();
+      return config.audio_debug_enabled === true;
+    },
+
+    setAudioDebugEnabled: function (enabled) {
+      var config = this.load();
+      config.audio_debug_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isDisableDefaultVoicesEnabled: function () {
+      var config = this.load();
+      return config.disable_default_voices === true;
+    },
+
+    setDisableDefaultVoicesEnabled: function (enabled) {
+      var config = this.load();
+      config.disable_default_voices = !!enabled;
       this.save(config);
     }
   };

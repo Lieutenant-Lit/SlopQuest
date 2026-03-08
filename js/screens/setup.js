@@ -130,7 +130,11 @@
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
         storyLength: this._selected.storyLength || 'medium',
-        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer'
+        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer',
+        voiceGender: document.getElementById('setup-voice-gender').value || '',
+        voiceDirection: document.getElementById('setup-voice-direction').value.trim() || '',
+        narratorGender: document.getElementById('setup-narrator-gender').value || '',
+        narratorDirection: document.getElementById('setup-narrator-direction').value.trim() || ''
       };
     },
 
@@ -206,15 +210,9 @@
           });
         }
 
-        // Fire TTS narration for the opening passage (non-blocking)
+        // Queue TTS narration for the opening passage (on-demand: user clicks play)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
-          SQ.AudioGenerator.generate(state.last_passage).then(function (audioUrl) {
-            if (audioUrl) {
-              state.narration_audio_url = audioUrl;
-              SQ.AudioGenerator.showControls();
-              SQ.AudioGenerator.play(audioUrl);
-            }
-          });
+          SQ.AudioDirector.prepareForPassage(state.last_passage, state);
         }
 
         SQ.GameState.save();

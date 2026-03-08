@@ -64,15 +64,22 @@
           <input type="checkbox" id="settings-narration-toggle">
           <span>Enable AI voice narration</span>
         </label>
-        <p>Reads passages aloud using a TTS model. Uses additional API credits.</p>
-        <div id="audio-model-section">
-          <label class="card-label">Audio Model</label>
-          <select id="audio-model-select">
-            <option value="openai/gpt-4o-audio-preview">GPT-4o Audio (default)</option>
-            <option value="custom">Custom model...</option>
-          </select>
-          <input type="text" id="audio-model-custom-input" class="hidden" placeholder="org/model-name">
+        <p>Full-cast audio play with unique voices for every character. Powered by ElevenLabs.</p>
+        <div id="elevenlabs-key-section">
+          <label class="card-label">ElevenLabs API Key</label>
+          <p class="card-hint">Get your key from <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">elevenlabs.io</a></p>
+          <input type="password" id="elevenlabs-key-input" placeholder="xi_..." autocomplete="off">
+          <button id="btn-validate-elevenlabs" class="btn btn-secondary">Validate Key</button>
+          <div id="elevenlabs-key-status" class="status-message"></div>
         </div>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-disable-default-voices">
+          <span>Disable default voices</span>
+        </label>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-audio-debug-toggle">
+          <span>Audio debug overlay</span>
+        </label>
       </div>
 
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
@@ -121,6 +128,25 @@
         <p>Broad archetype — the skeleton fills in the details.</p>
         <input type="text" id="setup-archetype" placeholder="e.g. disgraced knight, rogue scholar, starship mechanic...">
         <input type="text" id="setup-name" placeholder="Character name (optional)">
+        <select id="setup-voice-gender">
+          <option value="">Character voice (optional)</option>
+          <option value="masculine">Masculine</option>
+          <option value="feminine">Feminine</option>
+          <option value="non-binary">Non-Binary</option>
+        </select>
+        <input type="text" id="setup-voice-direction" placeholder="Voice direction (e.g. British accent, elderly, raspy...)">
+      </div>
+
+      <div class="card">
+        <h2>Narrator Voice</h2>
+        <p>Voice style for the narrator (requires ElevenLabs key).</p>
+        <select id="setup-narrator-gender">
+          <option value="">Narrator voice (optional)</option>
+          <option value="masculine">Masculine</option>
+          <option value="feminine">Feminine</option>
+          <option value="non-binary">Non-Binary</option>
+        </select>
+        <input type="text" id="setup-narrator-direction" placeholder="Voice direction (e.g. warm baritone, British, young...)">
       </div>
 
       <div class="card">
@@ -259,6 +285,13 @@
         <button class="btn-icon btn-audio" id="btn-audio-playpause" title="Play narration">&#9654;</button>
         <button class="btn-icon btn-audio" id="btn-audio-replay" title="Replay narration">&#8634;</button>
       </div>
+      <div id="audio-debug-panel" class="audio-debug-panel hidden">
+        <div class="audio-debug-header" id="audio-debug-header">
+          <span class="audio-debug-title">Voice Cast</span>
+          <span class="audio-debug-collapse">&#9660;</span>
+        </div>
+        <div id="audio-debug-cast" class="audio-debug-cast"></div>
+      </div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>
       </div>
@@ -356,7 +389,7 @@
   <script src="js/api/skeletonGenerator.js"></script>
   <script src="js/api/passageGenerator.js"></script>
   <script src="js/api/imageGenerator.js"></script>
-  <script src="js/api/audioGenerator.js"></script>
+  <script src="js/api/audioDirector.js"></script>
 
   <!-- UI modules -->
   <script src="js/ui/errorOverlay.js"></script>
