@@ -314,6 +314,7 @@
         var voiceAge = (labels.age || '').toLowerCase();
         var voiceDesc = (labels.description || '').toLowerCase();
         var voiceUseCase = (labels.use_case || '').toLowerCase();
+        var voiceAccent = (labels.accent || '').toLowerCase();
 
         // Gender matching (strong signal)
         if (wantsFemale && voiceGender === 'female') score += 10;
@@ -326,15 +327,35 @@
         if (/\b(old|elderly|aged)\b/.test(desc) && /old/.test(voiceAge)) score += 3;
         if (/\bmiddle.aged\b/.test(desc) && /middle/.test(voiceAge)) score += 3;
 
-        // Vocal quality matching
-        if (/\bdeep\b/.test(desc) && /deep/.test(voiceDesc)) score += 2;
-        if (/\bwarm\b/.test(desc) && /warm/.test(voiceDesc)) score += 2;
-        if (/\braspy\b/.test(desc) && /raspy/.test(voiceDesc)) score += 2;
-        if (/\bsmooth\b/.test(desc) && /smooth/.test(voiceDesc)) score += 2;
-        if (/\bsoft\b/.test(desc) && /soft/.test(voiceDesc)) score += 2;
+        // Expanded vocal quality matching
+        var qualityTerms = [
+          'deep', 'warm', 'raspy', 'smooth', 'soft', 'crisp', 'husky',
+          'gentle', 'strong', 'bright', 'rich', 'thin', 'thick',
+          'hoarse', 'clear', 'rough', 'sweet', 'powerful', 'light',
+          'gravelly', 'silky', 'breathy', 'sharp', 'calm', 'intense'
+        ];
+        qualityTerms.forEach(function (term) {
+          var re = new RegExp('\\b' + term + '\\b');
+          if (re.test(desc) && re.test(voiceDesc)) score += 2;
+        });
 
-        // Prefer narration/storytelling voices for narrator
-        if (desc === '' && /narrat|story|audiobook/.test(voiceUseCase)) score += 5;
+        // Use-case matching
+        if (/narrat|story|audiobook/.test(voiceUseCase)) {
+          if (desc === '' || /narrat|story/.test(desc)) score += 5;
+        }
+        if (/character|animated|gaming/.test(voiceUseCase)) {
+          if (/character|animated|gaming/.test(desc)) score += 3;
+          // Prefer character voices for any non-narrator dialogue
+          if (desc !== '') score += 2;
+        }
+        if (desc !== '' && /conversat/.test(voiceUseCase)) score += 1;
+
+        // Word overlap: shared words between LLM description and voice labels
+        var voiceText = [voiceDesc, voiceUseCase, voiceAccent].join(' ');
+        var descWords = desc.split(/[\s,]+/).filter(function (w) { return w.length > 3; });
+        descWords.forEach(function (word) {
+          if (voiceText.indexOf(word) !== -1) score += 1;
+        });
 
         // Penalty for already-used voices (prefer unique assignments)
         if (usedVoiceIds[voice.voice_id]) score -= 8;
@@ -344,6 +365,9 @@
 
       // Sort by score descending
       scored.sort(function (a, b) { return b.score - a.score; });
+
+      console.log('AudioDirector: voice match for "' + description + '":',
+        scored.slice(0, 3).map(function (s) { return s.voice.name + ' (' + s.score + ')'; }).join(', '));
 
       return scored[0].voice;
     },
@@ -520,10 +544,10 @@
             speaker = seg.speaker;
             var entry = registry[seg.speaker];
             voiceId = entry ? entry.voice_id : null;
-            // Dialogue gets higher expressiveness
-            voiceSettings.stability = 0.35;
-            voiceSettings.similarity_boost = 0.80;
-            voiceSettings.style = 0.4;
+            // Dialogue: expressive character performance
+            voiceSettings.stability = 0.30;
+            voiceSettings.similarity_boost = 0.75;
+            voiceSettings.style = 0.6;
           } else {
             speaker = 'Narrator';
             var narratorEntry = registry['__narrator__'];

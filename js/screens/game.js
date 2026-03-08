@@ -616,56 +616,72 @@
       });
     },
 
+    _findSegmentInText: function (needle, text, startFrom) {
+      // Direct match first
+      var idx = text.indexOf(needle, startFrom);
+      if (idx !== -1) return { start: idx, end: idx + needle.length };
+
+      // Dialogue text has quotes stripped by the LLM — try finding it inside quotes
+      var escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var sub = text.substring(startFrom || 0);
+      var patterns = [
+        new RegExp('["\u201c\u2018]' + escaped + '["\u201d\u2019,.\u2014!?]*'),
+        new RegExp('["\u201c\u2018]' + escaped),
+        new RegExp(escaped + '["\u201d\u2019,.]')
+      ];
+      for (var i = 0; i < patterns.length; i++) {
+        var m = patterns[i].exec(sub);
+        if (m) {
+          var matchStart = (startFrom || 0) + m.index;
+          return { start: matchStart, end: matchStart + m[0].length };
+        }
+      }
+
+      // Fuzzy: try first 30 chars
+      if (needle.length > 30) {
+        var short = needle.substring(0, 30);
+        idx = text.indexOf(short, startFrom);
+        if (idx !== -1) return { start: idx, end: Math.min(idx + needle.length, text.length) };
+      }
+
+      return null;
+    },
+
     _applySegmentColors: function (text, segments) {
       var ranges = [];
       var self = this;
+      var cursor = 0;
 
       segments.forEach(function (seg) {
         var needle = (seg.text || '').trim();
         if (!needle) return;
 
         var speaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : null;
-        var idx = text.indexOf(needle);
-
-        if (idx === -1) {
-          // Try matching first 40 chars (LLM may have slightly altered text)
-          var short = needle.substring(0, 40);
-          idx = text.indexOf(short);
-          if (idx !== -1) {
-            ranges.push({ start: idx, end: Math.min(idx + needle.length, text.length), speaker: speaker });
-          }
-          return;
+        var match = self._findSegmentInText(needle, text, cursor);
+        if (match) {
+          ranges.push({ start: match.start, end: match.end, speaker: speaker });
+          cursor = match.end;
         }
-        ranges.push({ start: idx, end: idx + needle.length, speaker: speaker });
       });
 
       if (ranges.length === 0) return self._escapeHtml(text);
 
-      ranges.sort(function (a, b) { return a.start - b.start; });
-
-      // Remove overlapping ranges
-      var cleaned = [ranges[0]];
-      for (var i = 1; i < ranges.length; i++) {
-        if (ranges[i].start >= cleaned[cleaned.length - 1].end) {
-          cleaned.push(ranges[i]);
-        }
-      }
-
+      // Ranges are already in order since we search sequentially with cursor
       var result = '';
-      var cursor = 0;
-      cleaned.forEach(function (r) {
-        if (r.start > cursor) {
-          result += self._escapeHtml(text.substring(cursor, r.start));
+      var pos = 0;
+      ranges.forEach(function (r) {
+        if (r.start > pos) {
+          result += self._escapeHtml(text.substring(pos, r.start));
         }
         var color = self._getDebugColor(r.speaker);
         var speakerAttr = self._escapeHtml(r.speaker || 'Narrator');
         result += '<span data-speaker="' + speakerAttr + '" style="color:' + color + '">';
-        result += self._escapeHtml(text.substring(Math.max(r.start, cursor), r.end));
+        result += self._escapeHtml(text.substring(Math.max(r.start, pos), r.end));
         result += '</span>';
-        cursor = r.end;
+        pos = r.end;
       });
-      if (cursor < text.length) {
-        result += self._escapeHtml(text.substring(cursor));
+      if (pos < text.length) {
+        result += self._escapeHtml(text.substring(pos));
       }
       return result;
     },
