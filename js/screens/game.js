@@ -594,24 +594,57 @@
       });
 
       panel.classList.remove('hidden');
-      this._highlightPassage(segments);
+      this._highlightPassage(detail.ttsSegments || []);
     },
 
-    _highlightPassage: function (segments) {
+    _highlightPassage: function (ttsSegments) {
       var state = SQ.GameState.get();
       if (!state || !state.last_passage) return;
 
-      var passageEl = document.getElementById('passage-text');
-      var paragraphs = state.last_passage.split(/\n\n+/);
+      var fullText = state.last_passage;
       var self = this;
 
-      passageEl.innerHTML = '';
-      paragraphs.forEach(function (para) {
-        var trimmed = para.trim();
-        if (!trimmed) return;
+      // Build ranges from actual TTS segments (exact text sent to ElevenLabs)
+      var ranges = [];
+      var cursor = 0;
+      ttsSegments.forEach(function (seg) {
+        var needle = (seg.text || '').trim();
+        if (!needle) return;
+        var speaker = (seg.speaker === 'Narrator') ? null : seg.speaker;
+        var match = self._findSegmentInText(needle, fullText, cursor);
+        if (match) {
+          ranges.push({ start: match.start, end: match.end, speaker: speaker });
+          cursor = match.end;
+        }
+      });
 
+      // Build the full highlighted HTML
+      var html = '';
+      var pos = 0;
+      ranges.forEach(function (r) {
+        if (r.start > pos) {
+          html += self._escapeHtml(fullText.substring(pos, r.start));
+        }
+        var color = self._getDebugColor(r.speaker);
+        var speakerAttr = self._escapeHtml(r.speaker || 'Narrator');
+        html += '<span data-speaker="' + speakerAttr + '" style="color:' + color + '">';
+        html += self._escapeHtml(fullText.substring(Math.max(r.start, pos), r.end));
+        html += '</span>';
+        pos = r.end;
+      });
+      if (pos < fullText.length) {
+        html += self._escapeHtml(fullText.substring(pos));
+      }
+
+      // Split on double newlines to preserve paragraph structure
+      var passageEl = document.getElementById('passage-text');
+      passageEl.innerHTML = '';
+      var parts = html.split(/\n\n+/);
+      parts.forEach(function (part) {
+        var trimmed = part.trim();
+        if (!trimmed) return;
         var el = document.createElement('p');
-        el.innerHTML = self._applySegmentColors(trimmed, segments);
+        el.innerHTML = trimmed;
         passageEl.appendChild(el);
       });
     },
@@ -625,9 +658,9 @@
       var escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       var sub = text.substring(startFrom || 0);
       var patterns = [
-        new RegExp('["\u201c\u2018]' + escaped + '["\u201d\u2019,.\u2014!?]*'),
-        new RegExp('["\u201c\u2018]' + escaped),
-        new RegExp(escaped + '["\u201d\u2019,.]')
+        new RegExp('["\u201c\u2018\']' + escaped + '["\u201d\u2019\',.\u2014!?]*'),
+        new RegExp('["\u201c\u2018\']' + escaped),
+        new RegExp(escaped + '["\u201d\u2019\',.]')
       ];
       for (var i = 0; i < patterns.length; i++) {
         var m = patterns[i].exec(sub);
@@ -645,45 +678,6 @@
       }
 
       return null;
-    },
-
-    _applySegmentColors: function (text, segments) {
-      var ranges = [];
-      var self = this;
-      var cursor = 0;
-
-      segments.forEach(function (seg) {
-        var needle = (seg.text || '').trim();
-        if (!needle) return;
-
-        var speaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : null;
-        var match = self._findSegmentInText(needle, text, cursor);
-        if (match) {
-          ranges.push({ start: match.start, end: match.end, speaker: speaker });
-          cursor = match.end;
-        }
-      });
-
-      if (ranges.length === 0) return self._escapeHtml(text);
-
-      // Ranges are already in order since we search sequentially with cursor
-      var result = '';
-      var pos = 0;
-      ranges.forEach(function (r) {
-        if (r.start > pos) {
-          result += self._escapeHtml(text.substring(pos, r.start));
-        }
-        var color = self._getDebugColor(r.speaker);
-        var speakerAttr = self._escapeHtml(r.speaker || 'Narrator');
-        result += '<span data-speaker="' + speakerAttr + '" style="color:' + color + '">';
-        result += self._escapeHtml(text.substring(Math.max(r.start, pos), r.end));
-        result += '</span>';
-        pos = r.end;
-      });
-      if (pos < text.length) {
-        result += self._escapeHtml(text.substring(pos));
-      }
-      return result;
     },
 
     showLoading: function () {

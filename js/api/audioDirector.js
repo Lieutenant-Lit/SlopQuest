@@ -88,7 +88,13 @@
         .then(function (success) {
           // Fire debug event AFTER voice assignment so registry has actual voices
           if (_lastAnalysisSegments) {
-            _lastAnalysis = { segments: _lastAnalysisSegments, registry: self._loadRegistry() };
+            _lastAnalysis = {
+              segments: _lastAnalysisSegments,
+              ttsSegments: _segments.map(function (s) {
+                return { text: s.text, speaker: s.speaker, index: s.index };
+              }),
+              registry: self._loadRegistry()
+            };
             document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
             _lastAnalysisSegments = null;
           }
