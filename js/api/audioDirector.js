@@ -191,6 +191,7 @@
         '- gender (male/female/neutral)',
         '- approximate age (young/middle-aged/old)',
         '- vocal quality (gruff, smooth, raspy, warm, cold, high-pitched, deep, etc.)',
+        '- accent if apparent from the character or setting (british, irish, southern, etc.)',
         '- emotional tone for this line (angry, calm, amused, fearful, etc.)',
         '',
         'Known characters (already have assigned voices): ' + (knownCharacters.length > 0 ? knownCharacters.join(', ') : 'none yet'),
@@ -209,13 +210,30 @@
 
       var userPrompt = 'Break this passage into audio segments:\n\n' + passage;
 
-      // Add game state context for better character identification
+      // Add game state context for better character identification and voice casting
+      if (gameState && gameState.meta) {
+        var meta = gameState.meta;
+        if (meta.setting) userPrompt += '\n\nSetting: ' + meta.setting;
+        if (meta.tone) userPrompt += '\nTone: ' + meta.tone;
+      }
       if (gameState && gameState.current) {
-        userPrompt += '\n\nScene context: ' + (gameState.current.scene_context || 'unknown');
+        userPrompt += '\nScene context: ' + (gameState.current.scene_context || 'unknown');
         userPrompt += '\nLocation: ' + (gameState.current.location || 'unknown');
       }
       if (playerName) {
         userPrompt += '\nPlayer character: ' + playerName;
+      }
+
+      // Include NPC roster so the LLM can generate informed voice descriptions
+      if (gameState && gameState.skeleton && gameState.skeleton.npcs) {
+        var npcList = gameState.skeleton.npcs.map(function (npc) {
+          var parts = [npc.name + ': ' + (npc.role || 'unknown role')];
+          if (npc.allegiance) parts.push('(' + npc.allegiance + ')');
+          return '- ' + parts.join(' ');
+        }).join('\n');
+        if (npcList) {
+          userPrompt += '\n\nNPC roster (use for voice casting):\n' + npcList;
+        }
       }
 
       return SQ.API.call(ANALYSIS_MODEL, [
@@ -320,6 +338,88 @@
     },
 
     /**
+     * Score a single voice against a description.
+     * @param {object} voice - ElevenLabs voice object
+     * @param {string} desc - Lowercased voice description
+     * @param {object} usedVoiceIds - Map of voice_id → true for already-assigned voices
+     * @returns {number} Score (higher is better)
+     * @private
+     */
+    _scoreOneVoice: function (voice, desc, usedVoiceIds) {
+      var score = 0;
+      var labels = (voice.labels || {});
+      var voiceGender = (labels.gender || '').toLowerCase();
+      var voiceAge = (labels.age || '').toLowerCase();
+      var voiceDesc = (labels.description || '').toLowerCase();
+      var voiceUseCase = (labels.use_case || '').toLowerCase();
+      var voiceAccent = (labels.accent || '').toLowerCase();
+
+      // Gender detection — only actual gender terms, not vocal qualities
+      var wantsFemale = /\b(female|woman|girl|she|her)\b/.test(desc);
+      var wantsMale = /\b(male|man|boy|he|him)\b/.test(desc);
+
+      // Gender matching (strong signal)
+      if (wantsFemale && voiceGender === 'female') score += 8;
+      if (wantsMale && voiceGender === 'male') score += 8;
+      if (wantsFemale && voiceGender === 'male') score -= 8;
+      if (wantsMale && voiceGender === 'female') score -= 8;
+
+      // Age matching
+      if (/\b(young|youth)\b/.test(desc) && /young/.test(voiceAge)) score += 3;
+      if (/\b(old|elderly|aged)\b/.test(desc) && /old/.test(voiceAge)) score += 3;
+      if (/\bmiddle.aged\b/.test(desc) && /middle/.test(voiceAge)) score += 3;
+
+      // Accent matching
+      var accentTerms = [
+        'british', 'american', 'irish', 'scottish', 'australian',
+        'french', 'german', 'italian', 'spanish', 'russian',
+        'indian', 'african', 'southern', 'transatlantic', 'midwestern'
+      ];
+      accentTerms.forEach(function (accent) {
+        var re = new RegExp('\\b' + accent + '\\b');
+        if (re.test(desc) && re.test(voiceAccent)) score += 4;
+      });
+
+      // Vocal quality matching
+      var qualityTerms = [
+        'deep', 'warm', 'raspy', 'smooth', 'soft', 'crisp', 'husky',
+        'gentle', 'strong', 'bright', 'rich', 'thin', 'thick',
+        'hoarse', 'clear', 'rough', 'sweet', 'powerful', 'light',
+        'gravelly', 'silky', 'breathy', 'sharp', 'calm', 'intense'
+      ];
+      qualityTerms.forEach(function (term) {
+        var re = new RegExp('\\b' + term + '\\b');
+        if (re.test(desc) && re.test(voiceDesc)) score += 2;
+      });
+
+      // Use-case matching (max +3)
+      var isNarrator = (desc === '' || /narrat|story|audiobook/.test(desc));
+      var isCharacter = (desc !== '' && !/narrat|story|audiobook/.test(desc));
+
+      if (isNarrator && /narrat|story|audiobook/.test(voiceUseCase)) {
+        score += 3;
+      }
+      if (isCharacter && /character|animated|gaming/.test(voiceUseCase)) {
+        score += 3;
+      }
+      if (isCharacter && /conversat/.test(voiceUseCase)) {
+        score += 1;
+      }
+
+      // Word overlap: shared words between LLM description and voice labels
+      var voiceText = [voiceDesc, voiceUseCase, voiceAccent].join(' ');
+      var descWords = desc.split(/[\s,]+/).filter(function (w) { return w.length > 3; });
+      descWords.forEach(function (word) {
+        if (voiceText.indexOf(word) !== -1) score += 1;
+      });
+
+      // Penalty for already-used voices (prefer unique assignments)
+      if (usedVoiceIds[voice.voice_id]) score -= 8;
+
+      return score;
+    },
+
+    /**
      * Match a voice description to the best available ElevenLabs voice.
      * Attempts to avoid reusing voices already assigned to other characters.
      * @private
@@ -328,66 +428,10 @@
       if (!_availableVoices || _availableVoices.length === 0) return null;
 
       var desc = (description || '').toLowerCase();
+      var self = this;
 
-      // Gender detection
-      var wantsFemale = /\b(female|woman|girl|she|her)\b/.test(desc);
-      var wantsMale = /\b(male|man|boy|he|him|gruff|deep|baritone)\b/.test(desc);
-
-      // Score each voice
       var scored = _availableVoices.map(function (voice) {
-        var score = 0;
-        var labels = (voice.labels || {});
-        var voiceGender = (labels.gender || '').toLowerCase();
-        var voiceAge = (labels.age || '').toLowerCase();
-        var voiceDesc = (labels.description || '').toLowerCase();
-        var voiceUseCase = (labels.use_case || '').toLowerCase();
-        var voiceAccent = (labels.accent || '').toLowerCase();
-
-        // Gender matching (strong signal)
-        if (wantsFemale && voiceGender === 'female') score += 10;
-        if (wantsMale && voiceGender === 'male') score += 10;
-        if (wantsFemale && voiceGender === 'male') score -= 10;
-        if (wantsMale && voiceGender === 'female') score -= 10;
-
-        // Age matching
-        if (/\b(young|youth)\b/.test(desc) && /young/.test(voiceAge)) score += 3;
-        if (/\b(old|elderly|aged)\b/.test(desc) && /old/.test(voiceAge)) score += 3;
-        if (/\bmiddle.aged\b/.test(desc) && /middle/.test(voiceAge)) score += 3;
-
-        // Expanded vocal quality matching
-        var qualityTerms = [
-          'deep', 'warm', 'raspy', 'smooth', 'soft', 'crisp', 'husky',
-          'gentle', 'strong', 'bright', 'rich', 'thin', 'thick',
-          'hoarse', 'clear', 'rough', 'sweet', 'powerful', 'light',
-          'gravelly', 'silky', 'breathy', 'sharp', 'calm', 'intense'
-        ];
-        qualityTerms.forEach(function (term) {
-          var re = new RegExp('\\b' + term + '\\b');
-          if (re.test(desc) && re.test(voiceDesc)) score += 2;
-        });
-
-        // Use-case matching
-        if (/narrat|story|audiobook/.test(voiceUseCase)) {
-          if (desc === '' || /narrat|story/.test(desc)) score += 5;
-        }
-        if (/character|animated|gaming/.test(voiceUseCase)) {
-          if (/character|animated|gaming/.test(desc)) score += 3;
-          // Prefer character voices for any non-narrator dialogue
-          if (desc !== '') score += 2;
-        }
-        if (desc !== '' && /conversat/.test(voiceUseCase)) score += 1;
-
-        // Word overlap: shared words between LLM description and voice labels
-        var voiceText = [voiceDesc, voiceUseCase, voiceAccent].join(' ');
-        var descWords = desc.split(/[\s,]+/).filter(function (w) { return w.length > 3; });
-        descWords.forEach(function (word) {
-          if (voiceText.indexOf(word) !== -1) score += 1;
-        });
-
-        // Penalty for already-used voices (prefer unique assignments)
-        if (usedVoiceIds[voice.voice_id]) score -= 8;
-
-        return { voice: voice, score: score };
+        return { voice: voice, score: self._scoreOneVoice(voice, desc, usedVoiceIds) };
       });
 
       // Sort by score descending
