@@ -277,9 +277,15 @@
     _assignVoice: function (characterKey, description) {
       var registry = this._loadRegistry();
 
-      // Already assigned?
+      // Already assigned? Validate voice is still in available list
       if (registry[characterKey] && registry[characterKey].voice_id) {
-        return registry[characterKey].voice_id;
+        var cachedId = registry[characterKey].voice_id;
+        var stillAvailable = !_availableVoices || _availableVoices.some(function (v) {
+          return v.voice_id === cachedId;
+        });
+        if (stillAvailable) return cachedId;
+        // Voice filtered out (e.g. premade voice disabled) — reassign below
+        console.log('AudioDirector: reassigning ' + characterKey + ' (voice no longer available)');
       }
 
       if (!_availableVoices || _availableVoices.length === 0) {

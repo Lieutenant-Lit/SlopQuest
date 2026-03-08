@@ -650,30 +650,29 @@
     },
 
     _findSegmentInText: function (needle, text, startFrom) {
+      var start = startFrom || 0;
+
       // Direct match first
-      var idx = text.indexOf(needle, startFrom);
+      var idx = text.indexOf(needle, start);
       if (idx !== -1) return { start: idx, end: idx + needle.length };
 
-      // Dialogue text has quotes stripped by the LLM — try finding it inside quotes
-      var escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      var sub = text.substring(startFrom || 0);
-      var patterns = [
-        new RegExp('["\u201c\u2018\']' + escaped + '["\u201d\u2019\',.\u2014!?]*'),
-        new RegExp('["\u201c\u2018\']' + escaped),
-        new RegExp(escaped + '["\u201d\u2019\',.]')
-      ];
-      for (var i = 0; i < patterns.length; i++) {
-        var m = patterns[i].exec(sub);
-        if (m) {
-          var matchStart = (startFrom || 0) + m.index;
-          return { start: matchStart, end: matchStart + m[0].length };
+      // Dialogue text has quotes stripped — scan for needle after a quote char
+      var openQuotes = '"\u201c\u2018\'';
+      var closeChars = '"\u201d\u2019\',.!?\u2014';
+      var limit = text.length - needle.length;
+      for (var i = start; i <= limit; i++) {
+        if (openQuotes.indexOf(text.charAt(i)) !== -1 &&
+            text.substring(i + 1, i + 1 + needle.length) === needle) {
+          var end = i + 1 + needle.length;
+          while (end < text.length && closeChars.indexOf(text.charAt(end)) !== -1) end++;
+          return { start: i, end: end };
         }
       }
 
-      // Fuzzy: try first 30 chars
+      // Fuzzy fallback: first 30 chars
       if (needle.length > 30) {
         var short = needle.substring(0, 30);
-        idx = text.indexOf(short, startFrom);
+        idx = text.indexOf(short, start);
         if (idx !== -1) return { start: idx, end: Math.min(idx + needle.length, text.length) };
       }
 
