@@ -523,6 +523,12 @@
       var segments = detail.segments || [];
       var registry = detail.registry || {};
 
+      // Build voice catalog lookup by voice_id
+      var voiceCatalog = {};
+      (detail.availableVoices || []).forEach(function (v) {
+        voiceCatalog[v.voice_id] = v;
+      });
+
       _debugColorMap = {};
 
       // Collect unique speakers in appearance order
@@ -570,8 +576,24 @@
         if (entry.description) {
           var descEl = document.createElement('span');
           descEl.className = 'audio-debug-voice-desc';
-          descEl.textContent = entry.description;
+          descEl.textContent = 'Casting: ' + entry.description;
           info.appendChild(descEl);
+        }
+
+        // Show the ElevenLabs voice catalog labels for the chosen voice
+        if (entry.voice_id && voiceCatalog[entry.voice_id]) {
+          var catVoice = voiceCatalog[entry.voice_id];
+          var catLabels = catVoice.labels || {};
+          var catParts = [catLabels.gender, catLabels.age, catLabels.accent].filter(Boolean);
+          var catStr = catParts.join(', ');
+          if (catLabels.description) catStr += ' | "' + catLabels.description + '"';
+          if (catLabels.use_case) catStr += ' | ' + catLabels.use_case;
+          if (catStr) {
+            var catEl = document.createElement('span');
+            catEl.className = 'audio-debug-voice-desc';
+            catEl.textContent = 'Catalog: ' + catStr;
+            info.appendChild(catEl);
+          }
         }
 
         // Show voice_description from LLM analysis for dialogue speakers

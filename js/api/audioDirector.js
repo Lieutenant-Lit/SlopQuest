@@ -93,7 +93,8 @@
               ttsSegments: _segments.map(function (s) {
                 return { text: s.text, speaker: s.speaker, index: s.index };
               }),
-              registry: self._loadRegistry()
+              registry: self._loadRegistry(),
+              availableVoices: _availableVoices || []
             };
             document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
             _lastAnalysisSegments = null;
