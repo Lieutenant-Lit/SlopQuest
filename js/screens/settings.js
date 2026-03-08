@@ -60,6 +60,12 @@
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
       });
 
+      // Disable default voices toggle
+      document.getElementById('settings-disable-default-voices').addEventListener('change', function () {
+        SQ.PlayerConfig.setDisableDefaultVoicesEnabled(this.checked);
+        SQ.AudioDirector.refreshVoices();
+      });
+
       // Audio debug toggle
       document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
@@ -137,6 +143,10 @@
       // Set narration toggle state
       document.getElementById('settings-narration-toggle').checked =
         SQ.PlayerConfig.isNarrationEnabled();
+
+      // Set disable default voices toggle state
+      document.getElementById('settings-disable-default-voices').checked =
+        SQ.PlayerConfig.isDisableDefaultVoicesEnabled();
 
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =

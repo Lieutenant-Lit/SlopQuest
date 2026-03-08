@@ -39,6 +39,7 @@
 
   /** Last analysis result for audio debug overlay. */
   var _lastAnalysis = null;
+  var _lastAnalysisSegments = null;
 
   SQ.AudioDirector = {
     // ========================================================
@@ -81,12 +82,16 @@
             console.warn('AudioDirector: LLM returned empty audio script');
             return false;
           }
-          // Capture analysis for debug overlay and notify listeners
-          _lastAnalysis = { segments: audioScript.segments, registry: self._loadRegistry() };
-          document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
+          _lastAnalysisSegments = audioScript.segments;
           return self._generateAllSegments(audioScript.segments, gameState);
         })
         .then(function (success) {
+          // Fire debug event AFTER voice assignment so registry has actual voices
+          if (_lastAnalysisSegments) {
+            _lastAnalysis = { segments: _lastAnalysisSegments, registry: self._loadRegistry() };
+            document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
+            _lastAnalysisSegments = null;
+          }
           if (success && _segments.length > 0) {
             self.showControls();
             self._playSegment(0);
@@ -119,6 +124,10 @@
 
     getLastAnalysis: function () {
       return _lastAnalysis;
+    },
+
+    hasPendingOrActive: function () {
+      return !!_pendingPassage || _segments.length > 0;
     },
 
     // ========================================================
@@ -155,8 +164,9 @@
         '',
         'CRITICAL RULES:',
         '- EVERY sentence in the passage MUST appear in exactly one segment. Do NOT skip or omit any text.',
-        '- Action beats and narrative between dialogue (e.g., "you call out cheerfully, continuing your approach")',
-        '  are NARRATION segments. They must be included.',
+        '- Action beats and narrative between dialogue (e.g., "she says", "he mutters", "you say to the crowd",',
+        '  "you call out cheerfully, continuing your approach") are NARRATION segments. NEVER skip them.',
+        '  Every phrase between dialogue quotes must be captured as a narration segment.',
         '- Preserve the EXACT text from the passage. Do not paraphrase or alter wording.',
         '- Strip quotation marks from dialogue text (the voice actor speaks the words directly).',
         '',
@@ -413,10 +423,19 @@
             return {
               voice_id: v.voice_id,
               name: v.name,
+              category: v.category || 'premade',
               labels: v.labels || {},
               preview_url: v.preview_url
             };
           });
+
+          // Filter out default/premade voices if user disabled them
+          if (SQ.PlayerConfig.isDisableDefaultVoicesEnabled()) {
+            var filtered = _availableVoices.filter(function (v) {
+              return v.category !== 'premade';
+            });
+            if (filtered.length > 0) _availableVoices = filtered;
+          }
 
           // Cache to localStorage
           try {

@@ -17,7 +17,8 @@
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
     narration_enabled: false,
-    audio_debug_enabled: false
+    audio_debug_enabled: false,
+    disable_default_voices: false
   };
 
   // Mock mode flag — default true for development
@@ -177,6 +178,17 @@
     setAudioDebugEnabled: function (enabled) {
       var config = this.load();
       config.audio_debug_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isDisableDefaultVoicesEnabled: function () {
+      var config = this.load();
+      return config.disable_default_voices === true;
+    },
+
+    setDisableDefaultVoicesEnabled: function (enabled) {
+      var config = this.load();
+      config.disable_default_voices = !!enabled;
       this.save(config);
     }
   };

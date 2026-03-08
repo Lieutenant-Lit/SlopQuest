@@ -98,8 +98,8 @@
         this._hideIllustration();
       }
 
-      // Audio controls — show if narration is enabled and we have audio
-      if (state.narration_audio_url && SQ.PlayerConfig.isNarrationEnabled()) {
+      // Audio controls — show if narration is enabled and audio is pending or active
+      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
         SQ.AudioDirector.showControls();
       } else {
         SQ.AudioDirector.hideControls();
