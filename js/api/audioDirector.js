@@ -243,13 +243,15 @@
     _validateAndApplyVoiceAssignments: function (audioScript, gameState) {
       var registry = this._loadRegistry();
 
-      // Build lookup of valid voice IDs
+      // Build lookup of valid voice IDs and reverse name-to-ID map
       var validVoiceIds = {};
       var voiceNameMap = {};
+      var nameToVoiceId = {};
       if (_availableVoices) {
         _availableVoices.forEach(function (v) {
           validVoiceIds[v.voice_id] = v;
           voiceNameMap[v.voice_id] = v.name;
+          nameToVoiceId[v.name.toLowerCase()] = v.voice_id;
         });
       }
 
@@ -271,6 +273,15 @@
           var cachedId = registry[characterKey].voice_id;
           var stillAvailable = !_availableVoices || validVoiceIds[cachedId];
           if (stillAvailable) return;
+        }
+
+        // If voiceId is actually a name, resolve it to the real ID
+        if (voiceId && !validVoiceIds[voiceId]) {
+          var resolved = nameToVoiceId[voiceId.toLowerCase()];
+          if (resolved) {
+            console.log('AudioDirector: resolved voice name "' + voiceId + '" to ID ' + resolved);
+            voiceId = resolved;
+          }
         }
 
         if (voiceId && validVoiceIds[voiceId]) {
