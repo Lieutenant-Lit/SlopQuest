@@ -155,9 +155,11 @@
       if (loadingStatus) loadingStatus.textContent = 'Generating story skeleton...';
       loadingOverlay.classList.remove('hidden');
 
-      // Create new game state
+      // Create new game state and clear stale audio caches
       SQ.GameState.create(setupConfig);
       SQ.HistoryStack.clear();
+      SQ.AudioDirector.clearRegistry();
+      SQ.AudioDirector.refreshVoices();
 
       // Generate skeleton, then opening passage
       SQ.SkeletonGenerator.generate(setupConfig).then(function (skeleton) {

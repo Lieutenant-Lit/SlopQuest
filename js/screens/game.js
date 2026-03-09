@@ -523,6 +523,12 @@
       var segments = detail.segments || [];
       var registry = detail.registry || {};
 
+      // Build voice catalog lookup by voice_id
+      var voiceCatalog = {};
+      (detail.availableVoices || []).forEach(function (v) {
+        voiceCatalog[v.voice_id] = v;
+      });
+
       _debugColorMap = {};
 
       // Collect unique speakers in appearance order
@@ -570,8 +576,41 @@
         if (entry.description) {
           var descEl = document.createElement('span');
           descEl.className = 'audio-debug-voice-desc';
-          descEl.textContent = entry.description;
+          descEl.textContent = 'Casting: ' + entry.description;
           info.appendChild(descEl);
+        }
+
+        // Show the ElevenLabs voice catalog entry for the chosen voice
+        if (entry.voice_id && voiceCatalog[entry.voice_id]) {
+          var catVoice = voiceCatalog[entry.voice_id];
+          var catLabels = catVoice.labels || {};
+          var catParts = [];
+          if (catVoice.name) catParts.push('"' + catVoice.name + '"');
+          var traits = [catLabels.gender, catLabels.age, catLabels.accent].filter(Boolean).join(', ');
+          if (traits) catParts.push(traits);
+          if (catLabels.use_case) catParts.push(catLabels.use_case);
+          var catStr = catParts.join(' | ');
+          if (catStr) {
+            var catEl = document.createElement('span');
+            catEl.className = 'audio-debug-voice-desc';
+            catEl.textContent = 'Catalog: ' + catStr;
+            info.appendChild(catEl);
+          }
+          // Show the full ElevenLabs voice description blurb
+          if (catVoice.description) {
+            var blurbEl = document.createElement('span');
+            blurbEl.className = 'audio-debug-voice-desc';
+            blurbEl.textContent = 'ElevenLabs: ' + catVoice.description;
+            info.appendChild(blurbEl);
+          }
+        }
+
+        // Show LLM casting justification
+        if (entry.justification) {
+          var justEl = document.createElement('span');
+          justEl.className = 'audio-debug-voice-desc';
+          justEl.textContent = 'Justification: ' + entry.justification;
+          info.appendChild(justEl);
         }
 
         // Show voice_description from LLM analysis for dialogue speakers
