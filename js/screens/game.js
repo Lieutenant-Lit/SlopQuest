@@ -70,6 +70,13 @@
       document.getElementById('gamestate-debug-header').addEventListener('click', function () {
         document.getElementById('gamestate-debug-panel').classList.toggle('collapsed');
       });
+      // Delegated click handler for collapsible sub-sections inside the debug panel
+      document.getElementById('gamestate-debug-content').addEventListener('click', function (e) {
+        var header = e.target.closest('.gsd-section-header');
+        if (header) {
+          header.parentElement.classList.toggle('collapsed');
+        }
+      });
     },
 
     onShow: function () {
@@ -525,7 +532,7 @@
 
     /**
      * Render the game state debug panel if enabled.
-     * Shows key state sections and choice metadata as formatted JSON.
+     * Shows formatted sections for player, position, choices, skeleton, etc.
      * Called after Writer response, after GM response, and on renderState (load/rewind).
      * @param {object} state - Current game state
      * @private
@@ -540,37 +547,234 @@
       }
 
       panel.classList.remove('hidden');
+      var self = this;
+      var html = '';
+      var player = state.player || {};
+      var current = state.current || {};
+      var resources = player.resources || {};
 
-      // Build a curated view of the state (not the full skeleton)
-      var debug = {
-        player: state.player,
-        current: state.current,
-        relationships: state.relationships,
-        pending_consequences: state.pending_consequences,
-        world_flags: state.world_flags,
-        event_log_last_5: (state.event_log || []).slice(-5),
-        choice_metadata: {}
-      };
+      // 1. Player
+      var playerBody = '';
+      var healthVal = typeof player.health === 'number' ? player.health : 100;
+      var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
+      playerBody += self._gsdRow('Health', healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
+      playerBody += self._gsdRow('Gold', typeof resources.gold === 'number' ? resources.gold : '—');
+      playerBody += self._gsdRow('Provisions', typeof resources.provisions === 'number' ? resources.provisions : '—');
+      if (player.inventory && player.inventory.length) {
+        playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
+      }
+      if (player.status_effects && player.status_effects.length) {
+        playerBody += self._gsdRow('Status', self._gsdList(player.status_effects));
+      }
+      if (player.skills && player.skills.length) {
+        playerBody += self._gsdRow('Skills', self._gsdList(player.skills));
+      }
+      html += self._gsdSection('Player', playerBody, false);
 
-      // Extract choice metadata (outcome/consequence/narration_directive)
+      // 2. Position
+      var posBody = '';
+      posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
+      if (current.location) posBody += self._gsdRow('Location', self._esc(current.location));
+      if (current.time_of_day) posBody += self._gsdRow('Time', self._esc(current.time_of_day));
+      if (current.scene_context) posBody += self._gsdRow('Context', self._esc(current.scene_context));
+      if (typeof current.proximity_to_climax === 'number') posBody += self._gsdRow('Climax proximity', current.proximity_to_climax);
+      if (current.active_constraints && current.active_constraints.length) {
+        posBody += self._gsdRow('Constraints', self._gsdList(current.active_constraints));
+      }
+      html += self._gsdSection('Position', posBody, false);
+
+      // 3. Relationships
+      var rels = state.relationships || {};
+      var relNames = Object.keys(rels);
+      if (relNames.length) {
+        var relBody = '';
+        relNames.forEach(function (name) {
+          var val = rels[name];
+          var cls = val > 0 ? 'gsd-rel-pos' : val < 0 ? 'gsd-rel-neg' : 'gsd-rel-zero';
+          var sign = val > 0 ? '+' : '';
+          relBody += self._gsdRow(self._esc(name), '<span class="' + cls + '">' + sign + val + '</span>');
+        });
+        html += self._gsdSection('Relationships', relBody, false);
+      }
+
+      // 4. Choices + metadata
       var choices = state.current_choices || {};
-      var keys = ['A', 'B', 'C', 'D'];
-      for (var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        if (choices[k]) {
-          var meta = {};
-          if (choices[k].text) meta.text = choices[k].text;
-          if (choices[k].outcome) meta.outcome = choices[k].outcome;
-          if (choices[k].consequence) meta.consequence = choices[k].consequence;
-          if (choices[k].narration_directive) meta.narration_directive = choices[k].narration_directive;
-          debug.choice_metadata[k] = meta;
+      var choiceKeys = ['A', 'B', 'C', 'D'];
+      var choiceBody = '';
+      for (var ci = 0; ci < choiceKeys.length; ci++) {
+        var ck = choiceKeys[ci];
+        var ch = choices[ck];
+        if (!ch) continue;
+        choiceBody += '<div class="gsd-choice">';
+        choiceBody += '<div class="gsd-choice-header">';
+        choiceBody += '<span class="gsd-choice-letter">' + ck + '</span>';
+        choiceBody += '<span class="gsd-choice-text">' + self._esc(ch.text || '') + '</span>';
+        choiceBody += '</div>';
+        if (ch.outcome) {
+          choiceBody += '<div class="gsd-choice-meta">';
+          choiceBody += self._gsdTag(ch.outcome, self._gsdOutcomeType(ch.outcome));
+          if (ch.consequence) choiceBody += ' ' + self._esc(ch.consequence);
+          choiceBody += '</div>';
+          if (ch.narration_directive) {
+            choiceBody += '<div class="gsd-choice-meta">Directive: ' + self._esc(ch.narration_directive) + '</div>';
+          }
+        } else {
+          choiceBody += '<div class="gsd-pending">[awaiting Game Master]</div>';
         }
+        choiceBody += '</div>';
+      }
+      html += self._gsdSection('Choices', choiceBody, false);
+
+      // 5. Pending Consequences
+      var pcs = state.pending_consequences || [];
+      if (pcs.length) {
+        var pcBody = '';
+        pcs.forEach(function (c) {
+          pcBody += '<div class="gsd-row" style="flex-wrap:wrap">';
+          pcBody += '<span class="gsd-label">' + self._esc(c.id || '?') + '</span>';
+          pcBody += '<span class="gsd-value">' + self._esc(c.description || '');
+          if (c.severity) pcBody += ' ' + self._gsdTag(c.severity, c.severity === 'lethal' ? 'danger' : c.severity === 'severe' ? 'risky' : 'muted');
+          if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
+          pcBody += '</span></div>';
+        });
+        html += self._gsdSection('Pending Consequences', pcBody, false);
+      }
+
+      // 6. World Flags
+      var flags = state.world_flags || {};
+      var flagKeys = Object.keys(flags);
+      if (flagKeys.length) {
+        var flagBody = '';
+        flagKeys.forEach(function (f) {
+          var dotCls = flags[f] ? 'gsd-dot-on' : 'gsd-dot-off';
+          flagBody += self._gsdRow('<span class="gsd-dot ' + dotCls + '"></span>' + self._esc(f), flags[f] ? 'true' : 'false');
+        });
+        html += self._gsdSection('World Flags', flagBody, true);
+      }
+
+      // 7. Event Log (last 5)
+      var log = (state.event_log || []).slice(-5);
+      if (log.length) {
+        var logBody = '<ol class="gsd-list" style="list-style:decimal">';
+        log.forEach(function (entry) {
+          logBody += '<li>' + self._esc(typeof entry === 'string' ? entry : JSON.stringify(entry)) + '</li>';
+        });
+        logBody += '</ol>';
+        html += self._gsdSection('Event Log (last 5)', logBody, true);
+      }
+
+      // 8. Skeleton (collapsed by default)
+      var skel = state.skeleton;
+      if (skel) {
+        var skelBody = '';
+        if (skel.premise) skelBody += self._gsdRow('Premise', self._esc(skel.premise));
+        if (skel.central_question) skelBody += self._gsdRow('Central Question', self._esc(skel.central_question));
+        if (skel.ending_shape) skelBody += self._gsdRow('Ending Shape', self._esc(skel.ending_shape));
+
+        if (skel.setting) {
+          skelBody += self._gsdRow('Setting', '<strong>' + self._esc(skel.setting.name || '') + '</strong> — ' + self._esc(skel.setting.description || ''));
+          if (skel.setting.tone_notes) skelBody += self._gsdRow('Tone', self._esc(skel.setting.tone_notes));
+        }
+
+        // Acts
+        if (Array.isArray(skel.acts)) {
+          skel.acts.forEach(function (act) {
+            var actHtml = '';
+            actHtml += self._gsdRow('Description', self._esc(act.description || ''));
+            actHtml += self._gsdRow('End Condition', self._esc(act.end_condition || ''));
+            actHtml += self._gsdRow('Target Scenes', act.target_scenes || '?');
+            if (act.locked_constraints && act.locked_constraints.length) {
+              actHtml += self._gsdRow('Constraints', self._gsdList(act.locked_constraints));
+            }
+            if (act.key_beats && act.key_beats.length) {
+              actHtml += self._gsdRow('Key Beats', self._gsdList(act.key_beats));
+            }
+            skelBody += self._gsdSection('Act ' + (act.act_number || '?') + ': ' + self._esc(act.title || ''), actHtml, true);
+          });
+        }
+
+        // NPCs
+        if (Array.isArray(skel.npcs) && skel.npcs.length) {
+          var npcHtml = '';
+          skel.npcs.forEach(function (npc) {
+            npcHtml += '<div style="padding:3px 0;border-top:1px solid rgba(42,42,58,0.3)">';
+            npcHtml += '<strong>' + self._esc(npc.name || '?') + '</strong> — ' + self._esc(npc.role || '') + '<br>';
+            if (npc.motivation) npcHtml += '<span class="gsd-label">Motivation:</span> ' + self._esc(npc.motivation) + '<br>';
+            if (npc.allegiance) npcHtml += '<span class="gsd-label">Allegiance:</span> ' + self._esc(npc.allegiance) + '<br>';
+            if (npc.secret) npcHtml += '<span class="gsd-label">Secret:</span> <em>' + self._esc(npc.secret) + '</em><br>';
+            npcHtml += '</div>';
+          });
+          skelBody += self._gsdSection('NPCs', npcHtml, true);
+        }
+
+        // Factions
+        if (Array.isArray(skel.factions) && skel.factions.length) {
+          var facHtml = '';
+          skel.factions.forEach(function (fac) {
+            facHtml += self._gsdRow(self._esc(fac.name || '?'), self._esc(fac.description || '') + (fac.goals ? ' — Goals: ' + self._esc(fac.goals) : ''));
+          });
+          skelBody += self._gsdSection('Factions', facHtml, true);
+        }
+
+        // World Rules
+        if (Array.isArray(skel.world_rules) && skel.world_rules.length) {
+          skelBody += self._gsdRow('World Rules', self._gsdList(skel.world_rules));
+        }
+
+        html += self._gsdSection('Skeleton', skelBody, true);
       }
 
       var contentEl = document.getElementById('gamestate-debug-content');
       if (contentEl) {
-        contentEl.textContent = JSON.stringify(debug, null, 2);
+        contentEl.innerHTML = html;
       }
+    },
+
+    // -- Debug panel helpers --
+
+    _gsdSection: function (title, bodyHtml, collapsed) {
+      return '<div class="gsd-section' + (collapsed ? ' collapsed' : '') + '">'
+        + '<div class="gsd-section-header">'
+        + '<span class="gsd-section-arrow">&#9660;</span>'
+        + title
+        + '</div>'
+        + '<div class="gsd-section-body">' + bodyHtml + '</div>'
+        + '</div>';
+    },
+
+    _gsdRow: function (label, value) {
+      return '<div class="gsd-row"><span class="gsd-label">' + label + '</span><span class="gsd-value">' + value + '</span></div>';
+    },
+
+    _gsdTag: function (text, type) {
+      return '<span class="gsd-tag gsd-tag-' + type + '">' + this._esc(text) + '</span>';
+    },
+
+    _gsdList: function (items) {
+      if (!items || !items.length) return '—';
+      var self = this;
+      var html = '<ul class="gsd-list">';
+      items.forEach(function (item) {
+        html += '<li>' + self._esc(typeof item === 'string' ? item : JSON.stringify(item)) + '</li>';
+      });
+      html += '</ul>';
+      return html;
+    },
+
+    _gsdOutcomeType: function (outcome) {
+      if (!outcome) return 'muted';
+      if (outcome === 'advance_safe') return 'safe';
+      if (outcome === 'advance_risky') return 'risky';
+      if (outcome === 'death' || outcome === 'severe_penalty') return 'danger';
+      if (outcome === 'hidden_benefit') return 'info';
+      return 'muted';
+    },
+
+    _esc: function (str) {
+      if (typeof str !== 'string') return String(str);
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     },
 
     /**
