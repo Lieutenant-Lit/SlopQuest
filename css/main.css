@@ -521,6 +521,20 @@ select:focus {
   cursor: not-allowed;
 }
 
+.gm-status {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: var(--spacing-xs) 0 0 0;
+  animation: gm-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gm-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 .choice-label {
   display: inline-flex;
   align-items: center;

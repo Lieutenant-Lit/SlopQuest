@@ -1,12 +1,15 @@
 /**
- * SQ.PassagePrompt — Builds system and user prompts for passage generation.
- * Based on design doc Section 9.2 prompt template.
+ * SQ.GameMasterPrompt — Builds prompts for The Game Master (mechanics LLM call).
+ * The Game Master manages all game state: health, resources, consequences,
+ * relationships, world flags, and choice outcome metadata.
+ * It does NOT write prose — that's The Writer's job.
  */
 (function () {
-  SQ.PassagePrompt = {
+  SQ.GameMasterPrompt = {
     /**
-     * Build the system prompt for passage generation.
-     * Contains the full story context and response format specification.
+     * Build the system prompt for The Game Master.
+     * Contains difficulty rules, current player state, and response schema.
+     * Deliberately excludes: writing style, tone, prose instructions.
      * @param {object} gameState - Full game state
      * @returns {string} System prompt
      */
@@ -14,23 +17,24 @@
       var meta = gameState.meta || {};
       var difficulty = meta.difficulty || 'normal';
       var isHardOrBrutal = difficulty === 'hard' || difficulty === 'brutal';
+      var diffConfig = SQ.DifficultyConfig[difficulty] || SQ.DifficultyConfig.normal;
 
       var p = '';
 
-      p += 'You are the narrator of an interactive gamebook. You write vivid, engaging prose in ';
-      p += (meta.perspective || 'second person') + ' perspective, ';
-      p += (meta.tense || 'present') + ' tense, with a ';
-      p += (meta.writing_style || 'literary') + ' style and ';
-      p += (meta.tone || 'dark and atmospheric') + ' tone.\n\n';
+      // Role
+      p += 'You are The Game Master for an interactive gamebook. You manage all game mechanics: ';
+      p += 'state updates, resource tracking, consequences, relationships, and choice outcome classification.\n\n';
 
-      p += 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON. ';
-      p += 'The passage text goes inside the "passage" field as a string. Nothing before or after the JSON.\n\n';
+      p += 'You do NOT write prose. A separate Writer handles narrative. ';
+      p += 'You will receive The Writer\'s passage and choices, then determine the mechanical impact.\n\n';
 
-      // Story skeleton
+      p += 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\n';
+
+      // Story skeleton — GM needs this for act advancement and constraint checking
       p += 'STORY SKELETON:\n';
       p += JSON.stringify(gameState.skeleton, null, 2) + '\n\n';
 
-      // Current game state sections
+      // Full player state — GM needs all mechanical details
       p += 'CURRENT PLAYER STATE:\n';
       p += JSON.stringify(gameState.player, null, 2) + '\n\n';
 
@@ -53,8 +57,7 @@
       p += 'WORLD STATE FLAGS:\n';
       p += JSON.stringify(gameState.world_flags, null, 2) + '\n\n';
 
-      // Difficulty parameters
-      var diffConfig = SQ.DifficultyConfig[difficulty] || SQ.DifficultyConfig.normal;
+      // Difficulty parameters — the heart of the GM's rules
       p += 'DIFFICULTY: ' + diffConfig.label + '\n';
       p += '- Safe choice ratio: ' + diffConfig.safe_choice_ratio + '\n';
       p += '- Consequence severity: ' + diffConfig.consequence_severity + '\n';
@@ -69,8 +72,6 @@
       // Response JSON schema
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
-      p += '  "passage": "string — the narrative passage, 150-300 words",\n';
-      p += '  "illustration_prompt": "string — a concise visual description of the key moment for image generation",\n';
       p += '  "state_updates": {\n';
       p += '    "player_changes": { "health": number, "resources": {...}, "inventory": [...], "status_effects": [...], "skills": [...] },\n';
       p += '    "new_pending_consequences": [ { "id": "string", "description": "string", "trigger": "string", "severity": "string", "scenes_remaining": number } ],\n';
@@ -83,117 +84,103 @@
       p += '    "game_over": false,\n';
       p += '    "story_complete": false\n';
       p += '  },\n';
-      p += '  "choices": {\n';
-      p += '    "A": { "text": "string — choice description shown to player"';
+      p += '  "choice_metadata": {\n';
       if (isHardOrBrutal) {
-        p += ',\n           "outcome": "string — advance_safe|advance_risky|severe_penalty|death|hidden_benefit"';
-        p += ',\n           "consequence": "string — what happens mechanically"';
-        p += ',\n           "narration_directive": "string — narration instructions for next turn"';
+        p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|death|hidden_benefit", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
+        p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
+      } else {
+        p += '    "A": { "outcome": "advance_safe|advance_risky", "consequence": "brief mechanical note" },\n';
+        p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       }
-      p += ' },\n';
-      p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       p += '  }\n';
       p += '}\n\n';
 
-      // Rules
+      // General rules
       p += 'RULES:\n';
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
-      p += '- Stay consistent with the skeleton\'s locked constraints for the current act\n';
-      p += '- Reference and advance pending consequences when their triggers are met\n';
-      p += '- Keep the passage between 150-300 words\n';
-      p += '- All four choices should feel plausible and interesting\n';
-      p += '- Never reveal information the skeleton marks as hidden/secret unless the act\'s end condition has been met\n';
-      p += '- Decrement scenes_remaining on all pending consequences\n';
-      p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
+      p += '- Relationship changes are DELTAS, not absolute values\n';
+      p += '- Decrement scenes_remaining on all pending consequences\n';
+      p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
+      p += '- event_log_entry is required — always summarize what happened this turn\n';
+      p += '- choice_metadata must classify all four choices (A, B, C, D)\n';
 
-      // Tier-specific passage rules
+      // Difficulty-specific rules
       if (difficulty === 'chill') {
         p += '\nCHILL MODE RULES (MANDATORY):\n';
         p += '- NEVER set game_over to true. The player cannot die on Chill.\n';
-        p += '- NEVER reduce health below ' + diffConfig.health_floor + '. If a consequence would reduce health below ' + diffConfig.health_floor + ', clamp it to ' + diffConfig.health_floor + '.\n';
+        p += '- NEVER reduce health below ' + diffConfig.health_floor + '.\n';
         p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points\n';
         p += '- Consequences are mild: lost items, delayed progress, NPC annoyance — never life-threatening\n';
-        p += '- Include at least 3 clearly safe choices out of 4. The "risky" choice should have minor consequences at most.\n';
+        p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
         p += '- Resources are generous. Include opportunities to gain gold/provisions regularly.\n';
-        p += '- When resources run low, have NPCs offer help or make resources easy to find.\n';
-        p += '- Hints should be obvious. If a choice is suboptimal, make the warning clear in the choice text.\n';
-        p += '- NPCs are forgiving. Even if the player makes mistakes, NPCs come around quickly.\n';
+        p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
       } else if (difficulty === 'normal') {
         p += '\nNORMAL MODE RULES (MANDATORY):\n';
         p += '- NEVER set game_over to true. The player cannot die on Normal.\n';
-        p += '- NEVER reduce health below ' + diffConfig.health_floor + '. Clamp health to ' + diffConfig.health_floor + ' minimum.\n';
+        p += '- NEVER reduce health below ' + diffConfig.health_floor + '.\n';
         p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points\n';
         p += '- Consequences are meaningful but recoverable: health loss, resource costs, relationship damage\n';
-        p += '- Approximately 2 safe and 2 risky choices per turn. Risky choices should have bigger rewards.\n';
+        p += '- Approximately 2 safe and 2 risky choices per turn.\n';
         p += '- Resources drain at a moderate rate. Include periodic opportunities to gain resources.\n';
-        p += '- Hints are moderate: choice text should give reasonable context without spelling out outcomes.\n';
         p += '- NPCs can be upset but always have a path to reconciliation.\n';
       } else if (difficulty === 'hard') {
         p += '\nHARD MODE RULES (MANDATORY):\n';
-        p += '- Include outcome, consequence, and narration_directive on every choice\n';
+        p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
         p += '- Death is possible but MUST be foreshadowed. If a choice is lethal, there should have been clues in earlier passages.\n';
         p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points (except for death outcomes)\n';
         p += '- Resources are scarce. Gaining resources should require effort or trade-offs.\n';
         p += '- Pending consequences escalate fast: 1-2 scenes before they trigger.\n';
-        p += '- Hints are subtle: the information is available but not highlighted. Attentive players will see the warnings.\n';
         p += '- NPCs have low forgiveness. Burning a relationship has lasting mechanical consequences.\n';
         p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
       } else if (difficulty === 'brutal') {
         p += '\nBRUTAL MODE RULES (MANDATORY):\n';
-        p += '- Include outcome, consequence, and narration_directive on every choice\n';
+        p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
         p += '- At most 1 clearly safe choice per turn. At least 1 choice should be lethal or severely punishing.\n';
         p += '- Health penalties are large: ' + diffConfig.max_health_penalty + ' point maximum. A bad choice can kill from full health.\n';
-        p += '- Resources drain aggressively. Every passage should cost something — provisions, gold, health, or relationships.\n';
+        p += '- Resources drain aggressively. Every turn should cost something.\n';
         p += '- Pending consequences trigger immediately (0-1 scenes). No grace period.\n';
-        p += '- Hints are cryptic. The player must interpret subtle clues from world state, NPC behavior, and earlier events.\n';
-        p += '- Some death choices should appear safe. Use trap logic — the "obvious" safe choice is actually the lethal one.\n';
-        p += '- Death narration must be vivid and final. No softening, no "barely survived", no last-minute saves.\n';
+        p += '- Some death choices should appear safe. The "obvious" safe choice may actually be lethal.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
-        p += '- Create cascading danger: if the player is already wounded or low on resources, make the situation worse, not easier.\n';
+        p += '- Create cascading danger: if the player is already wounded or low on resources, make the situation worse.\n';
       }
 
       return p;
     },
 
     /**
-     * Build the user prompt for passage generation.
-     * Contains the player's choice and any outcome directives.
+     * Build the user prompt for The Game Master.
+     * Passes The Writer's passage and choices so the GM can determine mechanical impact.
      * @param {object} gameState - Full game state
-     * @param {string|null} choiceId - The choice the player made, or null for opening
+     * @param {object} writerResponse - The Writer's response (passage + choices)
      * @returns {string} User prompt
      */
-    buildUser: function (gameState, choiceId) {
-      if (!choiceId) {
-        return 'Generate the opening passage for this story. Set the scene, establish the protagonist\'s situation, and present the first four choices. Respond with ONLY the JSON object.';
-      }
+    buildUser: function (gameState, writerResponse) {
+      var p = '';
 
-      var choice = gameState.current_choices && gameState.current_choices[choiceId];
-      var p = 'The player chose option ' + choiceId + '.';
+      p += 'The Writer produced the following passage and choices this turn.\n\n';
 
-      if (choice) {
-        if (choice.text) p += '\nChoice text: "' + choice.text + '"';
+      p += 'PASSAGE:\n';
+      p += writerResponse.passage + '\n\n';
 
-        // On Hard/Brutal, include predetermined outcome directives
-        if (choice.outcome) {
-          p += '\n\nOUTCOME CLASSIFICATION: ' + choice.outcome.toUpperCase();
-          if (choice.consequence) p += '\nConsequence: ' + choice.consequence;
-          if (choice.narration_directive) {
-            p += '\nNARRATION DIRECTIVE: ' + choice.narration_directive;
-            p += '\nYou MUST narrate this outcome exactly as classified. Do not soften, alter, or provide alternatives to the predetermined outcome.';
-          }
-
-          // Death-specific instruction
-          if (choice.outcome === 'death') {
-            p += '\n\nThe character DIES here. Narrate the death vividly and definitively. Do not offer survival, last-minute rescues, or "barely alive" outcomes. Set game_over to true in state_updates.';
-          }
+      p += 'CHOICES PRESENTED TO PLAYER:\n';
+      var choices = writerResponse.choices || {};
+      var keys = ['A', 'B', 'C', 'D'];
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (choices[key]) {
+          p += key + ': ' + choices[key].text + '\n';
         }
       }
 
-      p += '\n\nGenerate the next passage and four new choices. Respond with ONLY the JSON object.';
+      p += '\nBased on the passage and the current game state, determine:\n';
+      p += '1. State updates — what changed mechanically as a result of this passage\n';
+      p += '2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\n';
+      p += 'Respond with ONLY the JSON object.';
+
       return p;
     }
   };

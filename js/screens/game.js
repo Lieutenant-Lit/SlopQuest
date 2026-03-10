@@ -91,12 +91,8 @@
       // Status bar
       this._renderStatusBar(state);
 
-      // Illustration — show if we have a cached image URL
-      if (state.illustration_image_url) {
-        this._showIllustration(state.illustration_image_url, false);
-      } else {
-        this._hideIllustration();
-      }
+      // Illustrations temporarily disabled
+      this._hideIllustration();
 
       // Audio controls — show if narration is enabled and audio is pending or active
       if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
@@ -119,18 +115,18 @@
       } else {
         document.getElementById('choices-container').classList.remove('hidden');
         this.renderChoices(state.current_choices, !this._isInitialRender);
+        this._hideChoiceStatus();
       }
     },
 
     /**
      * Render the resource/status bar.
-     * Shows health, gold, provisions, and current act/scene.
+     * Shows health and current act/scene.
      * @private
      */
     _renderStatusBar: function (state) {
       var player = state.player || {};
       var current = state.current || {};
-      var resources = player.resources || {};
 
       // Health — update value and apply color class
       var healthEl = document.getElementById('status-health');
@@ -144,16 +140,6 @@
       } else {
         healthEl.classList.add('health-low');
       }
-
-      // Gold
-      var goldEl = document.getElementById('status-gold');
-      goldEl.querySelector('.status-value').textContent =
-        typeof resources.gold === 'number' ? resources.gold : 0;
-
-      // Provisions
-      var provEl = document.getElementById('status-provisions');
-      provEl.querySelector('.status-value').textContent =
-        typeof resources.provisions === 'number' ? resources.provisions : 0;
 
       // Act / Scene
       document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
@@ -228,11 +214,13 @@
 
     /**
      * Handle a player's choice — the core turn loop.
-     * 1. Push pre-choice snapshot to history
-     * 2. Call passage generator
-     * 3. Apply full state_updates from response
-     * 4. Check for game over / story complete
-     * 5. Save and re-render
+     *
+     * Two-phase flow:
+     * 1. Writer call → render passage + greyed-out choices immediately
+     * 2. Game Master call → apply state updates, enable choices
+     *
+     * Choices are DISABLED until the Game Master finishes. The game must never
+     * advance to the next turn before state is updated and consequences determined.
      */
     makeChoice: function (choiceId) {
       var self = this;
@@ -253,55 +241,95 @@
 
       self.showLoading();
 
-      // Fire image generation in parallel if illustrations are enabled.
-      // The image call uses the PREVIOUS passage's illustration_prompt since
-      // we don't have the new one yet. On the first turn after the opening,
-      // we use the illustration_prompt from the opening passage response.
-      var imagePromise = null;
-      if (SQ.PlayerConfig.isIllustrationsEnabled() && state.illustration_prompt) {
-        imagePromise = SQ.ImageGenerator.generate(state.illustration_prompt, state);
-      }
+      // Hide illustrations (disabled for this phase)
+      self._hideIllustration();
 
-      SQ.PassageGenerator.generate(state, choiceId).then(function (response) {
+      SQ.PassageGenerator.generate(state, choiceId).then(function (result) {
+        // Phase 1: Writer response is ready — render passage immediately
+        var writerResponse = result.writerResponse;
         self.hideLoading();
-        self.applyResponse(state, response);
 
-        // Queue Audio Director for on-demand narration (user clicks play to generate).
-        if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
-          SQ.AudioDirector.prepareForPassage(response.passage, state);
+        // Apply Writer response (passage + choices text + scene number)
+        self.applyWriterResponse(state, writerResponse);
+
+        // Render passage with animation
+        self._renderPassage(state.last_passage, true);
+
+        // Show choices but DISABLED with "Updating game state..." status
+        self.renderChoices(state.current_choices, true);
+        self._disableChoicesWithStatus('Updating game state...');
+
+        // Update status bar (scene number incremented)
+        self._renderStatusBar(state);
+
+        // Queue Audio Director for on-demand narration
+        if (SQ.PlayerConfig.isNarrationEnabled() && writerResponse.passage) {
+          SQ.AudioDirector.prepareForPassage(writerResponse.passage, state);
         } else {
           SQ.AudioDirector.stop();
           SQ.AudioDirector.hideControls();
         }
 
-        // If no image was started yet but the new response has an illustration_prompt,
-        // fire image generation now (for this passage's scene).
-        if (!imagePromise && SQ.PlayerConfig.isIllustrationsEnabled() && response.illustration_prompt) {
-          imagePromise = SQ.ImageGenerator.generate(response.illustration_prompt, state);
-        }
+        // Phase 2: Wait for Game Master response
+        result.gameMasterPromise.then(function (gmResponse) {
+          // Apply Game Master state updates
+          self.applyGameMasterResponse(state, gmResponse);
 
-        // Fade illustration in when it arrives (or hide if no image call).
-        // Image fades in last per design doc Section 5 progressive rendering.
-        if (imagePromise) {
-          self._showIllustrationLoading();
-          imagePromise.then(function (imageUrl) {
-            if (imageUrl) {
-              state.illustration_image_url = imageUrl;
-              SQ.GameState.save();
-              self._showIllustration(imageUrl, true);
-            } else {
-              self._hideIllustration();
+          // Re-render status bar (health may have changed)
+          self._renderStatusBar(state);
+
+          // Check for game over / story complete (handled inside applyGameMasterResponse)
+          if (state.game_over || state.story_complete) {
+            return; // Already navigated to gameover screen
+          }
+
+          // Enable choices — Game Master is done
+          self._enableChoices();
+          self._hideChoiceStatus();
+
+        }).catch(function (err) {
+          console.error('Game Master failed:', err);
+
+          // Show error overlay — choices remain disabled
+          SQ.ErrorOverlay.show(err, {
+            onRetry: function () {
+              // Retry the Game Master call only
+              var gmModel = SQ.PlayerConfig.getModel('gamemaster');
+              var gmSystem = SQ.GameMasterPrompt.buildSystem(state);
+              var gmUser = SQ.GameMasterPrompt.buildUser(state, writerResponse);
+              var difficulty = (state.meta && state.meta.difficulty) || 'normal';
+
+              SQ.PassageGenerator._attemptCall(
+                gmModel, gmSystem, gmUser,
+                { temperature: 0.3, max_tokens: 1500 },
+                'GameMaster',
+                function (r) { return SQ.StateValidator.validateGameMasterResponse(r, difficulty); },
+                0
+              ).then(function (gmResponse) {
+                SQ.ErrorOverlay.hide();
+                self.applyGameMasterResponse(state, gmResponse);
+                self._renderStatusBar(state);
+                if (state.game_over || state.story_complete) return;
+                self._enableChoices();
+                self._hideChoiceStatus();
+              }).catch(function (retryErr) {
+                console.error('Game Master retry failed:', retryErr);
+                SQ.ErrorOverlay.show(retryErr, {
+                  onRetry: function () {
+                    self.makeChoice(choiceId);
+                  }
+                });
+              });
             }
           });
-        } else {
-          self._hideIllustration();
-        }
+        });
+
       }).catch(function (err) {
+        // Writer call failed — full retry
         self.hideLoading();
         self._enableChoices();
-        console.error('Passage generation failed:', err);
+        console.error('Writer generation failed:', err);
 
-        // Show error overlay with retry callback
         SQ.ErrorOverlay.show(err, {
           onRetry: function () {
             self.makeChoice(choiceId);
@@ -311,11 +339,22 @@
     },
 
     /**
-     * Apply a passage response to the game state.
-     * Handles the full state_updates schema from Section 6.4 / 9.2.
+     * Apply The Writer's response to game state.
+     * Updates passage, choices (text only), and increments scene number.
      */
-    applyResponse: function (state, response) {
-      var updates = response.state_updates || {};
+    applyWriterResponse: function (state, writerResponse) {
+      state.last_passage = writerResponse.passage;
+      state.current_choices = writerResponse.choices;
+      state.current.scene_number = (state.current.scene_number || 0) + 1;
+      SQ.GameState.save();
+    },
+
+    /**
+     * Apply The Game Master's response to game state.
+     * Handles the full state_updates schema and choice metadata.
+     */
+    applyGameMasterResponse: function (state, gmResponse) {
+      var updates = gmResponse.state_updates || {};
 
       // 1. Player changes (health, resources, inventory, status_effects, skills)
       if (updates.player_changes) {
@@ -325,10 +364,6 @@
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
         if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
-      }
-      // Legacy: some responses use "player" instead of "player_changes"
-      if (updates.player) {
-        SQ.GameState.updatePlayer(updates.player);
       }
 
       // 2. New pending consequences
@@ -361,10 +396,6 @@
       if (updates.world_flag_changes) {
         Object.assign(state.world_flags, updates.world_flag_changes);
       }
-      // Legacy: some responses use "world_flags"
-      if (updates.world_flags) {
-        Object.assign(state.world_flags, updates.world_flags);
-      }
 
       // 7. Relationship changes (deltas, not absolutes)
       if (updates.relationship_changes) {
@@ -372,30 +403,20 @@
           if (updates.relationship_changes.hasOwnProperty(name)) {
             var delta = updates.relationship_changes[name];
             state.relationships[name] = (state.relationships[name] || 0) + delta;
-            // Clamp to -100..100
             state.relationships[name] = Math.max(-100, Math.min(100, state.relationships[name]));
           }
         }
-      }
-      // Legacy: some responses use "relationships" as absolute values
-      if (updates.relationships) {
-        Object.assign(state.relationships, updates.relationships);
       }
 
       // 8. Scene context update
       if (updates.new_scene_context) {
         state.current.scene_context = updates.new_scene_context;
       }
-      // Legacy: some responses use "current" object
-      if (updates.current) {
-        SQ.GameState.updateCurrent(updates.current);
-      }
 
       // 9. Act advancement
       if (updates.advance_act) {
         state.current.act = Math.min((state.current.act || 1) + 1, 3);
         state.current.proximity_to_climax = 0.0;
-        // Load new act's locked constraints
         if (state.skeleton && Array.isArray(state.skeleton.acts)) {
           var newAct = state.skeleton.acts[state.current.act - 1];
           if (newAct && Array.isArray(newAct.locked_constraints)) {
@@ -404,26 +425,30 @@
         }
       }
 
-      // 10. Update passage, choices, and scene number
-      state.last_passage = response.passage;
-      state.current_choices = response.choices;
-      state.illustration_prompt = response.illustration_prompt || '';
-      state.current.scene_number = (state.current.scene_number || 0) + 1;
+      // 10. Merge choice metadata (outcome, consequence, narration_directive)
+      if (gmResponse.choice_metadata) {
+        var keys = ['A', 'B', 'C', 'D'];
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i];
+          if (gmResponse.choice_metadata[k] && state.current_choices[k]) {
+            Object.assign(state.current_choices[k], gmResponse.choice_metadata[k]);
+          }
+        }
+      }
 
-      // 10b. Enforce difficulty health floor (client-side safety net)
-      // Don't trust the LLM to respect the floor — enforce it mechanically.
+      // 11. Enforce difficulty health floor (client-side safety net)
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
       if (!diffConfig.allow_game_over && state.player.health < diffConfig.health_floor) {
         state.player.health = diffConfig.health_floor;
       }
 
-      // 10c. Prevent game_over on difficulties that don't allow it
+      // 12. Prevent game_over on difficulties that don't allow it
       if (!diffConfig.allow_game_over) {
         updates.game_over = false;
       }
 
-      // 11. Check for game over or story complete
+      // 13. Check for game over or story complete
       var isGameOver = updates.game_over || (diffConfig.allow_game_over && state.player.health <= 0);
       var isStoryComplete = updates.story_complete;
 
@@ -443,16 +468,42 @@
       }
 
       SQ.GameState.save();
-      this.renderState();
     },
 
     /**
-     * Re-enable choice buttons after an error or cancel.
+     * Re-enable choice buttons after Game Master completes.
      */
     _enableChoices: function () {
       document.querySelectorAll('.btn-choice').forEach(function (btn) {
         btn.disabled = false;
       });
+    },
+
+    /**
+     * Disable choices and show a status message (e.g., "Updating game state...").
+     * @param {string} message - Status text to display
+     * @private
+     */
+    _disableChoicesWithStatus: function (message) {
+      document.querySelectorAll('.btn-choice').forEach(function (btn) {
+        btn.disabled = true;
+      });
+      var statusEl = document.getElementById('gm-status');
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.classList.remove('hidden');
+      }
+    },
+
+    /**
+     * Hide the Game Master status message.
+     * @private
+     */
+    _hideChoiceStatus: function () {
+      var statusEl = document.getElementById('gm-status');
+      if (statusEl) {
+        statusEl.classList.add('hidden');
+      }
     },
 
     /**

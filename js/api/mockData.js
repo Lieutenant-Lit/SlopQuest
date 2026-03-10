@@ -319,15 +319,60 @@
     },
 
     /**
-     * Return a mock passage generation response.
-     * Cycles through pre-written passages.
+     * Return a mock passage generation response in Writer + Game Master format.
+     * Splits mock data into writerResponse + gameMasterPromise to match
+     * the PassageGenerator.generate() return format.
      */
     generatePassage: function (gameState) {
       return new Promise(function (resolve) {
         setTimeout(function () {
-          var response = JSON.parse(JSON.stringify(PASSAGE_RESPONSES[passageIndex]));
+          var fullResponse = JSON.parse(JSON.stringify(PASSAGE_RESPONSES[passageIndex]));
           passageIndex = (passageIndex + 1) % PASSAGE_RESPONSES.length;
-          resolve(response);
+
+          // Split into Writer response (passage + choices text only)
+          var writerResponse = {
+            passage: fullResponse.passage,
+            choices: {}
+          };
+          var keys = ['A', 'B', 'C', 'D'];
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            if (fullResponse.choices[k]) {
+              writerResponse.choices[k] = { text: fullResponse.choices[k].text };
+            }
+          }
+
+          // Game Master response (state_updates + choice metadata)
+          var gmResponse = {
+            state_updates: fullResponse.state_updates || {},
+            choice_metadata: {}
+          };
+          // Add event_log_entry if missing
+          if (!gmResponse.state_updates.event_log_entry) {
+            gmResponse.state_updates.event_log_entry = 'The story continues.';
+          }
+          for (var j = 0; j < keys.length; j++) {
+            var key = keys[j];
+            if (fullResponse.choices[key]) {
+              gmResponse.choice_metadata[key] = {
+                outcome: fullResponse.choices[key].outcome || 'advance_safe',
+                consequence: fullResponse.choices[key].consequence || '',
+                narration_directive: fullResponse.choices[key].narration_directive || ''
+              };
+            }
+          }
+
+          // Simulate Game Master delay (slightly after Writer)
+          var gameMasterPromise = new Promise(function (gmResolve) {
+            setTimeout(function () {
+              gmResolve(gmResponse);
+            }, 300);
+          });
+
+          resolve({
+            writerResponse: writerResponse,
+            gameMasterPromise: gameMasterPromise
+          });
         }, 500);
       });
     },

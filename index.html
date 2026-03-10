@@ -37,7 +37,8 @@
         <input type="text" id="model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
 
-      <div class="card">
+      <!-- Illustrations temporarily disabled — will be revisited in a later phase -->
+      <div class="card hidden" id="illustrations-settings-card">
         <h2>Illustrations</h2>
         <label class="setup-toggle">
           <input type="checkbox" id="settings-illustrations-toggle">
@@ -232,7 +233,8 @@
       <div class="card">
         <h2>Multimodal</h2>
         <div class="setup-toggle-row">
-          <label class="setup-toggle">
+          <!-- Illustrations temporarily disabled -->
+          <label class="setup-toggle hidden">
             <input type="checkbox" id="setup-illustrations-toggle">
             <span>Illustrations</span>
             <span class="option-desc">AI-generated scene art (uses extra API credits)</span>
@@ -261,14 +263,6 @@
           <span id="status-health" class="status-chip status-health" title="Health">
             <span class="status-icon">&#9829;</span>
             <span class="status-value">100</span>
-          </span>
-          <span id="status-gold" class="status-chip" title="Gold">
-            <span class="status-icon">&#9679;</span>
-            <span class="status-value">0</span>
-          </span>
-          <span id="status-provisions" class="status-chip" title="Provisions">
-            <span class="status-icon">&#9724;</span>
-            <span class="status-value">0</span>
           </span>
         </div>
         <div class="status-group">
@@ -312,6 +306,7 @@
           <span class="choice-label">D</span>
           <span class="choice-text">Choice D</span>
         </button>
+        <p id="gm-status" class="gm-status hidden">Updating game state...</p>
       </div>
     </div>
     <div id="loading-overlay" class="hidden">
@@ -397,7 +392,8 @@
   <!-- Prompt modules -->
   <script src="js/prompts/difficultyConfig.js"></script>
   <script src="js/prompts/skeletonPrompt.js"></script>
-  <script src="js/prompts/passagePrompt.js"></script>
+  <script src="js/prompts/writerPrompt.js"></script>
+  <script src="js/prompts/gameMasterPrompt.js"></script>
 
   <!-- Screen modules -->
   <script src="js/screens/settings.js"></script>

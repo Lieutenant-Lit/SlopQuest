@@ -182,35 +182,17 @@
 
         // Generate opening passage
         return SQ.PassageGenerator.generate(state, null);
-      }).then(function (passageResponse) {
+      }).then(function (result) {
         var state = SQ.GameState.get();
 
         // Push initial state to history
         SQ.HistoryStack.push(SQ.GameState.snapshot(), '', null);
 
-        // Apply passage response
-        state.last_passage = passageResponse.passage;
-        state.current_choices = passageResponse.choices;
-        state.illustration_prompt = passageResponse.illustration_prompt || '';
-        if (passageResponse.state_updates) {
-          if (passageResponse.state_updates.current) {
-            SQ.GameState.updateCurrent(passageResponse.state_updates.current);
-          }
-        }
-
-        // Fire image generation for the opening scene (non-blocking)
-        if (SQ.PlayerConfig.isIllustrationsEnabled() && state.illustration_prompt) {
-          SQ.ImageGenerator.generate(state.illustration_prompt, state).then(function (imageUrl) {
-            if (imageUrl) {
-              state.illustration_image_url = imageUrl;
-              SQ.GameState.save();
-              // If game screen is already showing, display the illustration
-              var container = document.getElementById('illustration-container');
-              if (container && !container.closest('.screen.active')) return;
-              SQ.Screens.Game._showIllustration(imageUrl, true);
-            }
-          });
-        }
+        // Apply Writer response (passage + choices)
+        var writerResponse = result.writerResponse;
+        state.last_passage = writerResponse.passage;
+        state.current_choices = writerResponse.choices;
+        state.current.scene_number = (state.current.scene_number || 0) + 1;
 
         // Queue TTS narration for the opening passage (on-demand: user clicks play)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
@@ -218,6 +200,13 @@
         }
 
         SQ.GameState.save();
+
+        // Wait for Game Master to apply state updates before showing the game
+        return result.gameMasterPromise.then(function (gmResponse) {
+          SQ.Screens.Game.applyGameMasterResponse(state, gmResponse);
+          SQ.GameState.save();
+        });
+      }).then(function () {
         loadingOverlay.classList.add('hidden');
         self._resetButton();
         SQ.showScreen('game');
