@@ -549,12 +549,46 @@
       panel.classList.remove('hidden');
       var self = this;
       var html = '';
+      var meta = state.meta || {};
       var player = state.player || {};
+      var narrator = state.narrator || {};
       var current = state.current || {};
       var resources = player.resources || {};
 
-      // 1. Player
+      // 1. Meta
+      var metaBody = '';
+      metaBody += self._gsdRow('Title', self._esc(meta.title || '—'));
+      metaBody += self._gsdRow('Setting', self._esc(meta.setting || '—'));
+      metaBody += self._gsdRow('Tone', self._esc(meta.tone || '—'));
+      metaBody += self._gsdRow('Writing Style', self._esc(meta.writing_style || '—'));
+      metaBody += self._gsdRow('Perspective', self._esc(meta.perspective || '—'));
+      metaBody += self._gsdRow('Tense', self._esc(meta.tense || '—'));
+      metaBody += self._gsdRow('Difficulty', self._esc(meta.difficulty || '—'));
+      metaBody += self._gsdRow('Story Length', self._esc(meta.story_length || '—'));
+      html += self._gsdSection('Meta', metaBody, false);
+
+      // 2. Game Status
+      var statusBody = '';
+      var goClass = state.game_over ? 'gsd-dot-off' : 'gsd-dot-on';
+      statusBody += self._gsdRow('game_over', '<span class="gsd-dot ' + goClass + '"></span>' + (state.game_over ? 'true' : 'false'));
+      if (state.game_over_reason) statusBody += self._gsdRow('game_over_reason', self._esc(state.game_over_reason));
+      if ('story_complete' in state) {
+        var scClass = state.story_complete ? 'gsd-dot-on' : 'gsd-dot-off';
+        statusBody += self._gsdRow('story_complete', '<span class="gsd-dot ' + scClass + '"></span>' + (state.story_complete ? 'true' : 'false'));
+      }
+      if (state.last_passage) {
+        var preview = state.last_passage.length > 120 ? state.last_passage.substring(0, 120) + '...' : state.last_passage;
+        statusBody += self._gsdRow('last_passage', self._esc(preview));
+      }
+      if (state.illustration_prompt) statusBody += self._gsdRow('illustration_prompt', self._esc(state.illustration_prompt));
+      html += self._gsdSection('Game Status', statusBody, false);
+
+      // 3. Player
       var playerBody = '';
+      playerBody += self._gsdRow('Name', self._esc(player.name || '—'));
+      playerBody += self._gsdRow('Archetype', self._esc(player.archetype || '—'));
+      playerBody += self._gsdRow('Voice Gender', self._esc(player.voice_gender || '—'));
+      playerBody += self._gsdRow('Voice Direction', self._esc(player.voice_direction || '—'));
       var healthVal = typeof player.health === 'number' ? player.health : 100;
       var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
       playerBody += self._gsdRow('Health', healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
@@ -562,42 +596,58 @@
       playerBody += self._gsdRow('Provisions', typeof resources.provisions === 'number' ? resources.provisions : '—');
       if (player.inventory && player.inventory.length) {
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
+      } else {
+        playerBody += self._gsdRow('Inventory', '[]');
       }
       if (player.status_effects && player.status_effects.length) {
-        playerBody += self._gsdRow('Status', self._gsdList(player.status_effects));
+        playerBody += self._gsdRow('Status Effects', self._gsdList(player.status_effects));
+      } else {
+        playerBody += self._gsdRow('Status Effects', '[]');
       }
       if (player.skills && player.skills.length) {
         playerBody += self._gsdRow('Skills', self._gsdList(player.skills));
+      } else {
+        playerBody += self._gsdRow('Skills', '[]');
       }
       html += self._gsdSection('Player', playerBody, false);
 
-      // 2. Position
+      // 4. Narrator
+      var narrBody = '';
+      narrBody += self._gsdRow('Voice Gender', self._esc(narrator.voice_gender || '—'));
+      narrBody += self._gsdRow('Voice Direction', self._esc(narrator.voice_direction || '—'));
+      html += self._gsdSection('Narrator', narrBody, false);
+
+      // 5. Position
       var posBody = '';
       posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
-      if (current.location) posBody += self._gsdRow('Location', self._esc(current.location));
-      if (current.time_of_day) posBody += self._gsdRow('Time', self._esc(current.time_of_day));
-      if (current.scene_context) posBody += self._gsdRow('Context', self._esc(current.scene_context));
-      if (typeof current.proximity_to_climax === 'number') posBody += self._gsdRow('Climax proximity', current.proximity_to_climax);
+      posBody += self._gsdRow('Location', self._esc(current.location || '—'));
+      posBody += self._gsdRow('Time', self._esc(current.time_of_day || '—'));
+      posBody += self._gsdRow('Context', self._esc(current.scene_context || '—'));
+      posBody += self._gsdRow('Climax Proximity', typeof current.proximity_to_climax === 'number' ? current.proximity_to_climax : '—');
       if (current.active_constraints && current.active_constraints.length) {
         posBody += self._gsdRow('Constraints', self._gsdList(current.active_constraints));
+      } else {
+        posBody += self._gsdRow('Constraints', '[]');
       }
       html += self._gsdSection('Position', posBody, false);
 
-      // 3. Relationships
+      // 6. Relationships
       var rels = state.relationships || {};
       var relNames = Object.keys(rels);
+      var relBody = '';
       if (relNames.length) {
-        var relBody = '';
         relNames.forEach(function (name) {
           var val = rels[name];
           var cls = val > 0 ? 'gsd-rel-pos' : val < 0 ? 'gsd-rel-neg' : 'gsd-rel-zero';
           var sign = val > 0 ? '+' : '';
           relBody += self._gsdRow(self._esc(name), '<span class="' + cls + '">' + sign + val + '</span>');
         });
-        html += self._gsdSection('Relationships', relBody, false);
+      } else {
+        relBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
       }
+      html += self._gsdSection('Relationships', relBody, false);
 
-      // 4. Choices + metadata
+      // 7. Choices + metadata
       var choices = state.current_choices || {};
       var choiceKeys = ['A', 'B', 'C', 'D'];
       var choiceBody = '';
@@ -623,12 +673,13 @@
         }
         choiceBody += '</div>';
       }
+      if (!choiceBody) choiceBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
       html += self._gsdSection('Choices', choiceBody, false);
 
-      // 5. Pending Consequences
+      // 8. Pending Consequences
       var pcs = state.pending_consequences || [];
+      var pcBody = '';
       if (pcs.length) {
-        var pcBody = '';
         pcs.forEach(function (c) {
           pcBody += '<div class="gsd-row" style="flex-wrap:wrap">';
           pcBody += '<span class="gsd-label">' + self._esc(c.id || '?') + '</span>';
@@ -637,33 +688,46 @@
           if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
           pcBody += '</span></div>';
         });
-        html += self._gsdSection('Pending Consequences', pcBody, false);
+      } else {
+        pcBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
       }
+      html += self._gsdSection('Pending Consequences', pcBody, false);
 
-      // 6. World Flags
+      // 9. World Flags
       var flags = state.world_flags || {};
       var flagKeys = Object.keys(flags);
+      var flagBody = '';
       if (flagKeys.length) {
-        var flagBody = '';
         flagKeys.forEach(function (f) {
           var dotCls = flags[f] ? 'gsd-dot-on' : 'gsd-dot-off';
           flagBody += self._gsdRow('<span class="gsd-dot ' + dotCls + '"></span>' + self._esc(f), flags[f] ? 'true' : 'false');
         });
-        html += self._gsdSection('World Flags', flagBody, true);
+      } else {
+        flagBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
       }
+      html += self._gsdSection('World Flags', flagBody, true);
 
-      // 7. Event Log (last 5)
-      var log = (state.event_log || []).slice(-5);
+      // 10. Event Log (full)
+      var log = state.event_log || [];
+      var logBody = '';
       if (log.length) {
-        var logBody = '<ol class="gsd-list" style="list-style:decimal">';
+        logBody = '<ol class="gsd-list" style="list-style:decimal">';
         log.forEach(function (entry) {
           logBody += '<li>' + self._esc(typeof entry === 'string' ? entry : JSON.stringify(entry)) + '</li>';
         });
         logBody += '</ol>';
-        html += self._gsdSection('Event Log (last 5)', logBody, true);
+      } else {
+        logBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(empty)</span></div>';
       }
+      html += self._gsdSection('Event Log', logBody, true);
 
-      // 8. Skeleton (collapsed by default)
+      // 11. Backstory Summary
+      var bsBody = state.backstory_summary
+        ? self._gsdRow('Summary', self._esc(state.backstory_summary))
+        : '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(empty)</span></div>';
+      html += self._gsdSection('Backstory Summary', bsBody, true);
+
+      // 12. Skeleton (collapsed by default)
       var skel = state.skeleton;
       if (skel) {
         var skelBody = '';
