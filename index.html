@@ -77,6 +77,14 @@
           <input type="checkbox" id="settings-disable-default-voices">
           <span>Disable default voices</span>
         </label>
+      </div>
+
+      <div class="card">
+        <h2>Developer</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-gamestate-debug-toggle">
+          <span>Game state debug overlay</span>
+        </label>
         <label class="setup-toggle">
           <input type="checkbox" id="settings-audio-debug-toggle">
           <span>Audio debug overlay</span>
@@ -285,6 +293,13 @@
           <span class="audio-debug-collapse">&#9660;</span>
         </div>
         <div id="audio-debug-cast" class="audio-debug-cast"></div>
+      </div>
+      <div id="gamestate-debug-panel" class="gamestate-debug-panel hidden">
+        <div class="gamestate-debug-header" id="gamestate-debug-header">
+          <span class="gamestate-debug-title">Game State</span>
+          <span class="gamestate-debug-collapse">&#9660;</span>
+        </div>
+        <pre id="gamestate-debug-content" class="gamestate-debug-content"></pre>
       </div>
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>

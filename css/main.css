@@ -449,6 +449,61 @@ select:focus {
   font-style: italic;
 }
 
+/* --- Game State Debug Panel --- */
+.gamestate-debug-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.8125rem;
+}
+
+.gamestate-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.gamestate-debug-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.gamestate-debug-collapse {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.gamestate-debug-panel.collapsed .gamestate-debug-collapse {
+  transform: rotate(-90deg);
+}
+
+.gamestate-debug-panel.collapsed .gamestate-debug-content {
+  display: none;
+}
+
+.gamestate-debug-content {
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
 .passage span[data-speaker] {
   border-radius: 2px;
   padding: 1px 2px;

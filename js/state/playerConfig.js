@@ -19,6 +19,7 @@
     illustrations_enabled: false,
     narration_enabled: false,
     audio_debug_enabled: false,
+    game_state_debug_enabled: false,
     disable_default_voices: false
   };
 
@@ -179,6 +180,17 @@
     setAudioDebugEnabled: function (enabled) {
       var config = this.load();
       config.audio_debug_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isGameStateDebugEnabled: function () {
+      var config = this.load();
+      return config.game_state_debug_enabled === true;
+    },
+
+    setGameStateDebugEnabled: function (enabled) {
+      var config = this.load();
+      config.game_state_debug_enabled = !!enabled;
       this.save(config);
     },
 

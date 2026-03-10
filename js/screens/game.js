@@ -65,6 +65,11 @@
       document.getElementById('audio-debug-header').addEventListener('click', function () {
         document.getElementById('audio-debug-panel').classList.toggle('collapsed');
       });
+
+      // Game state debug overlay
+      document.getElementById('gamestate-debug-header').addEventListener('click', function () {
+        document.getElementById('gamestate-debug-panel').classList.toggle('collapsed');
+      });
     },
 
     onShow: function () {
@@ -76,6 +81,8 @@
       SQ.AudioDirector.stop();
       var debugPanel = document.getElementById('audio-debug-panel');
       if (debugPanel) debugPanel.classList.add('hidden');
+      var gsDebug = document.getElementById('gamestate-debug-panel');
+      if (gsDebug) gsDebug.classList.add('hidden');
     },
 
     /**
@@ -117,6 +124,9 @@
         this.renderChoices(state.current_choices, !this._isInitialRender);
         this._hideChoiceStatus();
       }
+
+      // Game state debug panel
+      this._renderGameStateDebug(state);
     },
 
     /**
@@ -262,6 +272,9 @@
         // Update status bar (scene number incremented)
         self._renderStatusBar(state);
 
+        // Debug panel — show state after Writer (before GM)
+        self._renderGameStateDebug(state);
+
         // Queue Audio Director for on-demand narration
         if (SQ.PlayerConfig.isNarrationEnabled() && writerResponse.passage) {
           SQ.AudioDirector.prepareForPassage(writerResponse.passage, state);
@@ -277,6 +290,9 @@
 
           // Re-render status bar (health may have changed)
           self._renderStatusBar(state);
+
+          // Debug panel — update with GM state changes + choice metadata
+          self._renderGameStateDebug(state);
 
           // Check for game over / story complete (handled inside applyGameMasterResponse)
           if (state.game_over || state.story_complete) {
@@ -309,6 +325,7 @@
                 SQ.ErrorOverlay.hide();
                 self.applyGameMasterResponse(state, gmResponse);
                 self._renderStatusBar(state);
+                self._renderGameStateDebug(state);
                 if (state.game_over || state.story_complete) return;
                 self._enableChoices();
                 self._hideChoiceStatus();
@@ -503,6 +520,56 @@
       var statusEl = document.getElementById('gm-status');
       if (statusEl) {
         statusEl.classList.add('hidden');
+      }
+    },
+
+    /**
+     * Render the game state debug panel if enabled.
+     * Shows key state sections and choice metadata as formatted JSON.
+     * Called after Writer response, after GM response, and on renderState (load/rewind).
+     * @param {object} state - Current game state
+     * @private
+     */
+    _renderGameStateDebug: function (state) {
+      var panel = document.getElementById('gamestate-debug-panel');
+      if (!panel) return;
+
+      if (!SQ.PlayerConfig.isGameStateDebugEnabled()) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+
+      // Build a curated view of the state (not the full skeleton)
+      var debug = {
+        player: state.player,
+        current: state.current,
+        relationships: state.relationships,
+        pending_consequences: state.pending_consequences,
+        world_flags: state.world_flags,
+        event_log_last_5: (state.event_log || []).slice(-5),
+        choice_metadata: {}
+      };
+
+      // Extract choice metadata (outcome/consequence/narration_directive)
+      var choices = state.current_choices || {};
+      var keys = ['A', 'B', 'C', 'D'];
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        if (choices[k]) {
+          var meta = {};
+          if (choices[k].text) meta.text = choices[k].text;
+          if (choices[k].outcome) meta.outcome = choices[k].outcome;
+          if (choices[k].consequence) meta.consequence = choices[k].consequence;
+          if (choices[k].narration_directive) meta.narration_directive = choices[k].narration_directive;
+          debug.choice_metadata[k] = meta;
+        }
+      }
+
+      var contentEl = document.getElementById('gamestate-debug-content');
+      if (contentEl) {
+        contentEl.textContent = JSON.stringify(debug, null, 2);
       }
     },
 
