@@ -637,13 +637,6 @@
           var rdVal = typeof resources[rdKey] === 'number' ? resources[rdKey] : '—';
           playerBody += self._gsdRow(resDefs[ri].name, rdVal);
         }
-      } else {
-        // Fallback for old saves without resource_definitions
-        for (var rk in resources) {
-          if (resources.hasOwnProperty(rk)) {
-            playerBody += self._gsdRow(rk.charAt(0).toUpperCase() + rk.slice(1), resources[rk]);
-          }
-        }
       }
       if (player.inventory && player.inventory.length) {
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));

@@ -44,8 +44,8 @@
       p += '    },\n';
       p += '    "resources": [\n';
       p += '      {\n';
-      p += '        "key": "string — lowercase machine key, no spaces (e.g. gold, ammo, social_capital)",\n';
-      p += '        "name": "string — display name (e.g. Gold, Ammo, Social Capital)",\n';
+      p += '        "key": "string — lowercase machine key, no spaces (e.g. scrap, ammo, social_capital)",\n';
+      p += '        "name": "string — display name (e.g. Scrap, Ammo, Social Capital)",\n';
       p += '        "icon": "string — one of: money, food, ammo, magnifier, handshake, potion, gem, scroll, tool, star",\n';
       p += '        "base_amount": "number — starting quantity at normal difficulty (3-20 range)"\n';
       p += '      }\n';
@@ -172,12 +172,27 @@
       p += '\n';
 
       // Resource definitions guidance
-      p += 'RESOURCE DEFINITIONS:\n';
-      p += '- Choose a health stat name that fits the genre/setting. Fantasy = Health, horror = Sanity, noir = Composure, romance = Confidence, sci-fi = Hull Integrity, etc.\n';
-      p += '- Choose 2-3 resources that make sense for this world. Fantasy = gold/provisions, sci-fi = credits/fuel, zombie = ammo/food/medicine, noir = cash/leads/favors, romance = charm/reputation, etc.\n';
+      p += 'RESOURCE DEFINITIONS — CRITICAL:\n';
+      p += 'Resources and the health stat MUST be tailored to THIS story\'s genre, setting, and tone. Generic resources break immersion.\n\n';
+      p += 'Health stat name examples by genre:\n';
+      p += '- Post-apocalyptic: Grit, Endurance, Radiation Resistance\n';
+      p += '- Horror: Sanity, Nerve, Composure\n';
+      p += '- Noir/mystery: Composure, Cool, Credibility\n';
+      p += '- Romance: Confidence, Heart, Poise\n';
+      p += '- Sci-fi: Hull Integrity, Oxygen, System Status\n';
+      p += '- Comedy: Dignity, Chill, Vibes\n';
+      p += '- Fantasy: Health, Vitality, Life Force\n\n';
+      p += 'Resource examples by genre (use as inspiration, invent your own):\n';
+      p += '- Post-apocalyptic: scrap, rations, fuel, ammo, water, medicine\n';
+      p += '- Horror: ammunition, flashlight_batteries, sanity_tokens, holy_water\n';
+      p += '- Noir/mystery: cash, leads, favors, contacts, evidence\n';
+      p += '- Romance: charm, reputation, social_capital, gossip\n';
+      p += '- Sci-fi: credits, fuel_cells, data_shards, oxygen\n';
+      p += '- Comedy: snacks, clout, luck, excuses\n';
+      p += '- Fantasy: gold, provisions, mana, potions\n\n';
       p += '- base_amount is the starting quantity at normal difficulty. Keep values in the 3-20 range.\n';
-      p += '- Resource keys must be lowercase with underscores, no spaces (e.g. "social_capital", "ammo", "food").\n';
-      p += '- Pick resources that create interesting trade-offs for THIS specific story. Generic is boring — tailor them.\n\n';
+      p += '- Resource keys must be lowercase with underscores, no spaces.\n';
+      p += '- Pick resources that create interesting trade-offs unique to THIS story. Think about what the protagonist would actually carry, spend, and worry about running out of.\n\n';
 
       // Final requirements
       p += 'The skeleton must have:\n';
