@@ -41,7 +41,7 @@
         // Phase 2: Fire The Game Master (returns a promise the caller can await)
         var gmModel = SQ.PlayerConfig.getModel('gamemaster');
         var gmSystem = SQ.GameMasterPrompt.buildSystem(gameState);
-        var gmUser = SQ.GameMasterPrompt.buildUser(gameState, writerResponse);
+        var gmUser = SQ.GameMasterPrompt.buildUser(gameState, writerResponse, choiceId);
         var difficulty = (gameState.meta && gameState.meta.difficulty) || 'normal';
 
         var gameMasterPromise = self._attemptCall(

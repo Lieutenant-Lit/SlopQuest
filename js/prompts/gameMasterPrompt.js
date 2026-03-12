@@ -121,6 +121,7 @@
       p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
       p += '- event_log_entry is required — always summarize what happened this turn\n';
       p += '- choice_metadata must classify all four choices (A, B, C, D)\n';
+      p += '- CRITICAL: When a PLAYER\'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply health or resource penalties. If the consequence specified a health gain, apply it as a gain, not a loss. The pre-classified outcome is the single source of truth for mechanical impact.\n';
 
       // Difficulty-specific rules
       if (difficulty === 'chill') {
@@ -174,8 +175,30 @@
      * @param {object} writerResponse - The Writer's response (passage + choices)
      * @returns {string} User prompt
      */
-    buildUser: function (gameState, writerResponse) {
+    buildUser: function (gameState, writerResponse, choiceId) {
       var p = '';
+
+      // If the player made a choice, include its pre-classified outcome so the GM honors it
+      if (choiceId && gameState.current && gameState.current.choice_metadata) {
+        var choiceMeta = gameState.current.choice_metadata[choiceId];
+        if (choiceMeta && choiceMeta.outcome) {
+          p += 'PLAYER\'S PREVIOUS CHOICE:\n';
+          p += 'The player chose option ' + choiceId + '.\n';
+          p += 'Pre-classified outcome: ' + choiceMeta.outcome.toUpperCase() + '\n';
+          if (choiceMeta.consequence) {
+            p += 'Pre-determined consequence: "' + choiceMeta.consequence + '"\n';
+          }
+          if (choiceMeta.narration_directive) {
+            p += 'Narration directive: "' + choiceMeta.narration_directive + '"\n';
+          }
+          p += '\nYour state_updates MUST be consistent with this pre-classified outcome:\n';
+          p += '- ADVANCE_SAFE: health should stay the same or INCREASE. No health or resource penalties.\n';
+          p += '- ADVANCE_RISKY: moderate penalties are appropriate.\n';
+          p += '- SEVERE_PENALTY: heavy penalties as described in the consequence.\n';
+          p += '- DEATH: set game_over to true.\n';
+          p += '- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\n';
+        }
+      }
 
       p += 'The Writer produced the following passage and choices this turn.\n\n';
 
