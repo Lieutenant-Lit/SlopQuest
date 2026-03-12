@@ -144,10 +144,15 @@
     _renderStatusBar: function (state) {
       var player = state.player || {};
       var current = state.current || {};
+      var meta = state.meta || {};
 
-      // Health — update value and apply color class
+      // Health — update value, icon, label, and apply color class
       var healthEl = document.getElementById('status-health');
       var healthVal = typeof player.health === 'number' ? player.health : 100;
+      var healthName = meta.health_stat_name || 'Health';
+      var healthIcon = this._getStatIcon(meta.health_stat_icon || 'heart');
+      healthEl.setAttribute('title', healthName);
+      healthEl.querySelector('.status-icon').innerHTML = healthIcon;
       healthEl.querySelector('.status-value').textContent = healthVal;
       healthEl.classList.remove('health-high', 'health-mid', 'health-low');
       if (healthVal > 60) {
@@ -158,9 +163,40 @@
         healthEl.classList.add('health-low');
       }
 
+      // Dynamic resource chips
+      var resourcesContainer = document.getElementById('status-resources');
+      if (resourcesContainer) {
+        resourcesContainer.innerHTML = '';
+        var defs = (meta.resource_definitions && meta.resource_definitions.resources) || [];
+        var resources = player.resources || {};
+        for (var i = 0; i < defs.length; i++) {
+          var r = defs[i];
+          var chip = document.createElement('span');
+          chip.className = 'status-chip status-resource';
+          chip.title = r.name;
+          chip.innerHTML = '<span class="status-icon">' + this._getStatIcon(r.icon) + '</span>' +
+                           '<span class="status-value">' + (typeof resources[r.key] === 'number' ? resources[r.key] : 0) + '</span>';
+          resourcesContainer.appendChild(chip);
+        }
+      }
+
       // Act / Scene
       document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
       document.getElementById('status-scene').textContent = 'Scene ' + (current.scene_number || 1);
+    },
+
+    /**
+     * Map icon key names to Unicode characters for status display.
+     */
+    _getStatIcon: function (key) {
+      var map = {
+        heart: '\u2764', shield: '\uD83D\uDEE1', brain: '\uD83E\uDDE0',
+        star: '\u2B50', fire: '\uD83D\uDD25',
+        money: '\uD83D\uDCB0', food: '\uD83C\uDF5E', ammo: '\uD83C\uDFAF',
+        magnifier: '\uD83D\uDD0D', handshake: '\uD83E\uDD1D', potion: '\uD83E\uDDEA',
+        gem: '\uD83D\uDC8E', scroll: '\uD83D\uDCDC', tool: '\uD83D\uDD27'
+      };
+      return map[key] || '\u2764';
     },
 
     /**
@@ -591,9 +627,17 @@
       playerBody += self._gsdRow('Voice Direction', self._esc(player.voice_direction || '—'));
       var healthVal = typeof player.health === 'number' ? player.health : 100;
       var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
-      playerBody += self._gsdRow('Health', healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
-      playerBody += self._gsdRow('Gold', typeof resources.gold === 'number' ? resources.gold : '—');
-      playerBody += self._gsdRow('Provisions', typeof resources.provisions === 'number' ? resources.provisions : '—');
+      var healthLabel = (meta.health_stat_name) || 'Health';
+      playerBody += self._gsdRow(healthLabel, healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
+      // Dynamic resources from skeleton definitions
+      var resDefs = (meta.resource_definitions && meta.resource_definitions.resources) || [];
+      if (resDefs.length > 0) {
+        for (var ri = 0; ri < resDefs.length; ri++) {
+          var rdKey = resDefs[ri].key;
+          var rdVal = typeof resources[rdKey] === 'number' ? resources[rdKey] : '—';
+          playerBody += self._gsdRow(resDefs[ri].name, rdVal);
+        }
+      }
       if (player.inventory && player.inventory.length) {
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
       } else {

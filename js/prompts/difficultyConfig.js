@@ -18,7 +18,7 @@
       pending_consequence_speed: 'slow',
       recovery_paths: 'always available',
       npc_forgiveness: 'high',
-      starting_resources: { gold: 20, provisions: 10 },
+      resource_multiplier: 2.0,
       health_floor: 30,
       max_health_penalty: 15,
       resource_drain_rate: 'minimal'
@@ -36,7 +36,7 @@
       pending_consequence_speed: 'normal',
       recovery_paths: 'usually available',
       npc_forgiveness: 'moderate',
-      starting_resources: { gold: 10, provisions: 5 },
+      resource_multiplier: 1.0,
       health_floor: 10,
       max_health_penalty: 30,
       resource_drain_rate: 'moderate'
@@ -54,7 +54,7 @@
       pending_consequence_speed: 'fast',
       recovery_paths: 'sometimes available',
       npc_forgiveness: 'low',
-      starting_resources: { gold: 5, provisions: 3 },
+      resource_multiplier: 0.5,
       health_floor: 0,
       max_health_penalty: 50,
       resource_drain_rate: 'aggressive'
@@ -72,7 +72,7 @@
       pending_consequence_speed: 'immediate',
       recovery_paths: 'rarely available',
       npc_forgiveness: 'none',
-      starting_resources: { gold: 3, provisions: 2 },
+      resource_multiplier: 0.3,
       health_floor: 0,
       max_health_penalty: 100,
       resource_drain_rate: 'punishing'

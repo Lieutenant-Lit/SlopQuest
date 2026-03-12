@@ -11,6 +11,13 @@
     premise: 'A disgraced knight returns to a kingdom on the brink of civil war, only to discover the throne itself is cursed — and they may be the only one who can break the cycle.',
     central_question: 'Will the protagonist restore the rightful ruler, seize power themselves, or destroy the crown forever?',
     ending_shape: 'The protagonist confronts the source of the curse in the throne room. Their choices throughout the story determine which of three endings plays out: restoration, usurpation, or destruction.',
+    resource_definitions: {
+      health_stat: { name: 'Vitality', icon: 'heart' },
+      resources: [
+        { key: 'crowns', name: 'Crowns', icon: 'money', base_amount: 10 },
+        { key: 'rations', name: 'Rations', icon: 'food', base_amount: 5 }
+      ]
+    },
     setting: {
       name: 'The Kingdom of Ashenmoor',
       description: 'A rain-drenched medieval kingdom of crumbling castles and fog-choked moors. The capital city of Thornwall sits on a cliff above a black river. Magic is rare and feared.',
@@ -181,7 +188,7 @@
         C: {
           text: 'Bribe the guards with your last silver. Everyone has a price in a dying kingdom.',
           outcome: 'advance_safe',
-          consequence: 'Lose 5 gold. Guards let you through quietly. No one knows you\'re here yet.'
+          consequence: 'Lose 5 crowns. Guards let you through quietly. No one knows you\'re here yet.'
         },
         D: {
           text: 'Slip away and find another way in. There were gaps in the wall near the river, if they haven\'t been repaired.',
