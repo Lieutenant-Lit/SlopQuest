@@ -1,6 +1,6 @@
 /**
  * SQ.Screens.Setup — New game configuration screen.
- * Collects per-game options (setting, archetype, style, tone, perspective,
+ * Collects per-game options (setting, archetype, style/tone, perspective,
  * tense, difficulty, story length) and launches skeleton generation.
  */
 (function () {
@@ -11,7 +11,7 @@
     init: function () {
       var self = this;
 
-      // Wire up all single-select option groups
+      // Wire up all single-select option groups (perspective, tense, difficulty, storyLength)
       document.querySelectorAll('#screen-setup .setup-options').forEach(function (group) {
         var groupName = group.getAttribute('data-group');
         group.addEventListener('click', function (e) {
@@ -21,14 +21,31 @@
         });
       });
 
-      // Illustrations toggle — persist immediately
-      document.getElementById('setup-illustrations-toggle').addEventListener('change', function () {
-        SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
-      });
+      // Wire up chip containers — clicking a chip fills its target text field
+      document.querySelectorAll('#screen-setup .setup-chips').forEach(function (container) {
+        var targetId = container.getAttribute('data-chip-target');
+        var targetInput = document.getElementById(targetId);
 
-      // Narration toggle — persist immediately
-      document.getElementById('setup-narration-toggle').addEventListener('change', function () {
-        SQ.PlayerConfig.setNarrationEnabled(this.checked);
+        container.addEventListener('click', function (e) {
+          var chip = e.target.closest('.setup-chip');
+          if (!chip) return;
+
+          // Fill text field with chip value
+          targetInput.value = chip.getAttribute('data-value');
+
+          // Highlight the clicked chip
+          container.querySelectorAll('.setup-chip').forEach(function (c) {
+            c.classList.remove('active');
+          });
+          chip.classList.add('active');
+        });
+
+        // When user types in the text field, clear chip highlights
+        targetInput.addEventListener('input', function () {
+          container.querySelectorAll('.setup-chip').forEach(function (c) {
+            c.classList.remove('active');
+          });
+        });
       });
 
       // Generate Story button
@@ -38,11 +55,8 @@
     },
 
     onShow: function () {
-      // Reset to defaults
+      // Reset single-select defaults
       this._selected = {
-        setting: 'dark fantasy',
-        writingStyle: 'literary',
-        tone: 'dark and gritty',
         perspective: 'second person',
         tense: 'present',
         difficulty: 'normal',
@@ -64,19 +78,15 @@
       });
 
       // Clear text inputs
+      document.getElementById('setup-setting-text').value = '';
       document.getElementById('setup-archetype').value = '';
       document.getElementById('setup-name').value = '';
-      var customInput = document.getElementById('setup-setting-custom');
-      customInput.value = '';
-      customInput.classList.add('hidden');
+      document.getElementById('setup-style-tone-text').value = '';
 
-      // Set illustrations toggle to saved preference
-      document.getElementById('setup-illustrations-toggle').checked =
-        SQ.PlayerConfig.isIllustrationsEnabled();
-
-      // Set narration toggle to saved preference
-      document.getElementById('setup-narration-toggle').checked =
-        SQ.PlayerConfig.isNarrationEnabled();
+      // Clear chip highlights
+      document.querySelectorAll('#screen-setup .setup-chip').forEach(function (c) {
+        c.classList.remove('active');
+      });
 
       // Reset generate button
       var btn = document.getElementById('btn-start-game');
@@ -99,42 +109,25 @@
       btn.classList.add('active');
 
       this._selected[groupName] = value;
-
-      // Special: show/hide custom setting input
-      if (groupName === 'setting') {
-        var customInput = document.getElementById('setup-setting-custom');
-        if (value === 'custom') {
-          customInput.classList.remove('hidden');
-          customInput.focus();
-        } else {
-          customInput.classList.add('hidden');
-        }
-      }
     },
 
     /**
      * Gather all form values into a setupConfig object.
      */
     gatherConfig: function () {
-      var setting = this._selected.setting || 'dark fantasy';
-      if (setting === 'custom') {
-        setting = document.getElementById('setup-setting-custom').value.trim() || 'fantasy';
-      }
+      var settingText = document.getElementById('setup-setting-text').value.trim();
+      var styleToneText = document.getElementById('setup-style-tone-text').value.trim();
 
       return {
-        setting: setting,
+        setting: settingText || 'dark fantasy',
         archetype: document.getElementById('setup-archetype').value.trim() || 'wanderer',
-        writingStyle: this._selected.writingStyle || 'literary',
-        tone: this._selected.tone || 'dark and gritty',
+        writingStyle: styleToneText || 'literary',
+        tone: styleToneText || 'dark and gritty',
         perspective: this._selected.perspective || 'second person',
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
         storyLength: this._selected.storyLength || 'medium',
-        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer',
-        voiceGender: document.getElementById('setup-voice-gender').value || '',
-        voiceDirection: document.getElementById('setup-voice-direction').value.trim() || '',
-        narratorGender: document.getElementById('setup-narrator-gender').value || '',
-        narratorDirection: document.getElementById('setup-narrator-direction').value.trim() || ''
+        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer'
       };
     },
 

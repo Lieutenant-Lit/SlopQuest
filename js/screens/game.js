@@ -587,7 +587,6 @@
       var html = '';
       var meta = state.meta || {};
       var player = state.player || {};
-      var narrator = state.narrator || {};
       var current = state.current || {};
       var resources = player.resources || {};
 
@@ -595,8 +594,7 @@
       var metaBody = '';
       metaBody += self._gsdRow('Title', self._esc(meta.title || '—'));
       metaBody += self._gsdRow('Setting', self._esc(meta.setting || '—'));
-      metaBody += self._gsdRow('Tone', self._esc(meta.tone || '—'));
-      metaBody += self._gsdRow('Writing Style', self._esc(meta.writing_style || '—'));
+      metaBody += self._gsdRow('Style &amp; Tone', self._esc(meta.writing_style || meta.tone || '—'));
       metaBody += self._gsdRow('Perspective', self._esc(meta.perspective || '—'));
       metaBody += self._gsdRow('Tense', self._esc(meta.tense || '—'));
       metaBody += self._gsdRow('Difficulty', self._esc(meta.difficulty || '—'));
@@ -623,8 +621,6 @@
       var playerBody = '';
       playerBody += self._gsdRow('Name', self._esc(player.name || '—'));
       playerBody += self._gsdRow('Archetype', self._esc(player.archetype || '—'));
-      playerBody += self._gsdRow('Voice Gender', self._esc(player.voice_gender || '—'));
-      playerBody += self._gsdRow('Voice Direction', self._esc(player.voice_direction || '—'));
       var healthVal = typeof player.health === 'number' ? player.health : 100;
       var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
       var healthLabel = (meta.health_stat_name) || 'Health';
@@ -655,13 +651,7 @@
       }
       html += self._gsdSection('Player', playerBody, false);
 
-      // 4. Narrator
-      var narrBody = '';
-      narrBody += self._gsdRow('Voice Gender', self._esc(narrator.voice_gender || '—'));
-      narrBody += self._gsdRow('Voice Direction', self._esc(narrator.voice_direction || '—'));
-      html += self._gsdSection('Narrator', narrBody, false);
-
-      // 5. Position
+      // 4. Position
       var posBody = '';
       posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
       posBody += self._gsdRow('Location', self._esc(current.location || '—'));

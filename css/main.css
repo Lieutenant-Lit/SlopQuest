@@ -1058,25 +1058,61 @@ select:focus {
   opacity: 0.45;
 }
 
-.setup-toggle-row {
+/* Chip selectors (quick-fill for text fields) */
+.setup-chips {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
 }
 
-.setup-toggle {
+.setup-chip {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px var(--spacing-md);
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.setup-chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.setup-chip.active {
+  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.12);
+  color: var(--color-text);
+}
+
+/* Inline groups (Perspective & Tense side by side) */
+.setup-inline-groups {
+  display: flex;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.setup-inline-group {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
-  cursor: default;
 }
 
-.setup-toggle input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary);
+.setup-inline-label {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+/* Secondary input (subdued styling) */
+.setup-input-secondary {
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 /* ===== GAME OVER ===== */
