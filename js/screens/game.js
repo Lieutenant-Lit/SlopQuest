@@ -420,7 +420,10 @@
       // 1. Player changes (health, resources, inventory, status_effects, skills)
       if (updates.player_changes) {
         var pc = updates.player_changes;
-        if (typeof pc.health === 'number') state.player.health = pc.health;
+        var hd = pc.health_delta != null ? pc.health_delta : pc.health;
+        if (typeof hd === 'number') {
+          state.player.health = Math.max(0, Math.min(100, state.player.health + hd));
+        }
         if (pc.resources) Object.assign(state.player.resources, pc.resources);
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
         if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;

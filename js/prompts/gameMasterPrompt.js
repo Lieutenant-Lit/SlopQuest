@@ -89,7 +89,7 @@
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
       p += '  "state_updates": {\n';
-      p += '    "player_changes": { "health": number, "resources": {...}, "inventory": [...], "status_effects": [...], "skills": [...] },\n';
+      p += '    "player_changes": { "health_delta": number, "resources": {...}, "inventory": [...], "status_effects": [...], "skills": [...] },\n';
       p += '    "new_pending_consequences": [ { "id": "string", "description": "string", "trigger": "string", "severity": "string", "scenes_remaining": number } ],\n';
       p += '    "resolved_consequences": [ "ids of consequences that fired this turn" ],\n';
       p += '    "event_log_entry": "string — one-line summary of what happened",\n';
@@ -116,6 +116,7 @@
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
       p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
       p += '- Only include player_changes fields that actually changed\n';
+      p += '- health_delta is a RELATIVE change, not an absolute value. Example: -15 means lose 15 health, +10 means gain 10. Do NOT set it to the new health total.\n';
       p += '- Relationship changes are DELTAS, not absolute values\n';
       p += '- Decrement scenes_remaining on all pending consequences\n';
       p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
@@ -177,6 +178,11 @@
      */
     buildUser: function (gameState, writerResponse, choiceId) {
       var p = '';
+
+      // Opening passage — no choice was made, no health changes allowed
+      if (!choiceId) {
+        p += 'This is the OPENING PASSAGE. No player choice was made yet. health_delta MUST be 0 — do not penalize the player before they have made any choices.\n\n';
+      }
 
       // If the player made a choice, include its pre-classified outcome so the GM honors it
       if (choiceId && gameState.current && gameState.current.choice_metadata) {
