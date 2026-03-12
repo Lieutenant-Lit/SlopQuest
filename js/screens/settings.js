@@ -71,6 +71,11 @@
         SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
       });
 
+      // Game state debug toggle
+      document.getElementById('settings-gamestate-debug-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setGameStateDebugEnabled(this.checked);
+      });
+
       // ElevenLabs API key validation
       document.getElementById('btn-validate-elevenlabs').addEventListener('click', function () {
         self.validateElevenLabsKey();
@@ -151,6 +156,9 @@
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =
         SQ.PlayerConfig.isAudioDebugEnabled();
+
+      document.getElementById('settings-gamestate-debug-toggle').checked =
+        SQ.PlayerConfig.isGameStateDebugEnabled();
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();

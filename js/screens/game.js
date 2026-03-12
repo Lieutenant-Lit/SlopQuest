@@ -65,6 +65,18 @@
       document.getElementById('audio-debug-header').addEventListener('click', function () {
         document.getElementById('audio-debug-panel').classList.toggle('collapsed');
       });
+
+      // Game state debug overlay
+      document.getElementById('gamestate-debug-header').addEventListener('click', function () {
+        document.getElementById('gamestate-debug-panel').classList.toggle('collapsed');
+      });
+      // Delegated click handler for collapsible sub-sections inside the debug panel
+      document.getElementById('gamestate-debug-content').addEventListener('click', function (e) {
+        var header = e.target.closest('.gsd-section-header');
+        if (header) {
+          header.parentElement.classList.toggle('collapsed');
+        }
+      });
     },
 
     onShow: function () {
@@ -76,6 +88,8 @@
       SQ.AudioDirector.stop();
       var debugPanel = document.getElementById('audio-debug-panel');
       if (debugPanel) debugPanel.classList.add('hidden');
+      var gsDebug = document.getElementById('gamestate-debug-panel');
+      if (gsDebug) gsDebug.classList.add('hidden');
     },
 
     /**
@@ -91,12 +105,8 @@
       // Status bar
       this._renderStatusBar(state);
 
-      // Illustration — show if we have a cached image URL
-      if (state.illustration_image_url) {
-        this._showIllustration(state.illustration_image_url, false);
-      } else {
-        this._hideIllustration();
-      }
+      // Illustrations temporarily disabled
+      this._hideIllustration();
 
       // Audio controls — show if narration is enabled and audio is pending or active
       if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
@@ -119,18 +129,21 @@
       } else {
         document.getElementById('choices-container').classList.remove('hidden');
         this.renderChoices(state.current_choices, !this._isInitialRender);
+        this._hideChoiceStatus();
       }
+
+      // Game state debug panel
+      this._renderGameStateDebug(state);
     },
 
     /**
      * Render the resource/status bar.
-     * Shows health, gold, provisions, and current act/scene.
+     * Shows health and current act/scene.
      * @private
      */
     _renderStatusBar: function (state) {
       var player = state.player || {};
       var current = state.current || {};
-      var resources = player.resources || {};
 
       // Health — update value and apply color class
       var healthEl = document.getElementById('status-health');
@@ -144,16 +157,6 @@
       } else {
         healthEl.classList.add('health-low');
       }
-
-      // Gold
-      var goldEl = document.getElementById('status-gold');
-      goldEl.querySelector('.status-value').textContent =
-        typeof resources.gold === 'number' ? resources.gold : 0;
-
-      // Provisions
-      var provEl = document.getElementById('status-provisions');
-      provEl.querySelector('.status-value').textContent =
-        typeof resources.provisions === 'number' ? resources.provisions : 0;
 
       // Act / Scene
       document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
@@ -228,11 +231,13 @@
 
     /**
      * Handle a player's choice — the core turn loop.
-     * 1. Push pre-choice snapshot to history
-     * 2. Call passage generator
-     * 3. Apply full state_updates from response
-     * 4. Check for game over / story complete
-     * 5. Save and re-render
+     *
+     * Two-phase flow:
+     * 1. Writer call → render passage + greyed-out choices immediately
+     * 2. Game Master call → apply state updates, enable choices
+     *
+     * Choices are DISABLED until the Game Master finishes. The game must never
+     * advance to the next turn before state is updated and consequences determined.
      */
     makeChoice: function (choiceId) {
       var self = this;
@@ -253,55 +258,102 @@
 
       self.showLoading();
 
-      // Fire image generation in parallel if illustrations are enabled.
-      // The image call uses the PREVIOUS passage's illustration_prompt since
-      // we don't have the new one yet. On the first turn after the opening,
-      // we use the illustration_prompt from the opening passage response.
-      var imagePromise = null;
-      if (SQ.PlayerConfig.isIllustrationsEnabled() && state.illustration_prompt) {
-        imagePromise = SQ.ImageGenerator.generate(state.illustration_prompt, state);
-      }
+      // Hide illustrations (disabled for this phase)
+      self._hideIllustration();
 
-      SQ.PassageGenerator.generate(state, choiceId).then(function (response) {
+      SQ.PassageGenerator.generate(state, choiceId).then(function (result) {
+        // Phase 1: Writer response is ready — render passage immediately
+        var writerResponse = result.writerResponse;
         self.hideLoading();
-        self.applyResponse(state, response);
 
-        // Queue Audio Director for on-demand narration (user clicks play to generate).
-        if (SQ.PlayerConfig.isNarrationEnabled() && response.passage) {
-          SQ.AudioDirector.prepareForPassage(response.passage, state);
+        // Apply Writer response (passage + choices text + scene number)
+        self.applyWriterResponse(state, writerResponse);
+
+        // Render passage with animation
+        self._renderPassage(state.last_passage, true);
+
+        // Show choices but DISABLED with "Updating game state..." status
+        self.renderChoices(state.current_choices, true);
+        self._disableChoicesWithStatus('Updating game state...');
+
+        // Update status bar (scene number incremented)
+        self._renderStatusBar(state);
+
+        // Debug panel — show state after Writer (before GM)
+        self._renderGameStateDebug(state);
+
+        // Queue Audio Director for on-demand narration
+        if (SQ.PlayerConfig.isNarrationEnabled() && writerResponse.passage) {
+          SQ.AudioDirector.prepareForPassage(writerResponse.passage, state);
         } else {
           SQ.AudioDirector.stop();
           SQ.AudioDirector.hideControls();
         }
 
-        // If no image was started yet but the new response has an illustration_prompt,
-        // fire image generation now (for this passage's scene).
-        if (!imagePromise && SQ.PlayerConfig.isIllustrationsEnabled() && response.illustration_prompt) {
-          imagePromise = SQ.ImageGenerator.generate(response.illustration_prompt, state);
-        }
+        // Phase 2: Wait for Game Master response
+        result.gameMasterPromise.then(function (gmResponse) {
+          // Apply Game Master state updates
+          self.applyGameMasterResponse(state, gmResponse);
 
-        // Fade illustration in when it arrives (or hide if no image call).
-        // Image fades in last per design doc Section 5 progressive rendering.
-        if (imagePromise) {
-          self._showIllustrationLoading();
-          imagePromise.then(function (imageUrl) {
-            if (imageUrl) {
-              state.illustration_image_url = imageUrl;
-              SQ.GameState.save();
-              self._showIllustration(imageUrl, true);
-            } else {
-              self._hideIllustration();
+          // Re-render status bar (health may have changed)
+          self._renderStatusBar(state);
+
+          // Debug panel — update with GM state changes + choice metadata
+          self._renderGameStateDebug(state);
+
+          // Check for game over / story complete (handled inside applyGameMasterResponse)
+          if (state.game_over || state.story_complete) {
+            return; // Already navigated to gameover screen
+          }
+
+          // Enable choices — Game Master is done
+          self._enableChoices();
+          self._hideChoiceStatus();
+
+        }).catch(function (err) {
+          console.error('Game Master failed:', err);
+
+          // Show error overlay — choices remain disabled
+          SQ.ErrorOverlay.show(err, {
+            onRetry: function () {
+              // Retry the Game Master call only
+              var gmModel = SQ.PlayerConfig.getModel('gamemaster');
+              var gmSystem = SQ.GameMasterPrompt.buildSystem(state);
+              var gmUser = SQ.GameMasterPrompt.buildUser(state, writerResponse);
+              var difficulty = (state.meta && state.meta.difficulty) || 'normal';
+
+              SQ.PassageGenerator._attemptCall(
+                gmModel, gmSystem, gmUser,
+                { temperature: 0.3, max_tokens: 1500 },
+                'GameMaster',
+                function (r) { return SQ.StateValidator.validateGameMasterResponse(r, difficulty); },
+                0
+              ).then(function (gmResponse) {
+                SQ.ErrorOverlay.hide();
+                self.applyGameMasterResponse(state, gmResponse);
+                self._renderStatusBar(state);
+                self._renderGameStateDebug(state);
+                if (state.game_over || state.story_complete) return;
+                self._enableChoices();
+                self._hideChoiceStatus();
+              }).catch(function (retryErr) {
+                console.error('Game Master retry failed:', retryErr);
+                SQ.ErrorOverlay.show(retryErr, {
+                  onRetry: function () {
+                    self.makeChoice(choiceId);
+                  }
+                });
+              });
             }
           });
-        } else {
-          self._hideIllustration();
-        }
+        });
+
       }).catch(function (err) {
+        // Writer call failed — full retry
         self.hideLoading();
         self._enableChoices();
-        console.error('Passage generation failed:', err);
+        console.error('Writer generation failed:', err);
 
-        // Show error overlay with retry callback
         SQ.ErrorOverlay.show(err, {
           onRetry: function () {
             self.makeChoice(choiceId);
@@ -311,11 +363,22 @@
     },
 
     /**
-     * Apply a passage response to the game state.
-     * Handles the full state_updates schema from Section 6.4 / 9.2.
+     * Apply The Writer's response to game state.
+     * Updates passage, choices (text only), and increments scene number.
      */
-    applyResponse: function (state, response) {
-      var updates = response.state_updates || {};
+    applyWriterResponse: function (state, writerResponse) {
+      state.last_passage = writerResponse.passage;
+      state.current_choices = writerResponse.choices;
+      state.current.scene_number = (state.current.scene_number || 0) + 1;
+      SQ.GameState.save();
+    },
+
+    /**
+     * Apply The Game Master's response to game state.
+     * Handles the full state_updates schema and choice metadata.
+     */
+    applyGameMasterResponse: function (state, gmResponse) {
+      var updates = gmResponse.state_updates || {};
 
       // 1. Player changes (health, resources, inventory, status_effects, skills)
       if (updates.player_changes) {
@@ -325,10 +388,6 @@
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
         if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
-      }
-      // Legacy: some responses use "player" instead of "player_changes"
-      if (updates.player) {
-        SQ.GameState.updatePlayer(updates.player);
       }
 
       // 2. New pending consequences
@@ -361,10 +420,6 @@
       if (updates.world_flag_changes) {
         Object.assign(state.world_flags, updates.world_flag_changes);
       }
-      // Legacy: some responses use "world_flags"
-      if (updates.world_flags) {
-        Object.assign(state.world_flags, updates.world_flags);
-      }
 
       // 7. Relationship changes (deltas, not absolutes)
       if (updates.relationship_changes) {
@@ -372,30 +427,20 @@
           if (updates.relationship_changes.hasOwnProperty(name)) {
             var delta = updates.relationship_changes[name];
             state.relationships[name] = (state.relationships[name] || 0) + delta;
-            // Clamp to -100..100
             state.relationships[name] = Math.max(-100, Math.min(100, state.relationships[name]));
           }
         }
-      }
-      // Legacy: some responses use "relationships" as absolute values
-      if (updates.relationships) {
-        Object.assign(state.relationships, updates.relationships);
       }
 
       // 8. Scene context update
       if (updates.new_scene_context) {
         state.current.scene_context = updates.new_scene_context;
       }
-      // Legacy: some responses use "current" object
-      if (updates.current) {
-        SQ.GameState.updateCurrent(updates.current);
-      }
 
       // 9. Act advancement
       if (updates.advance_act) {
         state.current.act = Math.min((state.current.act || 1) + 1, 3);
         state.current.proximity_to_climax = 0.0;
-        // Load new act's locked constraints
         if (state.skeleton && Array.isArray(state.skeleton.acts)) {
           var newAct = state.skeleton.acts[state.current.act - 1];
           if (newAct && Array.isArray(newAct.locked_constraints)) {
@@ -404,26 +449,30 @@
         }
       }
 
-      // 10. Update passage, choices, and scene number
-      state.last_passage = response.passage;
-      state.current_choices = response.choices;
-      state.illustration_prompt = response.illustration_prompt || '';
-      state.current.scene_number = (state.current.scene_number || 0) + 1;
+      // 10. Merge choice metadata (outcome, consequence, narration_directive)
+      if (gmResponse.choice_metadata) {
+        var keys = ['A', 'B', 'C', 'D'];
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i];
+          if (gmResponse.choice_metadata[k] && state.current_choices[k]) {
+            Object.assign(state.current_choices[k], gmResponse.choice_metadata[k]);
+          }
+        }
+      }
 
-      // 10b. Enforce difficulty health floor (client-side safety net)
-      // Don't trust the LLM to respect the floor — enforce it mechanically.
+      // 11. Enforce difficulty health floor (client-side safety net)
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
       if (!diffConfig.allow_game_over && state.player.health < diffConfig.health_floor) {
         state.player.health = diffConfig.health_floor;
       }
 
-      // 10c. Prevent game_over on difficulties that don't allow it
+      // 12. Prevent game_over on difficulties that don't allow it
       if (!diffConfig.allow_game_over) {
         updates.game_over = false;
       }
 
-      // 11. Check for game over or story complete
+      // 13. Check for game over or story complete
       var isGameOver = updates.game_over || (diffConfig.allow_game_over && state.player.health <= 0);
       var isStoryComplete = updates.story_complete;
 
@@ -443,16 +492,353 @@
       }
 
       SQ.GameState.save();
-      this.renderState();
     },
 
     /**
-     * Re-enable choice buttons after an error or cancel.
+     * Re-enable choice buttons after Game Master completes.
      */
     _enableChoices: function () {
       document.querySelectorAll('.btn-choice').forEach(function (btn) {
         btn.disabled = false;
       });
+    },
+
+    /**
+     * Disable choices and show a status message (e.g., "Updating game state...").
+     * @param {string} message - Status text to display
+     * @private
+     */
+    _disableChoicesWithStatus: function (message) {
+      document.querySelectorAll('.btn-choice').forEach(function (btn) {
+        btn.disabled = true;
+      });
+      var statusEl = document.getElementById('gm-status');
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.classList.remove('hidden');
+      }
+    },
+
+    /**
+     * Hide the Game Master status message.
+     * @private
+     */
+    _hideChoiceStatus: function () {
+      var statusEl = document.getElementById('gm-status');
+      if (statusEl) {
+        statusEl.classList.add('hidden');
+      }
+    },
+
+    /**
+     * Render the game state debug panel if enabled.
+     * Shows formatted sections for player, position, choices, skeleton, etc.
+     * Called after Writer response, after GM response, and on renderState (load/rewind).
+     * @param {object} state - Current game state
+     * @private
+     */
+    _renderGameStateDebug: function (state) {
+      var panel = document.getElementById('gamestate-debug-panel');
+      if (!panel) return;
+
+      if (!SQ.PlayerConfig.isGameStateDebugEnabled()) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      var self = this;
+      var html = '';
+      var meta = state.meta || {};
+      var player = state.player || {};
+      var narrator = state.narrator || {};
+      var current = state.current || {};
+      var resources = player.resources || {};
+
+      // 1. Meta
+      var metaBody = '';
+      metaBody += self._gsdRow('Title', self._esc(meta.title || '—'));
+      metaBody += self._gsdRow('Setting', self._esc(meta.setting || '—'));
+      metaBody += self._gsdRow('Tone', self._esc(meta.tone || '—'));
+      metaBody += self._gsdRow('Writing Style', self._esc(meta.writing_style || '—'));
+      metaBody += self._gsdRow('Perspective', self._esc(meta.perspective || '—'));
+      metaBody += self._gsdRow('Tense', self._esc(meta.tense || '—'));
+      metaBody += self._gsdRow('Difficulty', self._esc(meta.difficulty || '—'));
+      metaBody += self._gsdRow('Story Length', self._esc(meta.story_length || '—'));
+      html += self._gsdSection('Meta', metaBody, false);
+
+      // 2. Game Status
+      var statusBody = '';
+      var goClass = state.game_over ? 'gsd-dot-off' : 'gsd-dot-on';
+      statusBody += self._gsdRow('game_over', '<span class="gsd-dot ' + goClass + '"></span>' + (state.game_over ? 'true' : 'false'));
+      if (state.game_over_reason) statusBody += self._gsdRow('game_over_reason', self._esc(state.game_over_reason));
+      if ('story_complete' in state) {
+        var scClass = state.story_complete ? 'gsd-dot-on' : 'gsd-dot-off';
+        statusBody += self._gsdRow('story_complete', '<span class="gsd-dot ' + scClass + '"></span>' + (state.story_complete ? 'true' : 'false'));
+      }
+      if (state.last_passage) {
+        var preview = state.last_passage.length > 120 ? state.last_passage.substring(0, 120) + '...' : state.last_passage;
+        statusBody += self._gsdRow('last_passage', self._esc(preview));
+      }
+      if (state.illustration_prompt) statusBody += self._gsdRow('illustration_prompt', self._esc(state.illustration_prompt));
+      html += self._gsdSection('Game Status', statusBody, false);
+
+      // 3. Player
+      var playerBody = '';
+      playerBody += self._gsdRow('Name', self._esc(player.name || '—'));
+      playerBody += self._gsdRow('Archetype', self._esc(player.archetype || '—'));
+      playerBody += self._gsdRow('Voice Gender', self._esc(player.voice_gender || '—'));
+      playerBody += self._gsdRow('Voice Direction', self._esc(player.voice_direction || '—'));
+      var healthVal = typeof player.health === 'number' ? player.health : 100;
+      var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
+      playerBody += self._gsdRow('Health', healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
+      playerBody += self._gsdRow('Gold', typeof resources.gold === 'number' ? resources.gold : '—');
+      playerBody += self._gsdRow('Provisions', typeof resources.provisions === 'number' ? resources.provisions : '—');
+      if (player.inventory && player.inventory.length) {
+        playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
+      } else {
+        playerBody += self._gsdRow('Inventory', '[]');
+      }
+      if (player.status_effects && player.status_effects.length) {
+        playerBody += self._gsdRow('Status Effects', self._gsdList(player.status_effects));
+      } else {
+        playerBody += self._gsdRow('Status Effects', '[]');
+      }
+      if (player.skills && player.skills.length) {
+        playerBody += self._gsdRow('Skills', self._gsdList(player.skills));
+      } else {
+        playerBody += self._gsdRow('Skills', '[]');
+      }
+      html += self._gsdSection('Player', playerBody, false);
+
+      // 4. Narrator
+      var narrBody = '';
+      narrBody += self._gsdRow('Voice Gender', self._esc(narrator.voice_gender || '—'));
+      narrBody += self._gsdRow('Voice Direction', self._esc(narrator.voice_direction || '—'));
+      html += self._gsdSection('Narrator', narrBody, false);
+
+      // 5. Position
+      var posBody = '';
+      posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
+      posBody += self._gsdRow('Location', self._esc(current.location || '—'));
+      posBody += self._gsdRow('Time', self._esc(current.time_of_day || '—'));
+      posBody += self._gsdRow('Context', self._esc(current.scene_context || '—'));
+      posBody += self._gsdRow('Climax Proximity', typeof current.proximity_to_climax === 'number' ? current.proximity_to_climax : '—');
+      if (current.active_constraints && current.active_constraints.length) {
+        posBody += self._gsdRow('Constraints', self._gsdList(current.active_constraints));
+      } else {
+        posBody += self._gsdRow('Constraints', '[]');
+      }
+      html += self._gsdSection('Position', posBody, false);
+
+      // 6. Relationships
+      var rels = state.relationships || {};
+      var relNames = Object.keys(rels);
+      var relBody = '';
+      if (relNames.length) {
+        relNames.forEach(function (name) {
+          var val = rels[name];
+          var cls = val > 0 ? 'gsd-rel-pos' : val < 0 ? 'gsd-rel-neg' : 'gsd-rel-zero';
+          var sign = val > 0 ? '+' : '';
+          relBody += self._gsdRow(self._esc(name), '<span class="' + cls + '">' + sign + val + '</span>');
+        });
+      } else {
+        relBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
+      }
+      html += self._gsdSection('Relationships', relBody, false);
+
+      // 7. Choices + metadata
+      var choices = state.current_choices || {};
+      var choiceKeys = ['A', 'B', 'C', 'D'];
+      var choiceBody = '';
+      for (var ci = 0; ci < choiceKeys.length; ci++) {
+        var ck = choiceKeys[ci];
+        var ch = choices[ck];
+        if (!ch) continue;
+        choiceBody += '<div class="gsd-choice">';
+        choiceBody += '<div class="gsd-choice-header">';
+        choiceBody += '<span class="gsd-choice-letter">' + ck + '</span>';
+        choiceBody += '<span class="gsd-choice-text">' + self._esc(ch.text || '') + '</span>';
+        choiceBody += '</div>';
+        if (ch.outcome) {
+          choiceBody += '<div class="gsd-choice-meta">';
+          choiceBody += self._gsdTag(ch.outcome, self._gsdOutcomeType(ch.outcome));
+          if (ch.consequence) choiceBody += ' ' + self._esc(ch.consequence);
+          choiceBody += '</div>';
+          if (ch.narration_directive) {
+            choiceBody += '<div class="gsd-choice-meta">Directive: ' + self._esc(ch.narration_directive) + '</div>';
+          }
+        } else {
+          choiceBody += '<div class="gsd-pending">[awaiting Game Master]</div>';
+        }
+        choiceBody += '</div>';
+      }
+      if (!choiceBody) choiceBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
+      html += self._gsdSection('Choices', choiceBody, false);
+
+      // 8. Pending Consequences
+      var pcs = state.pending_consequences || [];
+      var pcBody = '';
+      if (pcs.length) {
+        pcs.forEach(function (c) {
+          pcBody += '<div class="gsd-row" style="flex-wrap:wrap">';
+          pcBody += '<span class="gsd-label">' + self._esc(c.id || '?') + '</span>';
+          pcBody += '<span class="gsd-value">' + self._esc(c.description || '');
+          if (c.severity) pcBody += ' ' + self._gsdTag(c.severity, c.severity === 'lethal' ? 'danger' : c.severity === 'severe' ? 'risky' : 'muted');
+          if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
+          pcBody += '</span></div>';
+        });
+      } else {
+        pcBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
+      }
+      html += self._gsdSection('Pending Consequences', pcBody, false);
+
+      // 9. World Flags
+      var flags = state.world_flags || {};
+      var flagKeys = Object.keys(flags);
+      var flagBody = '';
+      if (flagKeys.length) {
+        flagKeys.forEach(function (f) {
+          var dotCls = flags[f] ? 'gsd-dot-on' : 'gsd-dot-off';
+          flagBody += self._gsdRow('<span class="gsd-dot ' + dotCls + '"></span>' + self._esc(f), flags[f] ? 'true' : 'false');
+        });
+      } else {
+        flagBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
+      }
+      html += self._gsdSection('World Flags', flagBody, true);
+
+      // 10. Event Log (full)
+      var log = state.event_log || [];
+      var logBody = '';
+      if (log.length) {
+        logBody = '<ol class="gsd-list" style="list-style:decimal">';
+        log.forEach(function (entry) {
+          logBody += '<li>' + self._esc(typeof entry === 'string' ? entry : JSON.stringify(entry)) + '</li>';
+        });
+        logBody += '</ol>';
+      } else {
+        logBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(empty)</span></div>';
+      }
+      html += self._gsdSection('Event Log', logBody, true);
+
+      // 11. Backstory Summary
+      var bsBody = state.backstory_summary
+        ? self._gsdRow('Summary', self._esc(state.backstory_summary))
+        : '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(empty)</span></div>';
+      html += self._gsdSection('Backstory Summary', bsBody, true);
+
+      // 12. Skeleton (collapsed by default)
+      var skel = state.skeleton;
+      if (skel) {
+        var skelBody = '';
+        if (skel.premise) skelBody += self._gsdRow('Premise', self._esc(skel.premise));
+        if (skel.central_question) skelBody += self._gsdRow('Central Question', self._esc(skel.central_question));
+        if (skel.ending_shape) skelBody += self._gsdRow('Ending Shape', self._esc(skel.ending_shape));
+
+        if (skel.setting) {
+          skelBody += self._gsdRow('Setting', '<strong>' + self._esc(skel.setting.name || '') + '</strong> — ' + self._esc(skel.setting.description || ''));
+          if (skel.setting.tone_notes) skelBody += self._gsdRow('Tone', self._esc(skel.setting.tone_notes));
+        }
+
+        // Acts
+        if (Array.isArray(skel.acts)) {
+          skel.acts.forEach(function (act) {
+            var actHtml = '';
+            actHtml += self._gsdRow('Description', self._esc(act.description || ''));
+            actHtml += self._gsdRow('End Condition', self._esc(act.end_condition || ''));
+            actHtml += self._gsdRow('Target Scenes', act.target_scenes || '?');
+            if (act.locked_constraints && act.locked_constraints.length) {
+              actHtml += self._gsdRow('Constraints', self._gsdList(act.locked_constraints));
+            }
+            if (act.key_beats && act.key_beats.length) {
+              actHtml += self._gsdRow('Key Beats', self._gsdList(act.key_beats));
+            }
+            skelBody += self._gsdSection('Act ' + (act.act_number || '?') + ': ' + self._esc(act.title || ''), actHtml, true);
+          });
+        }
+
+        // NPCs
+        if (Array.isArray(skel.npcs) && skel.npcs.length) {
+          var npcHtml = '';
+          skel.npcs.forEach(function (npc) {
+            npcHtml += '<div style="padding:3px 0;border-top:1px solid rgba(42,42,58,0.3)">';
+            npcHtml += '<strong>' + self._esc(npc.name || '?') + '</strong> — ' + self._esc(npc.role || '') + '<br>';
+            if (npc.motivation) npcHtml += '<span class="gsd-label">Motivation:</span> ' + self._esc(npc.motivation) + '<br>';
+            if (npc.allegiance) npcHtml += '<span class="gsd-label">Allegiance:</span> ' + self._esc(npc.allegiance) + '<br>';
+            if (npc.secret) npcHtml += '<span class="gsd-label">Secret:</span> <em>' + self._esc(npc.secret) + '</em><br>';
+            npcHtml += '</div>';
+          });
+          skelBody += self._gsdSection('NPCs', npcHtml, true);
+        }
+
+        // Factions
+        if (Array.isArray(skel.factions) && skel.factions.length) {
+          var facHtml = '';
+          skel.factions.forEach(function (fac) {
+            facHtml += self._gsdRow(self._esc(fac.name || '?'), self._esc(fac.description || '') + (fac.goals ? ' — Goals: ' + self._esc(fac.goals) : ''));
+          });
+          skelBody += self._gsdSection('Factions', facHtml, true);
+        }
+
+        // World Rules
+        if (Array.isArray(skel.world_rules) && skel.world_rules.length) {
+          skelBody += self._gsdRow('World Rules', self._gsdList(skel.world_rules));
+        }
+
+        html += self._gsdSection('Skeleton', skelBody, true);
+      }
+
+      var contentEl = document.getElementById('gamestate-debug-content');
+      if (contentEl) {
+        contentEl.innerHTML = html;
+      }
+    },
+
+    // -- Debug panel helpers --
+
+    _gsdSection: function (title, bodyHtml, collapsed) {
+      return '<div class="gsd-section' + (collapsed ? ' collapsed' : '') + '">'
+        + '<div class="gsd-section-header">'
+        + '<span class="gsd-section-arrow">&#9660;</span>'
+        + title
+        + '</div>'
+        + '<div class="gsd-section-body">' + bodyHtml + '</div>'
+        + '</div>';
+    },
+
+    _gsdRow: function (label, value) {
+      return '<div class="gsd-row"><span class="gsd-label">' + label + '</span><span class="gsd-value">' + value + '</span></div>';
+    },
+
+    _gsdTag: function (text, type) {
+      return '<span class="gsd-tag gsd-tag-' + type + '">' + this._esc(text) + '</span>';
+    },
+
+    _gsdList: function (items) {
+      if (!items || !items.length) return '—';
+      var self = this;
+      var html = '<ul class="gsd-list">';
+      items.forEach(function (item) {
+        html += '<li>' + self._esc(typeof item === 'string' ? item : JSON.stringify(item)) + '</li>';
+      });
+      html += '</ul>';
+      return html;
+    },
+
+    _gsdOutcomeType: function (outcome) {
+      if (!outcome) return 'muted';
+      if (outcome === 'advance_safe') return 'safe';
+      if (outcome === 'advance_risky') return 'risky';
+      if (outcome === 'death' || outcome === 'severe_penalty') return 'danger';
+      if (outcome === 'hidden_benefit') return 'info';
+      return 'muted';
+    },
+
+    _esc: function (str) {
+      if (typeof str !== 'string') return String(str);
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     },
 
     /**

@@ -449,6 +449,215 @@ select:focus {
   font-style: italic;
 }
 
+/* --- Game State Debug Panel --- */
+.gamestate-debug-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.8125rem;
+}
+
+.gamestate-debug-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+  user-select: none;
+}
+
+.gamestate-debug-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.gamestate-debug-collapse {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.gamestate-debug-panel.collapsed .gamestate-debug-collapse {
+  transform: rotate(-90deg);
+}
+
+.gamestate-debug-panel.collapsed .gamestate-debug-content {
+  display: none;
+}
+
+.gamestate-debug-content {
+  padding: 0;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* --- Game State Debug Sections --- */
+.gsd-section {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.gsd-section:last-child {
+  border-bottom: none;
+}
+
+.gsd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px var(--spacing-md);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.gsd-section-header:hover {
+  color: var(--color-text);
+}
+
+.gsd-section-arrow {
+  font-size: 0.5rem;
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+
+.gsd-section.collapsed .gsd-section-arrow {
+  transform: rotate(-90deg);
+}
+
+.gsd-section.collapsed .gsd-section-body {
+  display: none;
+}
+
+.gsd-section-body {
+  padding: 0 var(--spacing-md) var(--spacing-sm);
+}
+
+.gsd-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  align-items: baseline;
+}
+
+.gsd-label {
+  color: var(--color-text-muted);
+  min-width: 100px;
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+}
+
+.gsd-value {
+  color: var(--color-text);
+  font-size: 0.6875rem;
+  word-break: break-word;
+}
+
+.gsd-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.gsd-tag-safe { background: rgba(64, 192, 96, 0.15); color: var(--color-success); }
+.gsd-tag-risky { background: rgba(224, 160, 48, 0.15); color: var(--color-warning); }
+.gsd-tag-danger { background: rgba(224, 64, 80, 0.15); color: var(--color-danger); }
+.gsd-tag-info { background: rgba(124, 111, 240, 0.15); color: var(--color-primary); }
+.gsd-tag-muted { background: rgba(136, 136, 160, 0.1); color: var(--color-text-muted); }
+
+.gsd-list {
+  margin: 2px 0;
+  padding-left: 18px;
+  font-size: 0.6875rem;
+}
+
+.gsd-list li {
+  padding: 1px 0;
+}
+
+.gsd-choice {
+  padding: 6px 0;
+  border-top: 1px solid rgba(42, 42, 58, 0.5);
+}
+
+.gsd-choice:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.gsd-choice-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.gsd-choice-letter {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  min-width: 14px;
+}
+
+.gsd-choice-text {
+  color: var(--color-text);
+  font-size: 0.6875rem;
+}
+
+.gsd-choice-meta {
+  padding-left: 22px;
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.gsd-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.gsd-dot-on { background: var(--color-success); }
+.gsd-dot-off { background: var(--color-danger); opacity: 0.5; }
+
+.gsd-rel-pos { color: var(--color-success); }
+.gsd-rel-neg { color: var(--color-danger); }
+.gsd-rel-zero { color: var(--color-text-muted); }
+
+.gsd-health-bar {
+  display: inline-block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-success);
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+.gsd-pending {
+  font-style: italic;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  font-size: 0.625rem;
+}
+
 .passage span[data-speaker] {
   border-radius: 2px;
   padding: 1px 2px;
@@ -519,6 +728,20 @@ select:focus {
 .btn-choice:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.gm-status {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: var(--spacing-xs) 0 0 0;
+  animation: gm-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gm-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .choice-label {

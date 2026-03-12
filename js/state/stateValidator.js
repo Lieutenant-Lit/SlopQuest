@@ -141,8 +141,9 @@
     },
 
     /**
-     * Validate a passage response from the LLM.
-     * @param {object} response - Parsed JSON from passage generation
+     * Validate a Writer response from the LLM.
+     * Checks passage text and choices A-D with text.
+     * @param {object} response - Parsed JSON from Writer
      * @returns {{ valid: boolean, errors: string[] }}
      */
     validatePassageResponse: function (response) {
@@ -165,6 +166,57 @@
             errors.push('Missing choice ' + required[i]);
           } else if (!response.choices[required[i]].text) {
             errors.push('Choice ' + required[i] + ' missing text');
+          }
+        }
+      }
+
+      return {
+        valid: errors.length === 0,
+        errors: errors
+      };
+    },
+
+    /**
+     * Validate a Game Master response from the LLM.
+     * Checks state_updates structure and choice_metadata.
+     * @param {object} response - Parsed JSON from Game Master
+     * @param {string} [difficulty] - Current difficulty for metadata requirements
+     * @returns {{ valid: boolean, errors: string[] }}
+     */
+    validateGameMasterResponse: function (response, difficulty) {
+      var errors = [];
+
+      if (!response || typeof response !== 'object') {
+        return { valid: false, errors: ['Response is not an object'] };
+      }
+
+      // state_updates is required
+      if (!response.state_updates || typeof response.state_updates !== 'object') {
+        errors.push('Missing state_updates object');
+      } else {
+        // event_log_entry is required
+        if (typeof response.state_updates.event_log_entry !== 'string' || !response.state_updates.event_log_entry) {
+          errors.push('Missing or empty event_log_entry');
+        }
+      }
+
+      // choice_metadata is required
+      if (!response.choice_metadata || typeof response.choice_metadata !== 'object') {
+        errors.push('Missing choice_metadata object');
+      } else {
+        var required = ['A', 'B', 'C', 'D'];
+        var isHardOrBrutal = difficulty === 'hard' || difficulty === 'brutal';
+        for (var i = 0; i < required.length; i++) {
+          var key = required[i];
+          if (!response.choice_metadata[key]) {
+            errors.push('Missing choice_metadata.' + key);
+          } else if (isHardOrBrutal) {
+            if (!response.choice_metadata[key].outcome) {
+              errors.push('choice_metadata.' + key + ' missing outcome (required on ' + difficulty + ')');
+            }
+            if (!response.choice_metadata[key].narration_directive) {
+              errors.push('choice_metadata.' + key + ' missing narration_directive (required on ' + difficulty + ')');
+            }
           }
         }
       }
