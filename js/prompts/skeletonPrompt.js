@@ -37,6 +37,20 @@
       p += '  "premise": "string — 2-3 sentence hook",\n';
       p += '  "central_question": "string — the dramatic question driving the story",\n';
       p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'sacrifice or survival\', \'mystery solved\', \'escape achieved\'",\n';
+      p += '  "resource_definitions": {\n';
+      p += '    "health_stat": {\n';
+      p += '      "name": "string — genre-appropriate name for the 0-100 vitality stat (e.g. Health, Morale, Composure, Sanity, Reputation)",\n';
+      p += '      "icon": "string — one of: heart, shield, brain, star, fire"\n';
+      p += '    },\n';
+      p += '    "resources": [\n';
+      p += '      {\n';
+      p += '        "key": "string — lowercase machine key, no spaces (e.g. gold, ammo, social_capital)",\n';
+      p += '        "name": "string — display name (e.g. Gold, Ammo, Social Capital)",\n';
+      p += '        "icon": "string — one of: money, food, ammo, magnifier, handshake, potion, gem, scroll, tool, star",\n';
+      p += '        "base_amount": "number — starting quantity at normal difficulty (3-20 range)"\n';
+      p += '      }\n';
+      p += '    ]\n';
+      p += '  },\n';
       p += '  "setting": {\n';
       p += '    "name": "string — name of the world/location",\n';
       p += '    "description": "string — 2-3 sentences describing the setting",\n';
@@ -156,6 +170,14 @@
         p += '- Medium length: balance pacing with depth. Enough room for subplots but keep the main arc tight.\n';
       }
       p += '\n';
+
+      // Resource definitions guidance
+      p += 'RESOURCE DEFINITIONS:\n';
+      p += '- Choose a health stat name that fits the genre/setting. Fantasy = Health, horror = Sanity, noir = Composure, romance = Confidence, sci-fi = Hull Integrity, etc.\n';
+      p += '- Choose 2-3 resources that make sense for this world. Fantasy = gold/provisions, sci-fi = credits/fuel, zombie = ammo/food/medicine, noir = cash/leads/favors, romance = charm/reputation, etc.\n';
+      p += '- base_amount is the starting quantity at normal difficulty. Keep values in the 3-20 range.\n';
+      p += '- Resource keys must be lowercase with underscores, no spaces (e.g. "social_capital", "ammo", "food").\n';
+      p += '- Pick resources that create interesting trade-offs for THIS specific story. Generic is boring — tailor them.\n\n';
 
       // Final requirements
       p += 'The skeleton must have:\n';

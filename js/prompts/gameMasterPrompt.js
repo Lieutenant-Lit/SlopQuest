@@ -38,6 +38,22 @@
       p += 'CURRENT PLAYER STATE:\n';
       p += JSON.stringify(gameState.player, null, 2) + '\n\n';
 
+      // Resource definitions — tell the GM what resource keys mean
+      if (gameState.meta && gameState.meta.resource_definitions) {
+        var defs = gameState.meta.resource_definitions;
+        p += 'RESOURCE DEFINITIONS:\n';
+        p += '- Vitality stat: "' + defs.health_stat.name + '" (internal field: player.health, 0-100 scale)\n';
+        if (Array.isArray(defs.resources)) {
+          for (var ri = 0; ri < defs.resources.length; ri++) {
+            var rd = defs.resources[ri];
+            p += '- Resource "' + rd.key + '": ' + rd.name + '\n';
+          }
+          p += 'When updating player_changes.resources, use these exact keys: ';
+          p += defs.resources.map(function (r) { return r.key; }).join(', ') + '\n';
+        }
+        p += '\n';
+      }
+
       p += 'RELATIONSHIPS:\n';
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
 
@@ -114,7 +130,7 @@
         p += '- Maximum health penalty per turn: ' + diffConfig.max_health_penalty + ' points\n';
         p += '- Consequences are mild: lost items, delayed progress, NPC annoyance — never life-threatening\n';
         p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
-        p += '- Resources are generous. Include opportunities to gain gold/provisions regularly.\n';
+        p += '- Resources are generous. Include opportunities to gain resources regularly.\n';
         p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
       } else if (difficulty === 'normal') {
         p += '\nNORMAL MODE RULES (MANDATORY):\n';

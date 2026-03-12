@@ -306,6 +306,11 @@ select:focus {
 .status-health.health-mid .status-value { color: var(--color-warning); }
 .status-health.health-low .status-value { color: var(--color-danger); }
 
+/* Resource chip colors */
+.status-resource .status-icon { color: var(--color-text-muted); }
+.status-resource .status-value { color: var(--color-text); }
+#status-resources { display: contents; }
+
 /* --- Illustration --- */
 .illustration-container {
   width: 100%;

@@ -54,6 +54,19 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
+      // Resource vocabulary — Writer needs to know what to call resources in prose
+      if (gameState.meta && gameState.meta.resource_definitions) {
+        var defs = gameState.meta.resource_definitions;
+        p += 'RESOURCE VOCABULARY:\n';
+        p += '- Vitality stat: ' + defs.health_stat.name + '\n';
+        if (Array.isArray(defs.resources)) {
+          for (var vi = 0; vi < defs.resources.length; vi++) {
+            p += '- ' + defs.resources[vi].name + '\n';
+          }
+        }
+        p += 'Use these terms naturally when the narrative involves resource gain or loss. Do NOT include numbers.\n\n';
+      }
+
       // Pending consequences — Writer needs to know what's looming for narrative hooks
       if (gameState.pending_consequences && gameState.pending_consequences.length > 0) {
         p += 'ACTIVE NARRATIVE THREADS (pending consequences to weave into the story):\n';

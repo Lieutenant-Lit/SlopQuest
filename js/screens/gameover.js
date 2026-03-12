@@ -103,7 +103,8 @@
       lines.push(this._statItem('Turns', totalTurns));
       lines.push(this._statItem('Act', state.current.act || '?'));
       lines.push(this._statItem('Scene', state.current.scene_number || '?'));
-      lines.push(this._statItem('Health', (state.player.health || 0) + '/100'));
+      var healthLabel = (state.meta && state.meta.health_stat_name) || 'Health';
+      lines.push(this._statItem(healthLabel, (state.player.health || 0) + '/100'));
 
       if (isComplete) {
         // Difficulty and story length
