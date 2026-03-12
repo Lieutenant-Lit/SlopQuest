@@ -159,7 +159,7 @@
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
         p += '- At most 1 clearly safe choice per turn. At least 1 choice should be lethal or severely punishing.\n';
         p += '- Health penalties are large: ' + diffConfig.max_health_penalty + ' point maximum. A bad choice can kill from full health.\n';
-        p += '- Resources drain aggressively. Every turn should cost something.\n';
+        p += '- Resources drain aggressively. Every turn should cost resources — but health_delta MUST still respect the pre-classified outcome. Do NOT apply health penalties on advance_safe turns.\n';
         p += '- Pending consequences trigger immediately (0-1 scenes). No grace period.\n';
         p += '- Some death choices should appear safe. The "obvious" safe choice may actually be lethal.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
@@ -185,8 +185,8 @@
       }
 
       // If the player made a choice, include its pre-classified outcome so the GM honors it
-      if (choiceId && gameState.current && gameState.current.choice_metadata) {
-        var choiceMeta = gameState.current.choice_metadata[choiceId];
+      if (choiceId && gameState.current_choices && gameState.current_choices[choiceId]) {
+        var choiceMeta = gameState.current_choices[choiceId];
         if (choiceMeta && choiceMeta.outcome) {
           p += 'PLAYER\'S PREVIOUS CHOICE:\n';
           p += 'The player chose option ' + choiceId + '.\n';
