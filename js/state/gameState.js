@@ -110,7 +110,7 @@
           return this._current;
         }
       } catch (e) {
-        console.warn('GameState: failed to parse stored state', e);
+        SQ.Logger.warn('State', 'Failed to parse stored game state', { error: e.message });
       }
       return null;
     },

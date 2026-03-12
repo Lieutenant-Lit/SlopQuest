@@ -142,6 +142,8 @@
       var loadingOverlay = document.getElementById('loading-overlay');
       var loadingStatus = document.getElementById('loading-status');
 
+      SQ.Logger.info('Setup', 'Starting new game', { config: setupConfig });
+
       // Disable button and show loading overlay
       btn.disabled = true;
       btn.textContent = 'Generating...';
@@ -207,7 +209,7 @@
         self._resetButton();
         SQ.showScreen('game');
       }).catch(function (err) {
-        console.error('Setup: generation failed', err);
+        SQ.Logger.error('Setup', 'Generation failed', { error: err.message });
         loadingOverlay.classList.add('hidden');
         self._resetButton();
 

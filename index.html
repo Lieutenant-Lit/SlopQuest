@@ -89,6 +89,11 @@
           <input type="checkbox" id="settings-audio-debug-toggle">
           <span>Audio debug overlay</span>
         </label>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-log-toggle">
+          <span>Enable persistent logging</span>
+        </label>
+        <button id="btn-view-logs" class="btn btn-secondary" style="margin-top: var(--spacing-sm);">View Logs</button>
       </div>
 
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
@@ -348,11 +353,36 @@
     <button id="btn-dev-toggle" title="Toggle Mock/Live mode">MOCK</button>
   </div>
 
+  <!-- Log Viewer Overlay -->
+  <div id="log-viewer" class="overlay hidden">
+    <div class="overlay-content log-viewer-content">
+      <div class="log-viewer-header">
+        <h2>Session Logs</h2>
+        <div class="log-viewer-controls">
+          <select id="log-filter-level">
+            <option value="">All Levels</option>
+            <option value="error">Errors</option>
+            <option value="warn">Warnings</option>
+            <option value="info">Info</option>
+          </select>
+          <select id="log-filter-category">
+            <option value="">All Categories</option>
+          </select>
+          <button id="btn-log-export" class="btn btn-secondary">Export</button>
+          <button id="btn-log-clear" class="btn btn-secondary">Clear</button>
+          <button id="btn-log-close" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+      <div id="log-entries" class="log-entries"></div>
+    </div>
+  </div>
+
   <!-- ===== SCRIPTS (dependency order) ===== -->
   <script>window.SQ = { Screens: {} };</script>
 
   <!-- State modules (no deps) -->
   <script src="js/state/playerConfig.js"></script>
+  <script src="js/state/logger.js"></script>
   <script src="js/state/gameState.js"></script>
   <script src="js/state/historyStack.js"></script>
   <script src="js/state/stateValidator.js"></script>
@@ -367,6 +397,7 @@
 
   <!-- UI modules -->
   <script src="js/ui/errorOverlay.js"></script>
+  <script src="js/ui/logViewer.js"></script>
 
   <!-- Prompt modules -->
   <script src="js/prompts/difficultyConfig.js"></script>

@@ -80,6 +80,11 @@
       SQ.ErrorOverlay.init();
     }
 
+    // Initialize log viewer
+    if (SQ.LogViewer && SQ.LogViewer.init) {
+      SQ.LogViewer.init();
+    }
+
     // Wire up back buttons
     document.querySelectorAll('.btn-back').forEach(function (btn) {
       btn.addEventListener('click', function () {

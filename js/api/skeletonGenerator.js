@@ -61,7 +61,7 @@
       try {
         skeleton = SQ.API.parseJSON(raw);
       } catch (e) {
-        console.warn('SkeletonGenerator: JSON parse failed (attempt ' + (attempt + 1) + ')', e.message);
+        SQ.Logger.warn('Skeleton', 'JSON parse failed (attempt ' + (attempt + 1) + ')', { attempt: attempt, error: e.message, rawPreview: typeof raw === 'string' ? raw.substring(0, 500) : '' });
         if (attempt < MAX_RETRIES) {
           return self._attemptGeneration(model, systemPrompt, userMsg, setupConfig, attempt + 1);
         }
@@ -71,12 +71,14 @@
       // Validate structure
       var result = SQ.StateValidator.validateSkeleton(skeleton, setupConfig);
       if (!result.valid) {
-        console.warn('SkeletonGenerator: validation failed (attempt ' + (attempt + 1) + '):', result.errors);
+        SQ.Logger.warn('Skeleton', 'Validation failed (attempt ' + (attempt + 1) + ')', { attempt: attempt, errors: result.errors });
         if (attempt < MAX_RETRIES) {
           return self._attemptGeneration(model, systemPrompt, userMsg, setupConfig, attempt + 1);
         }
         throw new Error('The AI returned an incomplete skeleton after ' + (MAX_RETRIES + 1) + ' attempts. Errors: ' + result.errors.join(', '));
       }
+
+      SQ.Logger.info('Skeleton', 'Generated OK', { title: skeleton.title, acts: skeleton.acts ? skeleton.acts.length : 0 });
 
       return skeleton;
     }

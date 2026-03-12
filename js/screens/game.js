@@ -347,7 +347,7 @@
           self._hideChoiceStatus();
 
         }).catch(function (err) {
-          console.error('Game Master failed:', err);
+          SQ.Logger.error('GameMaster', 'Generation failed', { error: err.message });
 
           // Show error overlay — choices remain disabled
           SQ.ErrorOverlay.show(err, {
@@ -373,7 +373,7 @@
                 self._enableChoices();
                 self._hideChoiceStatus();
               }).catch(function (retryErr) {
-                console.error('Game Master retry failed:', retryErr);
+                SQ.Logger.error('GameMaster', 'Retry failed', { error: retryErr.message });
                 SQ.ErrorOverlay.show(retryErr, {
                   onRetry: function () {
                     self.makeChoice(choiceId);
@@ -388,7 +388,7 @@
         // Writer call failed — full retry
         self.hideLoading();
         self._enableChoices();
-        console.error('Writer generation failed:', err);
+        SQ.Logger.error('Writer', 'Generation failed', { error: err.message });
 
         SQ.ErrorOverlay.show(err, {
           onRetry: function () {
@@ -415,6 +415,7 @@
      */
     applyGameMasterResponse: function (state, gmResponse) {
       var updates = gmResponse.state_updates || {};
+      var healthBefore = state.player.health;
 
       // 1. Player changes (health, resources, inventory, status_effects, skills)
       if (updates.player_changes) {
@@ -495,6 +496,17 @@
           }
         }
       }
+
+      // Log GM state updates (critical for diagnosing unexpected outcomes)
+      SQ.Logger.info('GameMaster', 'Applied state updates', {
+        healthBefore: healthBefore,
+        healthAfter: state.player.health,
+        healthDelta: state.player.health - healthBefore,
+        choiceMetadata: gmResponse.choice_metadata,
+        gameOver: updates.game_over,
+        storyComplete: updates.story_complete,
+        eventLog: updates.event_log_entry
+      });
 
       // 11. Enforce difficulty health floor (client-side safety net)
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';

@@ -1115,6 +1115,145 @@ select:focus {
   opacity: 0.8;
 }
 
+/* ===== LOG VIEWER ===== */
+#log-viewer {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 15, 0.95);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  padding: var(--spacing-md);
+}
+
+#log-viewer.hidden {
+  display: none;
+}
+
+.log-viewer-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.log-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--spacing-sm);
+}
+
+.log-viewer-header h2 {
+  font-family: var(--font-ui);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.log-viewer-controls {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.log-viewer-controls select {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.log-viewer-controls .btn {
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  min-height: 32px;
+}
+
+.log-entries {
+  flex: 1;
+  overflow-y: auto;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.log-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.log-time {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.log-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.log-level-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+.log-level-warn {
+  background: rgba(234, 179, 8, 0.2);
+  color: var(--color-warning);
+}
+
+.log-level-info {
+  background: rgba(124, 111, 240, 0.15);
+  color: var(--color-primary);
+}
+
+.log-cat {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.log-msg {
+  color: var(--color-text);
+}
+
+.log-entry-data {
+  width: 100%;
+  margin: 2px 0 4px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  color: var(--color-text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.7rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.log-empty {
+  color: var(--color-text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
 /* ===== GAME OVER ===== */
 #screen-gameover .screen-content {
   gap: var(--spacing-lg);
