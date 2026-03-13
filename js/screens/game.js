@@ -146,40 +146,6 @@
       var current = state.current || {};
       var meta = state.meta || {};
 
-      // Health — update value, icon, label, and apply color class
-      var healthEl = document.getElementById('status-health');
-      var healthVal = typeof player.health === 'number' ? player.health : 100;
-      var healthName = meta.health_stat_name || 'Health';
-      var healthIcon = this._getStatIcon(meta.health_stat_icon || 'heart');
-      healthEl.setAttribute('title', healthName);
-      healthEl.querySelector('.status-icon').innerHTML = healthIcon;
-      healthEl.querySelector('.status-value').textContent = healthVal;
-      healthEl.classList.remove('health-high', 'health-mid', 'health-low');
-      if (healthVal > 60) {
-        healthEl.classList.add('health-high');
-      } else if (healthVal > 25) {
-        healthEl.classList.add('health-mid');
-      } else {
-        healthEl.classList.add('health-low');
-      }
-
-      // Dynamic resource chips
-      var resourcesContainer = document.getElementById('status-resources');
-      if (resourcesContainer) {
-        resourcesContainer.innerHTML = '';
-        var defs = (meta.resource_definitions && meta.resource_definitions.resources) || [];
-        var resources = player.resources || {};
-        for (var i = 0; i < defs.length; i++) {
-          var r = defs[i];
-          var chip = document.createElement('span');
-          chip.className = 'status-chip status-resource';
-          chip.title = r.name;
-          chip.innerHTML = '<span class="status-icon">' + this._getStatIcon(r.icon) + '</span>' +
-                           '<span class="status-value">' + (typeof resources[r.key] === 'number' ? resources[r.key] : 0) + '</span>';
-          resourcesContainer.appendChild(chip);
-        }
-      }
-
       // Status effect chips
       var effectsContainer = document.getElementById('status-effects');
       if (effectsContainer) {
@@ -211,20 +177,6 @@
       // Act / Scene
       document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
       document.getElementById('status-scene').textContent = 'Scene ' + (current.scene_number || 1);
-    },
-
-    /**
-     * Map icon key names to Unicode characters for status display.
-     */
-    _getStatIcon: function (key) {
-      var map = {
-        heart: '\u2764', shield: '\uD83D\uDEE1', brain: '\uD83E\uDDE0',
-        star: '\u2B50', fire: '\uD83D\uDD25',
-        money: '\uD83D\uDCB0', food: '\uD83C\uDF5E', ammo: '\uD83C\uDFAF',
-        magnifier: '\uD83D\uDD0D', handshake: '\uD83E\uDD1D', potion: '\uD83E\uDDEA',
-        gem: '\uD83D\uDC8E', scroll: '\uD83D\uDCDC', tool: '\uD83D\uDD27'
-      };
-      return map[key] || '\u2764';
     },
 
     /**
@@ -445,15 +397,9 @@
       var updates = gmResponse.state_updates || {};
       var timeElapsed = updates.time_elapsed || null;
 
-      // 1. Player changes (health legacy, inventory, status_effects, skills)
+      // 1. Player changes (inventory, status_effects, skills)
       if (updates.player_changes) {
         var pc = updates.player_changes;
-        // Legacy health_delta support (Phase 2 will remove)
-        var hd = pc.health_delta != null ? pc.health_delta : pc.health;
-        if (typeof hd === 'number') {
-          state.player.health = Math.max(0, Math.min(100, state.player.health + hd));
-        }
-        if (pc.resources) Object.assign(state.player.resources, pc.resources);
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
         if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
@@ -499,17 +445,6 @@
           if (c.time_remaining) {
             var result = SQ.GameState.subtractTime(c.time_remaining, timeElapsed);
             c.time_remaining = result.time;
-          }
-          // Legacy scenes_remaining support
-          if (typeof c.scenes_remaining === 'number' && c.scenes_remaining > 0) {
-            c.scenes_remaining--;
-          }
-        });
-      } else {
-        // Fallback: legacy scenes_remaining decrement
-        state.pending_consequences.forEach(function (c) {
-          if (typeof c.scenes_remaining === 'number' && c.scenes_remaining > 0) {
-            c.scenes_remaining--;
           }
         });
       }
@@ -573,14 +508,9 @@
         eventLog: updates.event_log_entry
       });
 
-      // 13. Enforce difficulty health floor (legacy, Phase 2 will remove)
+      // 13. Enforce lethal effect restrictions on easier difficulties
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
-      if (!diffConfig.allow_game_over && state.player.health < diffConfig.health_floor) {
-        state.player.health = diffConfig.health_floor;
-      }
-
-      // 14. Enforce lethal effect restrictions on easier difficulties
       if (!diffConfig.allow_lethal_effects && Array.isArray(state.player.status_effects)) {
         state.player.status_effects.forEach(function (effect) {
           effect.lethal = false;
@@ -604,8 +534,8 @@
         updates.game_over = false;
       }
 
-      // 17. Check for game over or story complete
-      var isGameOver = updates.game_over || (diffConfig.allow_game_over && state.player.health <= 0);
+      // 16. Check for game over or story complete
+      var isGameOver = updates.game_over;
       var isStoryComplete = updates.story_complete;
 
       if (isGameOver) {
@@ -684,7 +614,6 @@
       var meta = state.meta || {};
       var player = state.player || {};
       var current = state.current || {};
-      var resources = player.resources || {};
 
       // 1. Meta
       var metaBody = '';
@@ -717,19 +646,6 @@
       var playerBody = '';
       playerBody += self._gsdRow('Name', self._esc(player.name || '—'));
       playerBody += self._gsdRow('Archetype', self._esc(player.archetype || '—'));
-      var healthVal = typeof player.health === 'number' ? player.health : 100;
-      var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
-      var healthLabel = (meta.health_stat_name) || 'Health';
-      playerBody += self._gsdRow(healthLabel, healthVal + ' <span class="gsd-health-bar" style="width:' + healthVal + 'px;background:' + healthColor + '"></span>');
-      // Dynamic resources from skeleton definitions
-      var resDefs = (meta.resource_definitions && meta.resource_definitions.resources) || [];
-      if (resDefs.length > 0) {
-        for (var ri = 0; ri < resDefs.length; ri++) {
-          var rdKey = resDefs[ri].key;
-          var rdVal = typeof resources[rdKey] === 'number' ? resources[rdKey] : '—';
-          playerBody += self._gsdRow(resDefs[ri].name, rdVal);
-        }
-      }
       if (player.inventory && player.inventory.length) {
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
       } else {

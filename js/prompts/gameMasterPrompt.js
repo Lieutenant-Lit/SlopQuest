@@ -48,19 +48,6 @@
         p += 'Use this to determine appropriate healing times and methods for status effects in this setting.\n\n';
       }
 
-      // Resource definitions — still included for Phase 1 backwards compat
-      if (gameState.meta && gameState.meta.resource_definitions) {
-        var defs = gameState.meta.resource_definitions;
-        p += 'RESOURCE DEFINITIONS (DEPRECATED — prefer status effects for injuries):\n';
-        if (Array.isArray(defs.resources)) {
-          for (var ri = 0; ri < defs.resources.length; ri++) {
-            var rd = defs.resources[ri];
-            p += '- Resource "' + rd.key + '": ' + rd.name + '\n';
-          }
-        }
-        p += '\n';
-      }
-
       p += 'RELATIONSHIPS:\n';
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
 
@@ -158,8 +145,7 @@
       p += '- Severity scale: 1.0 = completely debilitating, 0.7 = severely impaired, 0.5 = significant but manageable, 0.3 = noticeable nuisance, 0.1 = almost healed.\n';
       p += '- time_remaining can be null for effects with no natural expiry (e.g. a curse that requires a specific action to remove).\n';
       p += '- removal_condition can be set for effects that need specific actions (e.g. "Find the Witch of the Moor to break this curse"). Can be combined with time_remaining.\n';
-      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above. Realistic settings = realistic healing (broken bone: weeks, minor cut: days). Fantasy/sci-fi = faster if the setting provides healing methods.\n';
-      p += '- health_delta MUST be 0 every turn. It is deprecated. Use status effects for all injury/condition tracking.\n\n';
+      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above. Realistic settings = realistic healing (broken bone: weeks, minor cut: days). Fantasy/sci-fi = faster if the setting provides healing methods.\n\n';
 
       // Pending consequences rules
       p += 'PENDING CONSEQUENCES:\n';

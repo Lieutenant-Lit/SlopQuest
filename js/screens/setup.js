@@ -163,9 +163,6 @@
         state.meta.title = skeleton.title || 'Untitled Quest';
         state.world_flags = skeleton.initial_world_flags || {};
 
-        // Populate player resources from skeleton's genre-specific definitions
-        SQ.GameState.initResourcesFromSkeleton(skeleton);
-
         // Populate player inventory from skeleton's starting items
         SQ.GameState.initInventoryFromSkeleton(skeleton);
 

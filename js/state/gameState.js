@@ -52,8 +52,6 @@
         player: {
           name: setupConfig.characterName || 'The Wanderer',
           archetype: setupConfig.archetype || '',
-          health: 100,
-          resources: {},
           inventory: [],
           status_effects: [],
           skills: []
@@ -81,36 +79,6 @@
         game_over_reason: ''
       };
       return this._current;
-    },
-
-    /**
-     * Populate player resources from skeleton resource_definitions.
-     * Called after skeleton generation, scales base_amount by difficulty multiplier.
-     */
-    initResourcesFromSkeleton: function (skeleton) {
-      if (!this._current || !skeleton || !skeleton.resource_definitions) return;
-
-      var defs = skeleton.resource_definitions;
-      var diffKey = this._current.meta.difficulty || 'normal';
-      var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
-      var multiplier = diffConfig.resource_multiplier || 1.0;
-
-      // Store health stat metadata for UI
-      this._current.meta.health_stat_name = (defs.health_stat && defs.health_stat.name) || 'Health';
-      this._current.meta.health_stat_icon = (defs.health_stat && defs.health_stat.icon) || 'heart';
-
-      // Store full resource definitions for UI rendering
-      this._current.meta.resource_definitions = defs;
-
-      // Initialize resources scaled by difficulty
-      var resources = {};
-      if (Array.isArray(defs.resources)) {
-        for (var i = 0; i < defs.resources.length; i++) {
-          var r = defs.resources[i];
-          resources[r.key] = Math.round((r.base_amount || 5) * multiplier);
-        }
-      }
-      this._current.player.resources = resources;
     },
 
     /**

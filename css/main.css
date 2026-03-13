@@ -300,16 +300,6 @@ select:focus {
   font-variant-numeric: tabular-nums;
 }
 
-/* Health color states */
-.status-health .status-icon { color: var(--color-danger); }
-.status-health.health-high .status-value { color: var(--color-success); }
-.status-health.health-mid .status-value { color: var(--color-warning); }
-.status-health.health-low .status-value { color: var(--color-danger); }
-
-/* Resource chip colors */
-.status-resource .status-icon { color: var(--color-text-muted); }
-.status-resource .status-value { color: var(--color-text); }
-#status-resources { display: contents; }
 #status-effects { display: contents; }
 
 /* Status effect severity chips */
@@ -653,15 +643,6 @@ select:focus {
 .gsd-rel-pos { color: var(--color-success); }
 .gsd-rel-neg { color: var(--color-danger); }
 .gsd-rel-zero { color: var(--color-text-muted); }
-
-.gsd-health-bar {
-  display: inline-block;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--color-success);
-  vertical-align: middle;
-  margin-left: 6px;
-}
 
 .gsd-pending {
   font-style: italic;
