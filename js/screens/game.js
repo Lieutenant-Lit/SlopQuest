@@ -501,10 +501,16 @@
       // Log GM state updates
       SQ.Logger.info('GameMaster', 'Applied state updates', {
         timeElapsed: timeElapsed,
-        statusEffects: state.player.status_effects ? state.player.status_effects.length : 0,
+        statusEffects: (state.player.status_effects || []).map(function (e) {
+          return e.name + ' (sev:' + (e.severity || 0) + (e.lethal ? ', LETHAL' : '') + ')';
+        }),
+        inventoryCount: state.player.inventory ? state.player.inventory.length : 0,
+        relationshipChanges: updates.relationship_changes || undefined,
+        newConsequences: updates.new_pending_consequences ? updates.new_pending_consequences.length : undefined,
+        resolvedConsequences: updates.resolved_consequences ? updates.resolved_consequences.length : undefined,
         choiceMetadata: gmResponse.choice_metadata,
-        gameOver: updates.game_over,
-        storyComplete: updates.story_complete,
+        gameOver: updates.game_over || undefined,
+        storyComplete: updates.story_complete || undefined,
         eventLog: updates.event_log_entry
       });
 

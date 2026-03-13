@@ -87,6 +87,11 @@
         .then(function (raw) {
           var response;
 
+          // Repair common LLM JSON errors before parsing
+          if (typeof raw === 'string') {
+            raw = raw.replace(/:\s*\+(\d)/g, ': $1');  // +5 → 5
+          }
+
           // Parse JSON
           try {
             response = SQ.API.parseJSON(raw);
@@ -108,10 +113,19 @@
             throw new Error('The AI returned an incomplete response. Errors: ' + result.errors.join(', '));
           }
 
-          SQ.Logger.info(label, 'Response OK', {
-            passagePreview: response.passage ? response.passage.substring(0, 100) : undefined,
-            choiceCount: response.choices ? Object.keys(response.choices).length : undefined
-          });
+          if (label === 'GameMaster') {
+            SQ.Logger.info(label, 'Response OK', {
+              hasStateUpdates: !!response.state_updates,
+              choiceMetadataKeys: response.choice_metadata ? Object.keys(response.choice_metadata) : [],
+              gameOver: response.state_updates && response.state_updates.game_over,
+              eventLog: response.state_updates && response.state_updates.event_log_entry
+            });
+          } else {
+            SQ.Logger.info(label, 'Response OK', {
+              passagePreview: response.passage ? response.passage.substring(0, 100) : undefined,
+              choiceCount: response.choices ? Object.keys(response.choices).length : undefined
+            });
+          }
 
           return response;
         });
