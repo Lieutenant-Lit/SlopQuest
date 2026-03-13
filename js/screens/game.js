@@ -180,6 +180,34 @@
         }
       }
 
+      // Status effect chips
+      var effectsContainer = document.getElementById('status-effects');
+      if (effectsContainer) {
+        effectsContainer.innerHTML = '';
+        var effects = player.status_effects || [];
+        for (var ei = 0; ei < effects.length; ei++) {
+          var effect = effects[ei];
+          if (!effect || typeof effect !== 'object' || !effect.name) continue;
+          var eChip = document.createElement('span');
+          var sevClass = 'effect-mild';
+          if (typeof effect.severity === 'number') {
+            if (effect.severity > 0.7) sevClass = 'effect-severe';
+            else if (effect.severity > 0.3) sevClass = 'effect-moderate';
+          }
+          eChip.className = 'status-chip status-effect ' + sevClass;
+          eChip.title = effect.description || effect.name;
+          eChip.textContent = effect.name;
+          effectsContainer.appendChild(eChip);
+        }
+      }
+
+      // In-game time
+      var timeEl = document.getElementById('status-time');
+      if (timeEl) {
+        var igt = current.in_game_time;
+        timeEl.textContent = SQ.GameState.formatTime(igt);
+      }
+
       // Act / Scene
       document.getElementById('status-act').textContent = 'Act ' + (current.act || 1);
       document.getElementById('status-scene').textContent = 'Scene ' + (current.scene_number || 1);
@@ -415,11 +443,12 @@
      */
     applyGameMasterResponse: function (state, gmResponse) {
       var updates = gmResponse.state_updates || {};
-      var healthBefore = state.player.health;
+      var timeElapsed = updates.time_elapsed || null;
 
-      // 1. Player changes (health, resources, inventory, status_effects, skills)
+      // 1. Player changes (health legacy, inventory, status_effects, skills)
       if (updates.player_changes) {
         var pc = updates.player_changes;
+        // Legacy health_delta support (Phase 2 will remove)
         var hd = pc.health_delta != null ? pc.health_delta : pc.health;
         if (typeof hd === 'number') {
           state.player.health = Math.max(0, Math.min(100, state.player.health + hd));
@@ -430,38 +459,72 @@
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
       }
 
-      // 2. New pending consequences
+      // 2. Advance in-game clock
+      if (timeElapsed) {
+        SQ.GameState.advanceTime(timeElapsed);
+      }
+
+      // 3. Tick down status effect timers and auto-remove expired non-lethal effects
+      if (timeElapsed && Array.isArray(state.player.status_effects)) {
+        state.player.status_effects = state.player.status_effects.filter(function (effect) {
+          if (!effect.time_remaining) return true; // no timer = keep
+          var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
+          effect.time_remaining = result.time;
+          if (result.expired) {
+            // Lethal effects expiring = the GM should have set game_over, but keep the effect
+            // so it's visible in the game over screen
+            return !!effect.lethal;
+          }
+          return true;
+        });
+      }
+
+      // 4. New pending consequences
       if (Array.isArray(updates.new_pending_consequences)) {
         updates.new_pending_consequences.forEach(function (c) {
           state.pending_consequences.push(c);
         });
       }
 
-      // 3. Resolved consequences — remove by id
+      // 5. Resolved consequences — remove by id
       if (Array.isArray(updates.resolved_consequences)) {
         state.pending_consequences = state.pending_consequences.filter(function (c) {
           return updates.resolved_consequences.indexOf(c.id) === -1;
         });
       }
 
-      // 4. Decrement scenes_remaining on all pending consequences
-      state.pending_consequences.forEach(function (c) {
-        if (typeof c.scenes_remaining === 'number' && c.scenes_remaining > 0) {
-          c.scenes_remaining--;
-        }
-      });
+      // 6. Tick down pending consequence timers
+      if (timeElapsed) {
+        state.pending_consequences.forEach(function (c) {
+          if (c.time_remaining) {
+            var result = SQ.GameState.subtractTime(c.time_remaining, timeElapsed);
+            c.time_remaining = result.time;
+          }
+          // Legacy scenes_remaining support
+          if (typeof c.scenes_remaining === 'number' && c.scenes_remaining > 0) {
+            c.scenes_remaining--;
+          }
+        });
+      } else {
+        // Fallback: legacy scenes_remaining decrement
+        state.pending_consequences.forEach(function (c) {
+          if (typeof c.scenes_remaining === 'number' && c.scenes_remaining > 0) {
+            c.scenes_remaining--;
+          }
+        });
+      }
 
-      // 5. Event log entry
+      // 7. Event log entry
       if (updates.event_log_entry) {
         state.event_log.push(updates.event_log_entry);
       }
 
-      // 6. World flag changes
+      // 8. World flag changes
       if (updates.world_flag_changes) {
         Object.assign(state.world_flags, updates.world_flag_changes);
       }
 
-      // 7. Relationship changes (deltas, not absolutes)
+      // 9. Relationship changes (deltas, not absolutes)
       if (updates.relationship_changes) {
         for (var name in updates.relationship_changes) {
           if (updates.relationship_changes.hasOwnProperty(name)) {
@@ -472,12 +535,12 @@
         }
       }
 
-      // 8. Scene context update
+      // 10. Scene context update
       if (updates.new_scene_context) {
         state.current.scene_context = updates.new_scene_context;
       }
 
-      // 9. Act advancement
+      // 11. Act advancement
       if (updates.advance_act) {
         state.current.act = Math.min((state.current.act || 1) + 1, 3);
         state.current.proximity_to_climax = 0.0;
@@ -489,7 +552,7 @@
         }
       }
 
-      // 10. Merge choice metadata (outcome, consequence, narration_directive)
+      // 12. Merge choice metadata (outcome, consequence, narration_directive)
       if (gmResponse.choice_metadata) {
         var keys = ['A', 'B', 'C', 'D'];
         for (var i = 0; i < keys.length; i++) {
@@ -500,30 +563,48 @@
         }
       }
 
-      // Log GM state updates (critical for diagnosing unexpected outcomes)
+      // Log GM state updates
       SQ.Logger.info('GameMaster', 'Applied state updates', {
-        healthBefore: healthBefore,
-        healthAfter: state.player.health,
-        healthDelta: state.player.health - healthBefore,
+        timeElapsed: timeElapsed,
+        statusEffects: state.player.status_effects ? state.player.status_effects.length : 0,
         choiceMetadata: gmResponse.choice_metadata,
         gameOver: updates.game_over,
         storyComplete: updates.story_complete,
         eventLog: updates.event_log_entry
       });
 
-      // 11. Enforce difficulty health floor (client-side safety net)
+      // 13. Enforce difficulty health floor (legacy, Phase 2 will remove)
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
       if (!diffConfig.allow_game_over && state.player.health < diffConfig.health_floor) {
         state.player.health = diffConfig.health_floor;
       }
 
-      // 12. Prevent game_over on difficulties that don't allow it
+      // 14. Enforce lethal effect restrictions on easier difficulties
+      if (!diffConfig.allow_lethal_effects && Array.isArray(state.player.status_effects)) {
+        state.player.status_effects.forEach(function (effect) {
+          effect.lethal = false;
+        });
+      }
+
+      // 15. Enforce max severity on easier difficulties
+      if (Array.isArray(state.player.status_effects)) {
+        var maxSev = diffConfig.max_effect_severity;
+        if (typeof maxSev === 'number') {
+          state.player.status_effects.forEach(function (effect) {
+            if (typeof effect.severity === 'number' && effect.severity > maxSev) {
+              effect.severity = maxSev;
+            }
+          });
+        }
+      }
+
+      // 16. Prevent game_over on difficulties that don't allow it
       if (!diffConfig.allow_game_over) {
         updates.game_over = false;
       }
 
-      // 13. Check for game over or story complete
+      // 17. Check for game over or story complete
       var isGameOver = updates.game_over || (diffConfig.allow_game_over && state.player.health <= 0);
       var isStoryComplete = updates.story_complete;
 
@@ -655,7 +736,24 @@
         playerBody += self._gsdRow('Inventory', '[]');
       }
       if (player.status_effects && player.status_effects.length) {
-        playerBody += self._gsdRow('Status Effects', self._gsdList(player.status_effects));
+        var seHtml = '<div class="gsd-list">';
+        player.status_effects.forEach(function (effect) {
+          if (typeof effect === 'object' && effect.name) {
+            var sevLabel = typeof effect.severity === 'number' ? ' (sev: ' + effect.severity.toFixed(1) + ')' : '';
+            var timeLabel = effect.time_remaining ? ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ']' : '';
+            var condLabel = effect.removal_condition ? ' — needs: ' + self._esc(effect.removal_condition) : '';
+            var lethalLabel = effect.lethal ? ' ' + self._gsdTag('LETHAL', 'danger') : '';
+            seHtml += '<div style="margin-bottom:2px">';
+            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel;
+            if (effect.description) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + self._esc(effect.description) + '</span>';
+            if (condLabel) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + condLabel + '</span>';
+            seHtml += '</div>';
+          } else {
+            seHtml += '<div>' + self._esc(String(effect)) + '</div>';
+          }
+        });
+        seHtml += '</div>';
+        playerBody += self._gsdRow('Status Effects', seHtml);
       } else {
         playerBody += self._gsdRow('Status Effects', '[]');
       }
@@ -670,7 +768,8 @@
       var posBody = '';
       posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
       posBody += self._gsdRow('Location', self._esc(current.location || '—'));
-      posBody += self._gsdRow('Time', self._esc(current.time_of_day || '—'));
+      posBody += self._gsdRow('Time of Day', self._esc(current.time_of_day || '—'));
+      posBody += self._gsdRow('In-Game Time', SQ.GameState.formatTime(current.in_game_time));
       posBody += self._gsdRow('Context', self._esc(current.scene_context || '—'));
       posBody += self._gsdRow('Climax Proximity', typeof current.proximity_to_climax === 'number' ? current.proximity_to_climax : '—');
       if (current.active_constraints && current.active_constraints.length) {
@@ -734,7 +833,8 @@
           pcBody += '<span class="gsd-label">' + self._esc(c.id || '?') + '</span>';
           pcBody += '<span class="gsd-value">' + self._esc(c.description || '');
           if (c.severity) pcBody += ' ' + self._gsdTag(c.severity, c.severity === 'lethal' ? 'danger' : c.severity === 'severe' ? 'risky' : 'muted');
-          if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
+          if (c.time_remaining) pcBody += ' <span style="opacity:0.6">(' + SQ.GameState.formatDuration(c.time_remaining) + ')</span>';
+          else if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
           pcBody += '</span></div>';
         });
       } else {

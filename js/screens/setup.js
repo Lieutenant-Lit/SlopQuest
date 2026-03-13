@@ -166,6 +166,9 @@
         // Populate player resources from skeleton's genre-specific definitions
         SQ.GameState.initResourcesFromSkeleton(skeleton);
 
+        // Populate player inventory from skeleton's starting items
+        SQ.GameState.initInventoryFromSkeleton(skeleton);
+
         // Set initial relationships from NPC roster
         if (skeleton.npcs) {
           skeleton.npcs.forEach(function (npc) {

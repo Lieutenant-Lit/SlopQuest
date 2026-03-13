@@ -21,7 +21,10 @@
       resource_multiplier: 2.0,
       health_floor: 30,
       max_health_penalty: 15,
-      resource_drain_rate: 'minimal'
+      resource_drain_rate: 'minimal',
+      allow_lethal_effects: false,
+      max_effect_severity: 0.5,
+      healing_speed: 'fast'
     },
     normal: {
       label: 'Normal',
@@ -39,7 +42,10 @@
       resource_multiplier: 1.0,
       health_floor: 10,
       max_health_penalty: 30,
-      resource_drain_rate: 'moderate'
+      resource_drain_rate: 'moderate',
+      allow_lethal_effects: false,
+      max_effect_severity: 0.8,
+      healing_speed: 'normal'
     },
     hard: {
       label: 'Hard',
@@ -57,7 +63,10 @@
       resource_multiplier: 0.5,
       health_floor: 0,
       max_health_penalty: 50,
-      resource_drain_rate: 'aggressive'
+      resource_drain_rate: 'aggressive',
+      allow_lethal_effects: true,
+      max_effect_severity: 1.0,
+      healing_speed: 'realistic'
     },
     brutal: {
       label: 'Brutal',
@@ -75,7 +84,10 @@
       resource_multiplier: 0.3,
       health_floor: 0,
       max_health_penalty: 100,
-      resource_drain_rate: 'punishing'
+      resource_drain_rate: 'punishing',
+      allow_lethal_effects: true,
+      max_effect_severity: 1.0,
+      healing_speed: 'slow'
     }
   };
 

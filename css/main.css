@@ -310,6 +310,13 @@ select:focus {
 .status-resource .status-icon { color: var(--color-text-muted); }
 .status-resource .status-value { color: var(--color-text); }
 #status-resources { display: contents; }
+#status-effects { display: contents; }
+
+/* Status effect severity chips */
+.status-effect { font-size: 0.75rem; }
+.status-effect.effect-severe { color: var(--color-danger); }
+.status-effect.effect-moderate { color: var(--color-warning); }
+.status-effect.effect-mild { color: var(--color-text-muted); }
 
 /* --- Illustration --- */
 .illustration-container {

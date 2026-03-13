@@ -134,7 +134,7 @@
         errors.push('Missing initial_world_flags object');
       }
 
-      // Resource definitions
+      // Resource definitions (legacy, still validated for Phase 1)
       if (!skeleton.resource_definitions || typeof skeleton.resource_definitions !== 'object') {
         errors.push('Missing resource_definitions object');
       } else {
@@ -159,6 +159,22 @@
             if (typeof res.base_amount !== 'number' || res.base_amount < 1) {
               errors.push('Resource ' + (ri + 1) + ' missing or invalid base_amount');
             }
+          }
+        }
+      }
+
+      // Healing context
+      if (typeof skeleton.healing_context !== 'string' || !skeleton.healing_context) {
+        errors.push('Missing or empty healing_context string');
+      }
+
+      // Starting inventory
+      if (!Array.isArray(skeleton.starting_inventory) || skeleton.starting_inventory.length === 0) {
+        errors.push('Missing or empty starting_inventory array');
+      } else {
+        for (var si = 0; si < skeleton.starting_inventory.length; si++) {
+          if (typeof skeleton.starting_inventory[si] !== 'string' || !skeleton.starting_inventory[si]) {
+            errors.push('starting_inventory item ' + (si + 1) + ' must be a non-empty string');
           }
         }
       }

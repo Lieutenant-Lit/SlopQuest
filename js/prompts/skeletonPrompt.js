@@ -51,6 +51,10 @@
       p += '      }\n';
       p += '    ]\n';
       p += '  },\n';
+      p += '  "healing_context": "string — how healing works in this setting (e.g. \'magic potions and healing spells can mend wounds in hours\', \'wounds heal naturally over days with rest and bandages\', \'nanobots repair tissue damage within minutes\')",\n';
+      p += '  "starting_inventory": [\n';
+      p += '    "string — item the character starts with, appropriate to setting and archetype"\n';
+      p += '  ],\n';
       p += '  "setting": {\n';
       p += '    "name": "string — name of the world/location",\n';
       p += '    "description": "string — 2-3 sentences describing the setting",\n';
@@ -193,6 +197,28 @@
       p += '- base_amount is the starting quantity at normal difficulty. Keep values in the 3-20 range.\n';
       p += '- Resource keys must be lowercase with underscores, no spaces.\n';
       p += '- Pick resources that create interesting trade-offs unique to THIS story. Think about what the protagonist would actually carry, spend, and worry about running out of.\n\n';
+
+      // Healing context guidance
+      p += 'HEALING CONTEXT — REQUIRED:\n';
+      p += 'Describe how healing works in THIS setting. This tells the Game Master how fast injuries should heal and what methods are available.\n';
+      p += 'Examples:\n';
+      p += '- Fantasy: "Healing potions can mend minor wounds instantly. Serious injuries require a healer or extended rest. Magic can accelerate bone-setting but leaves the patient exhausted."\n';
+      p += '- Sci-fi: "Medical nanobots repair tissue damage over hours. Severe trauma requires a medbay. Cybernetic replacements are available but expensive."\n';
+      p += '- Realistic/gritty: "Wounds heal naturally over days and weeks. Bandages stop bleeding, splints set bones. Without proper treatment, injuries can worsen or become infected."\n';
+      p += '- Superhero: "The character heals rapidly — minor injuries in minutes, major ones in hours. Only extraordinary damage poses lasting danger."\n';
+      p += 'Make it specific to your setting. If it\'s an established universe, match the lore.\n\n';
+
+      // Starting inventory guidance
+      p += 'STARTING INVENTORY — REQUIRED:\n';
+      p += 'List 3-8 concrete items the character would realistically have at the start of the story, given their archetype and setting.\n';
+      p += '- Items should be tangible, specific things — not abstract concepts or stats.\n';
+      p += '- For established settings/universes, use CANONICAL items that make sense in the lore. For example:\n';
+      p += '  - Hitchhiker\'s Guide: "a towel", "a copy of The Hitchhiker\'s Guide to the Galaxy", "a Sub-Etha Sens-O-Matic"\n';
+      p += '  - Kingkiller Chronicles musician: "a lute", "a traveler\'s cloak", "a few jots and drabs"\n';
+      p += '  - Star Wars bounty hunter: "a blaster pistol", "a set of Mandalorian armor", "a tracking fob"\n';
+      p += '- For original settings, think about what this specific character would carry: tools of their trade, personal effects, supplies.\n';
+      p += '- Currency should be a specific amount with the setting\'s currency name (e.g. "15 gold crowns", "200 credits").\n';
+      p += '- Do NOT include abstract resources, stats, or game mechanics as inventory items.\n\n';
 
       // Final requirements
       p += 'The skeleton must have:\n';
