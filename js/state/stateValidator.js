@@ -29,7 +29,6 @@
       }
 
       if (state.player) {
-        if (typeof state.player.health !== 'number') errors.push('player.health must be a number');
         if (!state.player.name) errors.push('Missing player.name');
       }
 
@@ -134,31 +133,18 @@
         errors.push('Missing initial_world_flags object');
       }
 
-      // Resource definitions
-      if (!skeleton.resource_definitions || typeof skeleton.resource_definitions !== 'object') {
-        errors.push('Missing resource_definitions object');
+      // Healing context
+      if (typeof skeleton.healing_context !== 'string' || !skeleton.healing_context) {
+        errors.push('Missing or empty healing_context string');
+      }
+
+      // Starting inventory
+      if (!Array.isArray(skeleton.starting_inventory) || skeleton.starting_inventory.length === 0) {
+        errors.push('Missing or empty starting_inventory array');
       } else {
-        var rd = skeleton.resource_definitions;
-        if (!rd.health_stat || typeof rd.health_stat.name !== 'string' || !rd.health_stat.name) {
-          errors.push('Missing or empty resource_definitions.health_stat.name');
-        }
-        if (!Array.isArray(rd.resources)) {
-          errors.push('resource_definitions.resources must be an array');
-        } else {
-          if (rd.resources.length < 2 || rd.resources.length > 3) {
-            errors.push('resource_definitions.resources must have 2-3 items, got ' + rd.resources.length);
-          }
-          for (var ri = 0; ri < rd.resources.length; ri++) {
-            var res = rd.resources[ri];
-            if (!res.key || typeof res.key !== 'string') {
-              errors.push('Resource ' + (ri + 1) + ' missing key');
-            }
-            if (!res.name || typeof res.name !== 'string') {
-              errors.push('Resource ' + (ri + 1) + ' missing name');
-            }
-            if (typeof res.base_amount !== 'number' || res.base_amount < 1) {
-              errors.push('Resource ' + (ri + 1) + ' missing or invalid base_amount');
-            }
+        for (var si = 0; si < skeleton.starting_inventory.length; si++) {
+          if (typeof skeleton.starting_inventory[si] !== 'string' || !skeleton.starting_inventory[si]) {
+            errors.push('starting_inventory item ' + (si + 1) + ' must be a non-empty string');
           }
         }
       }

@@ -29,7 +29,7 @@
       var titleEl = document.getElementById('gameover-title');
       if (isComplete) {
         titleEl.textContent = 'Story Complete';
-      } else if (state.player && state.player.health <= 0) {
+      } else if (isDeath) {
         titleEl.textContent = 'You Died';
       } else {
         titleEl.textContent = 'Game Over';
@@ -103,8 +103,9 @@
       lines.push(this._statItem('Turns', totalTurns));
       lines.push(this._statItem('Act', state.current.act || '?'));
       lines.push(this._statItem('Scene', state.current.scene_number || '?'));
-      var healthLabel = (state.meta && state.meta.health_stat_name) || 'Health';
-      lines.push(this._statItem(healthLabel, (state.player.health || 0) + '/100'));
+      if (state.current && state.current.in_game_time) {
+        lines.push(this._statItem('Time', SQ.GameState.formatTime(state.current.in_game_time)));
+      }
 
       if (isComplete) {
         // Difficulty and story length

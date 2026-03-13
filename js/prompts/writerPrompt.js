@@ -54,17 +54,32 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
-      // Resource vocabulary — Writer needs to know what to call resources in prose
-      if (gameState.meta && gameState.meta.resource_definitions) {
-        var defs = gameState.meta.resource_definitions;
-        p += 'RESOURCE VOCABULARY:\n';
-        p += '- Vitality stat: ' + defs.health_stat.name + '\n';
-        if (Array.isArray(defs.resources)) {
-          for (var vi = 0; vi < defs.resources.length; vi++) {
-            p += '- ' + defs.resources[vi].name + '\n';
+      // Status effects — Writer needs to know what the character is dealing with
+      if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
+        p += 'ACTIVE STATUS EFFECTS (weave these into the narrative naturally):\n';
+        gameState.player.status_effects.forEach(function (effect) {
+          if (typeof effect === 'object' && effect.name) {
+            p += '- ' + effect.name;
+            if (typeof effect.severity === 'number') {
+              if (effect.severity >= 0.7) p += ' (severe)';
+              else if (effect.severity >= 0.4) p += ' (moderate)';
+              else p += ' (minor)';
+            }
+            if (effect.description) p += ': ' + effect.description;
+            if (effect.time_remaining) p += ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ' remaining]';
+            p += '\n';
+          } else if (typeof effect === 'string') {
+            p += '- ' + effect + '\n';
           }
-        }
-        p += 'Use these terms naturally when the narrative involves resource gain or loss. Do NOT include numbers.\n\n';
+        });
+        p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
+      }
+
+      // In-game time awareness
+      var igt = (gameState.current && gameState.current.in_game_time) || null;
+      if (igt) {
+        p += 'IN-GAME TIME: ' + SQ.GameState.formatTime(igt) + '\n';
+        p += 'Use this for natural time references (time of day, how long since events, etc.).\n\n';
       }
 
       // Pending consequences — Writer needs to know what's looming for narrative hooks

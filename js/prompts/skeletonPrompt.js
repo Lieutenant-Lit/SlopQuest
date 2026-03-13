@@ -37,20 +37,10 @@
       p += '  "premise": "string — 2-3 sentence hook",\n';
       p += '  "central_question": "string — the dramatic question driving the story",\n';
       p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'sacrifice or survival\', \'mystery solved\', \'escape achieved\'",\n';
-      p += '  "resource_definitions": {\n';
-      p += '    "health_stat": {\n';
-      p += '      "name": "string — genre-appropriate name for the 0-100 vitality stat (e.g. Health, Morale, Composure, Sanity, Reputation)",\n';
-      p += '      "icon": "string — one of: heart, shield, brain, star, fire"\n';
-      p += '    },\n';
-      p += '    "resources": [\n';
-      p += '      {\n';
-      p += '        "key": "string — lowercase machine key, no spaces (e.g. scrap, ammo, social_capital)",\n';
-      p += '        "name": "string — display name (e.g. Scrap, Ammo, Social Capital)",\n';
-      p += '        "icon": "string — one of: money, food, ammo, magnifier, handshake, potion, gem, scroll, tool, star",\n';
-      p += '        "base_amount": "number — starting quantity at normal difficulty (3-20 range)"\n';
-      p += '      }\n';
-      p += '    ]\n';
-      p += '  },\n';
+      p += '  "healing_context": "string — how healing works in this setting (e.g. \'magic potions and healing spells can mend wounds in hours\', \'wounds heal naturally over days with rest and bandages\', \'nanobots repair tissue damage within minutes\')",\n';
+      p += '  "starting_inventory": [\n';
+      p += '    "string — item the character starts with, appropriate to setting and archetype"\n';
+      p += '  ],\n';
       p += '  "setting": {\n';
       p += '    "name": "string — name of the world/location",\n';
       p += '    "description": "string — 2-3 sentences describing the setting",\n';
@@ -102,7 +92,6 @@
       p += 'DIFFICULTY RULES (' + difficulty.label + '):\n';
       p += '- Safe choice ratio: ' + difficulty.safe_choice_ratio + ' (proportion of choices that are safe)\n';
       p += '- Consequence severity: ' + difficulty.consequence_severity + '\n';
-      p += '- Resource abundance: ' + difficulty.resource_abundance + '\n';
       p += '- Game over allowed: ' + difficulty.allow_game_over + '\n';
       p += '- Game over frequency: ' + difficulty.game_over_frequency + '\n';
       p += '- Hint transparency: ' + difficulty.hint_transparency + '\n';
@@ -116,27 +105,24 @@
         p += 'CHILL DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- The skeleton must NEVER include death states, lethal outcomes, or game_over triggers\n';
         p += '- All choices should lead to interesting story developments, not punishments\n';
-        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never health-threatening\n';
+        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never threatening\n';
         p += '- NPCs should be generally helpful or at worst inconvenient — no genuinely hostile NPCs that threaten the player\n';
-        p += '- Resources should be plentiful and easy to acquire. Include opportunities to gain resources in most scenes\n';
         p += '- Locked constraints should protect the player from accidentally entering dangerous situations\n';
         p += '- The key_beats should focus on discovery, relationships, and narrative progression — not survival\n\n';
       } else if (setupConfig.difficulty === 'normal') {
         p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- The skeleton must NOT include death states or game_over triggers\n';
-        p += '- Consequences should be meaningful but recoverable — health loss (never below 10), resource drain, relationship damage\n';
+        p += '- Consequences should be meaningful but recoverable — status effects, relationship damage, lost items\n';
         p += '- Include both safe and risky choices. Risky choices should have bigger rewards but real mechanical costs\n';
         p += '- NPCs can be hostile but should offer paths to resolution or avoidance\n';
-        p += '- Include some resource scarcity but also reliable ways to recover resources\n';
         p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
       } else if (setupConfig.difficulty === 'hard') {
         p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- Death is possible but rare: include at most 1 lethal choice per act\n';
         p += '- Lethal choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
-        p += '- Include severe consequences: major health loss (up to 50), resource depletion, permanent NPC hostility\n';
-        p += '- Resources are scarce. Gaining resources should require risky choices or NPC favors\n';
+        p += '- Include severe consequences: serious status effects, permanent NPC hostility, lost items\n';
         p += '- Pending consequences should escalate quickly (1-2 scenes) and hit hard when they trigger\n';
-        p += '- Recovery paths exist but require sacrifice — healing costs resources, alliances cost favors\n';
+        p += '- Recovery paths exist but require sacrifice — healing requires effort, alliances cost favors\n';
         p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
       } else if (setupConfig.difficulty === 'brutal') {
         p += 'BRUTAL DIFFICULTY REQUIREMENTS:\n';
@@ -145,10 +131,8 @@
         p += '- No scene may have more than two advance_safe options\n';
         p += '- At least one death per act must be non-obvious (requires interpreting earlier clues)\n';
         p += '- Create genuine trap logic — choices that SOUND safe but are lethal based on earlier context the player may not have noticed\n';
-        p += '- Resources are desperately scarce. Starting with almost nothing, gaining resources is rare and costly\n';
         p += '- Consequences are immediate and severe. Pending consequences trigger within 0-1 scenes\n';
         p += '- NPCs never forgive. A single wrong move with an NPC should permanently close that relationship\n';
-        p += '- Health penalties should be large (30-100). A bad choice can kill from full health\n';
         p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';
       }
 
@@ -162,7 +146,7 @@
         }
       } else if (setupConfig.storyLength === 'long') {
         if (setupConfig.difficulty === 'brutal' || setupConfig.difficulty === 'hard') {
-          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns. Resource management is critical.\n';
+          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns. Status effects stack and healing is scarce.\n';
         } else {
           p += '- Long story: develop subplots, deepen NPC relationships, let consequences play out over many scenes.\n';
         }
@@ -171,28 +155,27 @@
       }
       p += '\n';
 
-      // Resource definitions guidance
-      p += 'RESOURCE DEFINITIONS — CRITICAL:\n';
-      p += 'Resources and the health stat MUST be tailored to THIS story\'s genre, setting, and tone. Generic resources break immersion.\n\n';
-      p += 'Health stat name examples by genre:\n';
-      p += '- Post-apocalyptic: Grit, Endurance, Radiation Resistance\n';
-      p += '- Horror: Sanity, Nerve, Composure\n';
-      p += '- Noir/mystery: Composure, Cool, Credibility\n';
-      p += '- Romance: Confidence, Heart, Poise\n';
-      p += '- Sci-fi: Hull Integrity, Oxygen, System Status\n';
-      p += '- Comedy: Dignity, Chill, Vibes\n';
-      p += '- Fantasy: Health, Vitality, Life Force\n\n';
-      p += 'Resource examples by genre (use as inspiration, invent your own):\n';
-      p += '- Post-apocalyptic: scrap, rations, fuel, ammo, water, medicine\n';
-      p += '- Horror: ammunition, flashlight_batteries, sanity_tokens, holy_water\n';
-      p += '- Noir/mystery: cash, leads, favors, contacts, evidence\n';
-      p += '- Romance: charm, reputation, social_capital, gossip\n';
-      p += '- Sci-fi: credits, fuel_cells, data_shards, oxygen\n';
-      p += '- Comedy: snacks, clout, luck, excuses\n';
-      p += '- Fantasy: gold, provisions, mana, potions\n\n';
-      p += '- base_amount is the starting quantity at normal difficulty. Keep values in the 3-20 range.\n';
-      p += '- Resource keys must be lowercase with underscores, no spaces.\n';
-      p += '- Pick resources that create interesting trade-offs unique to THIS story. Think about what the protagonist would actually carry, spend, and worry about running out of.\n\n';
+      // Healing context guidance
+      p += 'HEALING CONTEXT — REQUIRED:\n';
+      p += 'Describe how healing works in THIS setting. This tells the Game Master how fast injuries should heal and what methods are available.\n';
+      p += 'Examples:\n';
+      p += '- Fantasy: "Healing potions can mend minor wounds instantly. Serious injuries require a healer or extended rest. Magic can accelerate bone-setting but leaves the patient exhausted."\n';
+      p += '- Sci-fi: "Medical nanobots repair tissue damage over hours. Severe trauma requires a medbay. Cybernetic replacements are available but expensive."\n';
+      p += '- Realistic/gritty: "Wounds heal naturally over days and weeks. Bandages stop bleeding, splints set bones. Without proper treatment, injuries can worsen or become infected."\n';
+      p += '- Superhero: "The character heals rapidly — minor injuries in minutes, major ones in hours. Only extraordinary damage poses lasting danger."\n';
+      p += 'Make it specific to your setting. If it\'s an established universe, match the lore.\n\n';
+
+      // Starting inventory guidance
+      p += 'STARTING INVENTORY — REQUIRED:\n';
+      p += 'List 3-8 concrete items the character would realistically have at the start of the story, given their archetype and setting.\n';
+      p += '- Items should be tangible, specific things — not abstract concepts or stats.\n';
+      p += '- For established settings/universes, use CANONICAL items that make sense in the lore. For example:\n';
+      p += '  - Hitchhiker\'s Guide: "a towel", "a copy of The Hitchhiker\'s Guide to the Galaxy", "a Sub-Etha Sens-O-Matic"\n';
+      p += '  - Kingkiller Chronicles musician: "a lute", "a traveler\'s cloak", "a few jots and drabs"\n';
+      p += '  - Star Wars bounty hunter: "a blaster pistol", "a set of Mandalorian armor", "a tracking fob"\n';
+      p += '- For original settings, think about what this specific character would carry: tools of their trade, personal effects, supplies.\n';
+      p += '- Currency should be a specific amount with the setting\'s currency name (e.g. "15 gold crowns", "200 credits").\n';
+      p += '- Do NOT include abstract resources, stats, or game mechanics as inventory items.\n\n';
 
       // Final requirements
       p += 'The skeleton must have:\n';
