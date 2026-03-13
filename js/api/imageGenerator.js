@@ -45,10 +45,7 @@
         })
         .catch(function (err) {
           // Graceful degradation: log full error detail and return null
-          console.warn('ImageGenerator: generation failed, degrading to text-only.');
-          console.warn('  Model:', model);
-          console.warn('  Error:', err.message || err);
-          if (err.code) console.warn('  Code:', err.code);
+          SQ.Logger.warn('Image', 'Generation failed, degrading to text-only', { model: model, error: err.message || String(err), code: err.code });
           return null;
         });
     },
@@ -130,7 +127,7 @@
         }
       }
 
-      console.warn('ImageGenerator: could not extract image from response', JSON.stringify(response).slice(0, 200));
+      SQ.Logger.warn('Image', 'Could not extract image from response', { responsePreview: JSON.stringify(response).slice(0, 200) });
       return null;
     },
 

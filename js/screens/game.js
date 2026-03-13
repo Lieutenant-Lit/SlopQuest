@@ -347,7 +347,7 @@
           self._hideChoiceStatus();
 
         }).catch(function (err) {
-          console.error('Game Master failed:', err);
+          SQ.Logger.error('GameMaster', 'Generation failed', { error: err.message });
 
           // Show error overlay — choices remain disabled
           SQ.ErrorOverlay.show(err, {
@@ -373,7 +373,7 @@
                 self._enableChoices();
                 self._hideChoiceStatus();
               }).catch(function (retryErr) {
-                console.error('Game Master retry failed:', retryErr);
+                SQ.Logger.error('GameMaster', 'Retry failed', { error: retryErr.message });
                 SQ.ErrorOverlay.show(retryErr, {
                   onRetry: function () {
                     self.makeChoice(choiceId);
@@ -388,7 +388,7 @@
         // Writer call failed — full retry
         self.hideLoading();
         self._enableChoices();
-        console.error('Writer generation failed:', err);
+        SQ.Logger.error('Writer', 'Generation failed', { error: err.message });
 
         SQ.ErrorOverlay.show(err, {
           onRetry: function () {
@@ -415,11 +415,15 @@
      */
     applyGameMasterResponse: function (state, gmResponse) {
       var updates = gmResponse.state_updates || {};
+      var healthBefore = state.player.health;
 
       // 1. Player changes (health, resources, inventory, status_effects, skills)
       if (updates.player_changes) {
         var pc = updates.player_changes;
-        if (typeof pc.health === 'number') state.player.health = pc.health;
+        var hd = pc.health_delta != null ? pc.health_delta : pc.health;
+        if (typeof hd === 'number') {
+          state.player.health = Math.max(0, Math.min(100, state.player.health + hd));
+        }
         if (pc.resources) Object.assign(state.player.resources, pc.resources);
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
         if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
@@ -495,6 +499,17 @@
           }
         }
       }
+
+      // Log GM state updates (critical for diagnosing unexpected outcomes)
+      SQ.Logger.info('GameMaster', 'Applied state updates', {
+        healthBefore: healthBefore,
+        healthAfter: state.player.health,
+        healthDelta: state.player.health - healthBefore,
+        choiceMetadata: gmResponse.choice_metadata,
+        gameOver: updates.game_over,
+        storyComplete: updates.story_complete,
+        eventLog: updates.event_log_entry
+      });
 
       // 11. Enforce difficulty health floor (client-side safety net)
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
@@ -587,7 +602,6 @@
       var html = '';
       var meta = state.meta || {};
       var player = state.player || {};
-      var narrator = state.narrator || {};
       var current = state.current || {};
       var resources = player.resources || {};
 
@@ -595,8 +609,7 @@
       var metaBody = '';
       metaBody += self._gsdRow('Title', self._esc(meta.title || '—'));
       metaBody += self._gsdRow('Setting', self._esc(meta.setting || '—'));
-      metaBody += self._gsdRow('Tone', self._esc(meta.tone || '—'));
-      metaBody += self._gsdRow('Writing Style', self._esc(meta.writing_style || '—'));
+      metaBody += self._gsdRow('Style &amp; Tone', self._esc(meta.writing_style || meta.tone || '—'));
       metaBody += self._gsdRow('Perspective', self._esc(meta.perspective || '—'));
       metaBody += self._gsdRow('Tense', self._esc(meta.tense || '—'));
       metaBody += self._gsdRow('Difficulty', self._esc(meta.difficulty || '—'));
@@ -623,8 +636,6 @@
       var playerBody = '';
       playerBody += self._gsdRow('Name', self._esc(player.name || '—'));
       playerBody += self._gsdRow('Archetype', self._esc(player.archetype || '—'));
-      playerBody += self._gsdRow('Voice Gender', self._esc(player.voice_gender || '—'));
-      playerBody += self._gsdRow('Voice Direction', self._esc(player.voice_direction || '—'));
       var healthVal = typeof player.health === 'number' ? player.health : 100;
       var healthColor = healthVal > 60 ? 'var(--color-success)' : healthVal > 25 ? 'var(--color-warning)' : 'var(--color-danger)';
       var healthLabel = (meta.health_stat_name) || 'Health';
@@ -655,13 +666,7 @@
       }
       html += self._gsdSection('Player', playerBody, false);
 
-      // 4. Narrator
-      var narrBody = '';
-      narrBody += self._gsdRow('Voice Gender', self._esc(narrator.voice_gender || '—'));
-      narrBody += self._gsdRow('Voice Direction', self._esc(narrator.voice_direction || '—'));
-      html += self._gsdSection('Narrator', narrBody, false);
-
-      // 5. Position
+      // 4. Position
       var posBody = '';
       posBody += self._gsdRow('Act / Scene', 'Act ' + (current.act || 1) + ' / Scene ' + (current.scene_number || 1));
       posBody += self._gsdRow('Location', self._esc(current.location || '—'));

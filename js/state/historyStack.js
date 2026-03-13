@@ -108,7 +108,7 @@
             // keep trimming
           }
         }
-        console.warn('HistoryStack: localStorage save failed after trimming', e);
+        SQ.Logger.warn('State', 'HistoryStack: localStorage save failed after trimming', { error: e.message });
       }
     },
 
@@ -125,7 +125,7 @@
           return true;
         }
       } catch (e) {
-        console.warn('HistoryStack: failed to load from localStorage', e);
+        SQ.Logger.warn('State', 'HistoryStack: failed to load from localStorage', { error: e.message });
       }
       stack = [];
       return false;

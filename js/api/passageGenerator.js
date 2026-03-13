@@ -41,7 +41,7 @@
         // Phase 2: Fire The Game Master (returns a promise the caller can await)
         var gmModel = SQ.PlayerConfig.getModel('gamemaster');
         var gmSystem = SQ.GameMasterPrompt.buildSystem(gameState);
-        var gmUser = SQ.GameMasterPrompt.buildUser(gameState, writerResponse);
+        var gmUser = SQ.GameMasterPrompt.buildUser(gameState, writerResponse, choiceId);
         var difficulty = (gameState.meta && gameState.meta.difficulty) || 'normal';
 
         var gameMasterPromise = self._attemptCall(
@@ -79,6 +79,10 @@
         { role: 'user', content: userPrompt }
       ];
 
+      if (attempt === 0) {
+        SQ.Logger.info(label, 'Calling LLM', { model: model, temperature: options.temperature });
+      }
+
       return SQ.API.call(model, messages, options)
         .then(function (raw) {
           var response;
@@ -87,7 +91,7 @@
           try {
             response = SQ.API.parseJSON(raw);
           } catch (e) {
-            console.warn(label + ': JSON parse failed (attempt ' + (attempt + 1) + ')', e.message);
+            SQ.Logger.warn(label, 'JSON parse failed (attempt ' + (attempt + 1) + ')', { attempt: attempt, error: e.message, rawPreview: typeof raw === 'string' ? raw.substring(0, 500) : '' });
             if (attempt < 1) {
               return self._attemptCall(model, systemPrompt, userPrompt, options, label, validateFn, attempt + 1);
             }
@@ -97,12 +101,17 @@
           // Validate
           var result = validateFn(response);
           if (!result.valid) {
-            console.warn(label + ': validation failed (attempt ' + (attempt + 1) + '):', result.errors);
+            SQ.Logger.warn(label, 'Validation failed (attempt ' + (attempt + 1) + ')', { attempt: attempt, errors: result.errors });
             if (attempt < 1) {
               return self._attemptCall(model, systemPrompt, userPrompt, options, label, validateFn, attempt + 1);
             }
             throw new Error('The AI returned an incomplete response. Errors: ' + result.errors.join(', '));
           }
+
+          SQ.Logger.info(label, 'Response OK', {
+            passagePreview: response.passage ? response.passage.substring(0, 100) : undefined,
+            choiceCount: response.choices ? Object.keys(response.choices).length : undefined
+          });
 
           return response;
         });

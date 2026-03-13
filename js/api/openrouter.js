@@ -125,7 +125,7 @@
             return { error: { message: 'HTTP ' + response.status } };
           }).then(function (errorBody) {
             var serverMsg = (errorBody.error && errorBody.error.message) || ('HTTP ' + response.status);
-            console.error('OpenRouter API error (' + response.status + '):', serverMsg);
+            SQ.Logger.error('API', 'HTTP error (' + response.status + ')', { status: response.status, message: serverMsg, model: model });
 
             if (response.status === 401 || response.status === 403) {
               throw new APIError(
@@ -171,6 +171,7 @@
               ErrorCodes.MALFORMED_RESPONSE
             );
           }
+          SQ.Logger.info('API', 'Call OK', { model: model, usage: data.usage });
           var msg = data.choices[0].message;
 
           // Return the full message for image callers (they need msg.images).

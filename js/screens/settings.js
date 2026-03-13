@@ -76,6 +76,16 @@
         SQ.PlayerConfig.setGameStateDebugEnabled(this.checked);
       });
 
+      // Logging toggle
+      document.getElementById('settings-log-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setLoggingEnabled(this.checked);
+      });
+
+      // View logs button
+      document.getElementById('btn-view-logs').addEventListener('click', function () {
+        SQ.LogViewer.show();
+      });
+
       // ElevenLabs API key validation
       document.getElementById('btn-validate-elevenlabs').addEventListener('click', function () {
         self.validateElevenLabsKey();
@@ -159,6 +169,10 @@
 
       document.getElementById('settings-gamestate-debug-toggle').checked =
         SQ.PlayerConfig.isGameStateDebugEnabled();
+
+      // Set logging toggle state
+      document.getElementById('settings-log-toggle').checked =
+        SQ.PlayerConfig.isLoggingEnabled();
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();

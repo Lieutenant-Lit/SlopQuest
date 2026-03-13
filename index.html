@@ -89,6 +89,11 @@
           <input type="checkbox" id="settings-audio-debug-toggle">
           <span>Audio debug overlay</span>
         </label>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-log-toggle">
+          <span>Enable persistent logging</span>
+        </label>
+        <button id="btn-view-logs" class="btn btn-secondary" style="margin-top: var(--spacing-sm);">View Logs</button>
       </div>
 
       <button id="btn-save-settings" class="btn btn-primary btn-large">Continue to Menu</button>
@@ -119,81 +124,61 @@
 
       <div class="card">
         <h2>Setting / Universe</h2>
-        <p>Pick a world or describe your own.</p>
-        <div class="setup-options" data-group="setting">
-          <button class="setup-option active" data-value="dark fantasy">Fantasy</button>
-          <button class="setup-option" data-value="sci-fi">Sci-Fi</button>
-          <button class="setup-option" data-value="horror">Horror</button>
-          <button class="setup-option" data-value="post-apocalyptic">Post-Apocalyptic</button>
-          <button class="setup-option" data-value="historical">Historical</button>
-          <button class="setup-option" data-value="mystery">Mystery</button>
-          <button class="setup-option" data-value="custom">Custom...</button>
+        <p>Describe your world, or pick a genre to get started.</p>
+        <input type="text" id="setup-setting-text" placeholder="Describe your world...">
+        <div class="setup-chips" data-chip-target="setup-setting-text">
+          <button class="setup-chip" data-value="dark fantasy">Fantasy</button>
+          <button class="setup-chip" data-value="sci-fi">Sci-Fi</button>
+          <button class="setup-chip" data-value="horror">Horror</button>
+          <button class="setup-chip" data-value="post-apocalyptic">Post-Apocalyptic</button>
+          <button class="setup-chip" data-value="historical">Historical</button>
+          <button class="setup-chip" data-value="mystery">Mystery</button>
         </div>
-        <input type="text" id="setup-setting-custom" class="hidden" placeholder="Describe your setting or name a universe...">
       </div>
 
       <div class="card">
         <h2>Character</h2>
         <p>Broad archetype — the skeleton fills in the details.</p>
         <input type="text" id="setup-archetype" placeholder="e.g. disgraced knight, rogue scholar, starship mechanic...">
-        <input type="text" id="setup-name" placeholder="Character name (optional)">
-        <select id="setup-voice-gender">
-          <option value="">Character voice (optional)</option>
-          <option value="masculine">Masculine</option>
-          <option value="feminine">Feminine</option>
-          <option value="non-binary">Non-Binary</option>
-        </select>
-        <input type="text" id="setup-voice-direction" placeholder="Voice direction (e.g. British accent, elderly, raspy...)">
+        <input type="text" id="setup-name" class="setup-input-secondary" placeholder="Character name (optional)">
       </div>
 
       <div class="card">
-        <h2>Narrator Voice</h2>
-        <p>Voice style for the narrator (requires ElevenLabs key).</p>
-        <select id="setup-narrator-gender">
-          <option value="">Narrator voice (optional)</option>
-          <option value="masculine">Masculine</option>
-          <option value="feminine">Feminine</option>
-          <option value="non-binary">Non-Binary</option>
-        </select>
-        <input type="text" id="setup-narrator-direction" placeholder="Voice direction (e.g. warm baritone, British, young...)">
-      </div>
-
-      <div class="card">
-        <h2>Writing Style</h2>
-        <div class="setup-options" data-group="writingStyle">
-          <button class="setup-option active" data-value="literary">Literary</button>
-          <button class="setup-option" data-value="pulpy">Pulpy</button>
-          <button class="setup-option" data-value="minimalist">Minimalist</button>
-          <button class="setup-option" data-value="flowery">Flowery</button>
-          <button class="setup-option" data-value="humorous">Humorous</button>
+        <h2>Style &amp; Tone</h2>
+        <p>How should the story read? Describe a style, name an author, or pick from the chips.</p>
+        <input type="text" id="setup-style-tone-text" placeholder="e.g., Cormac McCarthy meets Terry Pratchett">
+        <div class="setup-chips" data-chip-target="setup-style-tone-text">
+          <button class="setup-chip" data-value="literary">Literary</button>
+          <button class="setup-chip" data-value="pulpy">Pulpy</button>
+          <button class="setup-chip" data-value="minimalist">Minimalist</button>
+          <button class="setup-chip" data-value="flowery">Flowery</button>
+          <button class="setup-chip" data-value="humorous">Humorous</button>
+          <button class="setup-chip" data-value="dark and gritty">Dark &amp; Gritty</button>
+          <button class="setup-chip" data-value="epic and mythic">Epic &amp; Mythic</button>
+          <button class="setup-chip" data-value="mysterious">Mysterious</button>
+          <button class="setup-chip" data-value="comedic">Comedic</button>
+          <button class="setup-chip" data-value="whimsical">Whimsical</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>Tone</h2>
-        <div class="setup-options" data-group="tone">
-          <button class="setup-option active" data-value="dark and gritty">Dark &amp; Gritty</button>
-          <button class="setup-option" data-value="epic and mythic">Epic &amp; Mythic</button>
-          <button class="setup-option" data-value="mysterious">Mysterious</button>
-          <button class="setup-option" data-value="comedic">Comedic</button>
-          <button class="setup-option" data-value="whimsical">Whimsical</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Perspective</h2>
-        <div class="setup-options" data-group="perspective">
-          <button class="setup-option" data-value="first person">First Person</button>
-          <button class="setup-option active" data-value="second person">Second Person</button>
-          <button class="setup-option" data-value="third person">Third Person</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Tense</h2>
-        <div class="setup-options" data-group="tense">
-          <button class="setup-option" data-value="past">Past</button>
-          <button class="setup-option active" data-value="present">Present</button>
+        <h2>Perspective &amp; Tense</h2>
+        <div class="setup-inline-groups">
+          <div class="setup-inline-group">
+            <span class="setup-inline-label">Perspective</span>
+            <div class="setup-options" data-group="perspective">
+              <button class="setup-option" data-value="first person">1st</button>
+              <button class="setup-option active" data-value="second person">2nd</button>
+              <button class="setup-option" data-value="third person">3rd</button>
+            </div>
+          </div>
+          <div class="setup-inline-group">
+            <span class="setup-inline-label">Tense</span>
+            <div class="setup-options" data-group="tense">
+              <button class="setup-option" data-value="past">Past</button>
+              <button class="setup-option active" data-value="present">Present</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -235,23 +220,6 @@
             <span class="option-label">Long</span>
             <span class="option-desc">50-70 turns &middot; ~90-150 min &middot; ~$2.00-5.00</span>
           </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Multimodal</h2>
-        <div class="setup-toggle-row">
-          <!-- Illustrations temporarily disabled -->
-          <label class="setup-toggle hidden">
-            <input type="checkbox" id="setup-illustrations-toggle">
-            <span>Illustrations</span>
-            <span class="option-desc">AI-generated scene art (uses extra API credits)</span>
-          </label>
-          <label class="setup-toggle">
-            <input type="checkbox" id="setup-narration-toggle">
-            <span>Narration</span>
-            <span class="option-desc">AI voice narration of passages (uses extra API credits)</span>
-          </label>
         </div>
       </div>
 
@@ -385,11 +353,36 @@
     <button id="btn-dev-toggle" title="Toggle Mock/Live mode">MOCK</button>
   </div>
 
+  <!-- Log Viewer Overlay -->
+  <div id="log-viewer" class="overlay hidden">
+    <div class="overlay-content log-viewer-content">
+      <div class="log-viewer-header">
+        <h2>Session Logs</h2>
+        <div class="log-viewer-controls">
+          <select id="log-filter-level">
+            <option value="">All Levels</option>
+            <option value="error">Errors</option>
+            <option value="warn">Warnings</option>
+            <option value="info">Info</option>
+          </select>
+          <select id="log-filter-category">
+            <option value="">All Categories</option>
+          </select>
+          <button id="btn-log-export" class="btn btn-secondary">Export</button>
+          <button id="btn-log-clear" class="btn btn-secondary">Clear</button>
+          <button id="btn-log-close" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+      <div id="log-entries" class="log-entries"></div>
+    </div>
+  </div>
+
   <!-- ===== SCRIPTS (dependency order) ===== -->
   <script>window.SQ = { Screens: {} };</script>
 
   <!-- State modules (no deps) -->
   <script src="js/state/playerConfig.js"></script>
+  <script src="js/state/logger.js"></script>
   <script src="js/state/gameState.js"></script>
   <script src="js/state/historyStack.js"></script>
   <script src="js/state/stateValidator.js"></script>
@@ -404,6 +397,7 @@
 
   <!-- UI modules -->
   <script src="js/ui/errorOverlay.js"></script>
+  <script src="js/ui/logViewer.js"></script>
 
   <!-- Prompt modules -->
   <script src="js/prompts/difficultyConfig.js"></script>

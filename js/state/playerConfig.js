@@ -20,7 +20,8 @@
     narration_enabled: false,
     audio_debug_enabled: false,
     game_state_debug_enabled: false,
-    disable_default_voices: false
+    disable_default_voices: false,
+    logging_enabled: false
   };
 
   // Mock mode flag — default true for development
@@ -37,7 +38,8 @@
           return JSON.parse(raw);
         }
       } catch (e) {
-        console.warn('PlayerConfig: failed to parse stored config', e);
+        if (SQ.Logger) { SQ.Logger.warn('Config', 'Failed to parse stored config', { error: e.message }); }
+        else { console.warn('PlayerConfig: failed to parse stored config', e); }
       }
       return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     },
@@ -202,6 +204,17 @@
     setDisableDefaultVoicesEnabled: function (enabled) {
       var config = this.load();
       config.disable_default_voices = !!enabled;
+      this.save(config);
+    },
+
+    isLoggingEnabled: function () {
+      var config = this.load();
+      return config.logging_enabled === true;
+    },
+
+    setLoggingEnabled: function (enabled) {
+      var config = this.load();
+      config.logging_enabled = !!enabled;
       this.save(config);
     }
   };

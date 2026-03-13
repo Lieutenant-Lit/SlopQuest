@@ -66,7 +66,7 @@
 
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
       if (!elevenLabsKey) {
-        console.warn('AudioDirector: no ElevenLabs API key configured');
+        SQ.Logger.warn('Audio', 'No ElevenLabs API key configured');
         return Promise.resolve(false);
       }
 
@@ -86,7 +86,7 @@
           // results[1] = casting (already applied to registry via _validateAndApplyVoiceAssignments)
 
           if (!segmentResult || !segmentResult.segments || segmentResult.segments.length === 0) {
-            console.warn('AudioDirector: LLM returned empty audio script');
+            SQ.Logger.warn('Audio', 'LLM returned empty audio script');
             return false;
           }
           _lastAnalysisSegments = segmentResult.segments;
@@ -115,8 +115,7 @@
         })
         .catch(function (err) {
           if (err.name === 'AbortError') return false;
-          console.warn('AudioDirector: generation failed, degrading to text-only.');
-          console.warn('  Error:', err.message || err);
+          SQ.Logger.warn('Audio', 'Generation failed, degrading to text-only', { error: err.message || String(err) });
           return false;
         });
     },
@@ -302,7 +301,7 @@
             }
           }
           if (resolved) {
-            console.log('AudioDirector: resolved voice name "' + voiceId + '" to ID ' + resolved);
+            SQ.Logger.info('Audio', 'Resolved voice name', { voiceName: voiceId, resolvedId: resolved });
             voiceId = resolved;
           }
         }
@@ -316,14 +315,13 @@
           };
           usedVoiceIds[voiceId] = true;
           changed = true;
-          console.log('AudioDirector: LLM assigned ' + characterKey + ' -> ' + (voiceNameMap[voiceId] || voiceId));
-          if (justification) console.log('  Justification: ' + justification);
+          SQ.Logger.info('Audio', 'Voice cast', { character: characterKey, voice: voiceNameMap[voiceId] || voiceId, justification: justification });
         } else {
           // Fallback to keyword matching
           if (voiceId) {
-            console.warn('AudioDirector: FALLBACK — LLM returned invalid voice_id "' + voiceId + '" for ' + characterKey + ', using keyword matching instead');
+            SQ.Logger.warn('Audio', 'Fallback: invalid voice_id from LLM', { character: characterKey, voiceId: voiceId });
           } else {
-            console.warn('AudioDirector: FALLBACK — no voice_id from LLM for ' + characterKey + ', using keyword matching instead');
+            SQ.Logger.warn('Audio', 'Fallback: no voice_id from LLM', { character: characterKey });
           }
           var bestVoice = self._fallbackMatchVoice(description || '', usedVoiceIds);
           if (bestVoice) {
@@ -335,7 +333,7 @@
             };
             usedVoiceIds[bestVoice.voice_id] = true;
             changed = true;
-            console.warn('AudioDirector: FALLBACK assigned ' + characterKey + ' -> ' + bestVoice.name);
+            SQ.Logger.warn('Audio', 'Fallback voice assigned', { character: characterKey, voice: bestVoice.name });
           }
         }
       };
@@ -445,7 +443,7 @@
         try {
           return SQ.API.parseJSON(response);
         } catch (e) {
-          console.warn('AudioDirector: failed to parse segmentation JSON', e);
+          SQ.Logger.warn('Audio', 'Failed to parse segmentation JSON', { error: e.message });
           return { segments: [{ type: 'narration', text: passage }] };
         }
       });
@@ -548,7 +546,7 @@
           self._validateAndApplyVoiceAssignments(castResult, gameState);
           return castResult;
         } catch (e) {
-          console.warn('AudioDirector: failed to parse casting JSON', e);
+          SQ.Logger.warn('Audio', 'Failed to parse casting JSON', { error: e.message });
           return { voice_assignments: {} };
         }
       });
@@ -568,7 +566,7 @@
         var raw = localStorage.getItem(VOICE_REGISTRY_KEY);
         if (raw) return JSON.parse(raw);
       } catch (e) {
-        console.warn('AudioDirector: failed to load voice registry', e);
+        SQ.Logger.warn('Audio', 'Failed to load voice registry', { error: e.message });
       }
       return {};
     },
@@ -596,7 +594,7 @@
       // 1. Case-insensitive exact match
       for (var i = 0; i < keys.length; i++) {
         if (keys[i].toLowerCase() === speakerLower) {
-          console.log('AudioDirector: fuzzy match (case) "' + speaker + '" -> "' + keys[i] + '"');
+          SQ.Logger.info('Audio', 'Fuzzy match (case)', { speaker: speaker, matched: keys[i] });
           return registry[keys[i]];
         }
       }
@@ -610,7 +608,7 @@
         }
       }
       if (substringMatches.length === 1) {
-        console.log('AudioDirector: fuzzy match (substring) "' + speaker + '" -> "' + substringMatches[0] + '"');
+        SQ.Logger.info('Audio', 'Fuzzy match (substring)', { speaker: speaker, matched: substringMatches[0] });
         return registry[substringMatches[0]];
       }
 
@@ -631,7 +629,7 @@
         }
       }
       if (bestKey) {
-        console.log('AudioDirector: fuzzy match (word overlap) "' + speaker + '" -> "' + bestKey + '"');
+        SQ.Logger.info('Audio', 'Fuzzy match (word overlap)', { speaker: speaker, matched: bestKey });
         return registry[bestKey];
       }
 
@@ -651,7 +649,7 @@
      * @private
      */
     _fallbackMatchVoice: function (description, usedVoiceIds) {
-      console.warn('AudioDirector: falling back to keyword matching for "' + description + '"');
+      SQ.Logger.warn('Audio', 'Falling back to keyword matching', { description: description });
       if (!_availableVoices || _availableVoices.length === 0) return null;
 
       var desc = (description || '').toLowerCase();
@@ -720,8 +718,7 @@
       // Sort by score descending
       scored.sort(function (a, b) { return b.score - a.score; });
 
-      console.log('AudioDirector: voice match for "' + description + '":',
-        scored.slice(0, 3).map(function (s) { return s.voice.name + ' (' + s.score + ')'; }).join(', '));
+      SQ.Logger.info('Audio', 'Voice match', { description: description, top: scored.slice(0, 3).map(function (s) { return s.voice.name + ' (' + s.score + ')'; }).join(', ') });
 
       return scored[0].voice;
     },
@@ -787,7 +784,7 @@
             localStorage.setItem(VOICE_CACHE_KEY, JSON.stringify(_availableVoices));
           } catch (e) { /* ignore quota errors */ }
 
-          console.log('AudioDirector: loaded ' + _availableVoices.length + ' voices from ElevenLabs');
+          SQ.Logger.info('Audio', 'Loaded voices from ElevenLabs', { count: _availableVoices.length });
         });
     },
 
@@ -839,7 +836,7 @@
           return response.arrayBuffer();
         })
         .then(function (buffer) {
-          console.log('AudioDirector: segment audio buffer size:', buffer.byteLength);
+          SQ.Logger.info('Audio', 'Segment audio buffer', { byteLength: buffer.byteLength });
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
@@ -898,7 +895,7 @@
           }
 
           if (!voiceId) {
-            console.warn('AudioDirector: no voice assigned for', speaker);
+            SQ.Logger.warn('Audio', 'No voice assigned', { speaker: speaker });
             return;
           }
 
@@ -919,7 +916,7 @@
               });
             })
             .catch(function (err) {
-              console.warn('AudioDirector: segment ' + i + ' failed:', err.message);
+              SQ.Logger.warn('Audio', 'Segment failed', { segment: i, error: err.message });
               // Skip failed segments, continue with the rest
             });
         });
@@ -970,13 +967,13 @@
       audio.addEventListener('error', function () {
         if (!advanced) {
           advanced = true;
-          console.warn('AudioDirector: playback error on segment', index);
+          SQ.Logger.warn('Audio', 'Playback error on segment', { segment: index });
           self._playSegment(index + 1);
         }
       });
 
       audio.play().catch(function (err) {
-        console.warn('AudioDirector: autoplay blocked', err.message);
+        SQ.Logger.warn('Audio', 'Autoplay blocked', { error: err.message });
         _isPlaying = false;
         self._updateControls();
       });
