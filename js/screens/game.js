@@ -211,8 +211,9 @@
         passageEl.appendChild(el);
       });
 
-      // Scroll passage to top when new content arrives
+      // Scroll passage and page to top when new content arrives
       passageEl.scrollTop = 0;
+      window.scrollTo(0, 0);
     },
 
     /**
