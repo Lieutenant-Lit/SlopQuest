@@ -498,21 +498,36 @@
         }
       }
 
-      // Log GM state updates
-      SQ.Logger.info('GameMaster', 'Applied state updates', {
-        timeElapsed: timeElapsed,
-        statusEffects: (state.player.status_effects || []).map(function (e) {
+      // Log GM state updates — build object conditionally to avoid undefined noise
+      var _gmLog = {};
+      if (timeElapsed) _gmLog.time = SQ.GameState.formatDuration(timeElapsed);
+      var _efx = (state.player.status_effects || []);
+      if (_efx.length) {
+        _gmLog.effects = _efx.map(function (e) {
           return e.name + ' (sev:' + (e.severity || 0) + (e.lethal ? ', LETHAL' : '') + ')';
-        }),
-        inventoryCount: state.player.inventory ? state.player.inventory.length : 0,
-        relationshipChanges: updates.relationship_changes || undefined,
-        newConsequences: updates.new_pending_consequences ? updates.new_pending_consequences.length : undefined,
-        resolvedConsequences: updates.resolved_consequences ? updates.resolved_consequences.length : undefined,
-        choiceMetadata: gmResponse.choice_metadata,
-        gameOver: updates.game_over || undefined,
-        storyComplete: updates.story_complete || undefined,
-        eventLog: updates.event_log_entry
-      });
+        }).join(', ');
+      }
+      if (updates.relationship_changes) {
+        var _rc = [];
+        for (var _rn in updates.relationship_changes) {
+          if (updates.relationship_changes.hasOwnProperty(_rn)) {
+            var _rd = updates.relationship_changes[_rn];
+            _rc.push(_rn + ': ' + (_rd > 0 ? '+' : '') + _rd);
+          }
+        }
+        if (_rc.length) _gmLog.relationships = _rc.join(', ');
+      }
+      if (updates.new_pending_consequences && updates.new_pending_consequences.length) {
+        _gmLog.newConsequences = updates.new_pending_consequences.length;
+      }
+      if (updates.resolved_consequences && updates.resolved_consequences.length) {
+        _gmLog.resolvedConsequences = updates.resolved_consequences.length;
+      }
+      if (updates.game_over) _gmLog.gameOver = true;
+      if (updates.story_complete) _gmLog.storyComplete = true;
+      _gmLog.choices = gmResponse.choice_metadata;
+      _gmLog.event = updates.event_log_entry;
+      SQ.Logger.info('GameMaster', 'Applied state updates', _gmLog);
 
       // 13. Enforce lethal effect restrictions on easier difficulties
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';

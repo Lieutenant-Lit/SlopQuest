@@ -114,12 +114,10 @@
           }
 
           if (label === 'GameMaster') {
-            SQ.Logger.info(label, 'Response OK', {
-              hasStateUpdates: !!response.state_updates,
-              choiceMetadataKeys: response.choice_metadata ? Object.keys(response.choice_metadata) : [],
-              gameOver: response.state_updates && response.state_updates.game_over,
-              eventLog: response.state_updates && response.state_updates.event_log_entry
-            });
+            var _gmOk = { event: response.state_updates && response.state_updates.event_log_entry };
+            if (response.state_updates && response.state_updates.game_over) _gmOk.gameOver = true;
+            if (response.state_updates && response.state_updates.story_complete) _gmOk.storyComplete = true;
+            SQ.Logger.info(label, 'Response OK', _gmOk);
           } else {
             SQ.Logger.info(label, 'Response OK', {
               passagePreview: response.passage ? response.passage.substring(0, 100) : undefined,
