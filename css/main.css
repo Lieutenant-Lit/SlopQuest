@@ -1108,10 +1108,17 @@ textarea {
   gap: var(--spacing-md);
 }
 
+.setup-inline-groups-stacked .setup-inline-group {
+  display: flex;
+  align-items: center;
+}
+
 .setup-inline-label-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--color-text);
-  min-width: 100px;
+  min-width: 110px;
+  flex-shrink: 0;
 }
 
 /* Secondary input (subdued styling) */
