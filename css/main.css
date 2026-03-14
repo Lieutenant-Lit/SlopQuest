@@ -134,6 +134,7 @@ a {
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],
+textarea,
 select {
   font-family: var(--font-ui);
   font-size: 1rem;
@@ -147,9 +148,14 @@ select {
 }
 
 input:focus,
+textarea:focus,
 select:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: -1px;
+}
+
+textarea {
+  resize: vertical;
 }
 
 /* ===== BUTTONS ===== */
@@ -1095,6 +1101,24 @@ select:focus {
   font-size: 0.8rem;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.setup-inline-groups-stacked {
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.setup-inline-groups-stacked .setup-inline-group {
+  display: flex;
+  align-items: center;
+}
+
+.setup-inline-label-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 110px;
+  flex-shrink: 0;
 }
 
 /* Secondary input (subdued styling) */

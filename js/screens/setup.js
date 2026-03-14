@@ -55,21 +55,27 @@
     },
 
     onShow: function () {
-      // Reset single-select defaults
+      // Load saved preferences or use defaults
+      var prefs = null;
+      try {
+        var raw = localStorage.getItem('slopquest_setup_prefs');
+        if (raw) prefs = JSON.parse(raw);
+      } catch (e) { /* ignore */ }
+
       this._selected = {
-        perspective: 'second person',
-        tense: 'present',
-        difficulty: 'normal',
-        storyLength: 'medium'
+        perspective: (prefs && prefs.perspective) || 'second person',
+        tense: (prefs && prefs.tense) || 'present',
+        difficulty: (prefs && prefs.difficulty) || 'normal',
+        storyLength: (prefs && prefs.storyLength) || 'medium'
       };
 
-      // Reset visual state — activate default options
+      // Activate matching option buttons
       var self = this;
       document.querySelectorAll('#screen-setup .setup-options').forEach(function (group) {
         var groupName = group.getAttribute('data-group');
-        var defaultVal = self._selected[groupName];
+        var val = self._selected[groupName];
         group.querySelectorAll('.setup-option').forEach(function (btn) {
-          if (btn.getAttribute('data-value') === defaultVal) {
+          if (btn.getAttribute('data-value') === val) {
             btn.classList.add('active');
           } else {
             btn.classList.remove('active');
@@ -77,15 +83,23 @@
         });
       });
 
-      // Clear text inputs
-      document.getElementById('setup-setting-text').value = '';
-      document.getElementById('setup-archetype').value = '';
-      document.getElementById('setup-name').value = '';
-      document.getElementById('setup-style-tone-text').value = '';
+      // Restore text inputs from saved prefs
+      document.getElementById('setup-setting-text').value = (prefs && prefs.setting) || '';
+      document.getElementById('setup-archetype').value = (prefs && prefs.archetype) || '';
+      document.getElementById('setup-style-tone-text').value = (prefs && prefs.writingStyle) || '';
 
-      // Clear chip highlights
-      document.querySelectorAll('#screen-setup .setup-chip').forEach(function (c) {
-        c.classList.remove('active');
+      // Highlight matching chips for restored text values
+      document.querySelectorAll('#screen-setup .setup-chips').forEach(function (container) {
+        var targetId = container.getAttribute('data-chip-target');
+        var targetInput = document.getElementById(targetId);
+        var inputVal = targetInput.value;
+        container.querySelectorAll('.setup-chip').forEach(function (c) {
+          if (inputVal && c.getAttribute('data-value') === inputVal) {
+            c.classList.add('active');
+          } else {
+            c.classList.remove('active');
+          }
+        });
       });
 
       // Reset generate button
@@ -118,7 +132,7 @@
       var settingText = document.getElementById('setup-setting-text').value.trim();
       var styleToneText = document.getElementById('setup-style-tone-text').value.trim();
 
-      return {
+      var config = {
         setting: settingText || 'dark fantasy',
         archetype: document.getElementById('setup-archetype').value.trim() || 'wanderer',
         writingStyle: styleToneText || 'literary',
@@ -126,9 +140,23 @@
         perspective: this._selected.perspective || 'second person',
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
-        storyLength: this._selected.storyLength || 'medium',
-        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer'
+        storyLength: this._selected.storyLength || 'medium'
       };
+
+      // Persist raw form values so onShow() can restore them next time
+      try {
+        localStorage.setItem('slopquest_setup_prefs', JSON.stringify({
+          setting: settingText,
+          archetype: document.getElementById('setup-archetype').value.trim(),
+          writingStyle: styleToneText,
+          perspective: this._selected.perspective,
+          tense: this._selected.tense,
+          difficulty: this._selected.difficulty,
+          storyLength: this._selected.storyLength
+        }));
+      } catch (e) { /* localStorage full or unavailable */ }
+
+      return config;
     },
 
     /**
@@ -161,6 +189,7 @@
         var state = SQ.GameState.get();
         state.skeleton = skeleton;
         state.meta.title = skeleton.title || 'Untitled Quest';
+        state.player.name = skeleton.player_name || state.player.name || 'The Wanderer';
         state.world_flags = skeleton.initial_world_flags || {};
 
         // Populate player inventory from skeleton's starting items
