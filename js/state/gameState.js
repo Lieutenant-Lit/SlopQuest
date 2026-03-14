@@ -50,7 +50,7 @@
         },
         skeleton: null, // populated after skeleton generation
         player: {
-          name: setupConfig.characterName || 'The Wanderer',
+          name: 'The Wanderer',
           archetype: setupConfig.archetype || '',
           inventory: [],
           status_effects: [],

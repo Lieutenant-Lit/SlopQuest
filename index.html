@@ -125,7 +125,7 @@
       <div class="card">
         <h2>Setting / Universe</h2>
         <p>Describe your world, or pick a genre to get started.</p>
-        <input type="text" id="setup-setting-text" placeholder="Describe your world...">
+        <textarea id="setup-setting-text" rows="5" placeholder="Describe your world..."></textarea>
         <div class="setup-chips" data-chip-target="setup-setting-text">
           <button class="setup-chip" data-value="dark fantasy">Fantasy</button>
           <button class="setup-chip" data-value="sci-fi">Sci-Fi</button>
@@ -138,15 +138,14 @@
 
       <div class="card">
         <h2>Character</h2>
-        <p>Broad archetype — the skeleton fills in the details.</p>
-        <input type="text" id="setup-archetype" placeholder="e.g. disgraced knight, rogue scholar, starship mechanic...">
-        <input type="text" id="setup-name" class="setup-input-secondary" placeholder="Character name (optional)">
+        <p>Describe your character — the story will fill in the rest.</p>
+        <textarea id="setup-archetype" rows="3" placeholder="e.g. a disgraced knight seeking redemption, a rogue scholar on the run..."></textarea>
       </div>
 
       <div class="card">
         <h2>Style &amp; Tone</h2>
         <p>How should the story read? Describe a style, name an author, or pick from the chips.</p>
-        <input type="text" id="setup-style-tone-text" placeholder="e.g., Cormac McCarthy meets Terry Pratchett">
+        <textarea id="setup-style-tone-text" rows="3" placeholder="e.g., Cormac McCarthy meets Terry Pratchett"></textarea>
         <div class="setup-chips" data-chip-target="setup-style-tone-text">
           <button class="setup-chip" data-value="literary">Literary</button>
           <button class="setup-chip" data-value="pulpy">Pulpy</button>
@@ -183,43 +182,25 @@
       </div>
 
       <div class="card">
-        <h2>Difficulty</h2>
-        <p>Difficulty is mechanical — it controls how forgiving the world is, not the writing tone.</p>
-        <div class="setup-options setup-options-vertical" data-group="difficulty">
-          <button class="setup-option setup-option-card" data-value="chill">
-            <span class="option-label">Chill</span>
-            <span class="option-desc">A relaxing story experience. No game overs, obvious hints.</span>
-          </button>
-          <button class="setup-option setup-option-card active" data-value="normal">
-            <span class="option-label">Normal</span>
-            <span class="option-desc">A balanced adventure. Choices have consequences but recovery is usually possible.</span>
-          </button>
-          <button class="setup-option setup-option-card" data-value="hard">
-            <span class="option-label">Hard</span>
-            <span class="option-desc">A challenging experience. Death is possible. Consequences hit fast and hard.</span>
-          </button>
-          <button class="setup-option setup-option-card" data-value="brutal">
-            <span class="option-label">Brutal</span>
-            <span class="option-desc">Lethal and unforgiving. Death is common, clues are cryptic, and NPCs hold grudges.</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Story Length</h2>
-        <div class="setup-options setup-options-vertical" data-group="storyLength">
-          <button class="setup-option setup-option-card" data-value="short">
-            <span class="option-label">Short</span>
-            <span class="option-desc">15-20 turns &middot; ~20-30 min &middot; ~$0.30-0.80</span>
-          </button>
-          <button class="setup-option setup-option-card active" data-value="medium">
-            <span class="option-label">Medium</span>
-            <span class="option-desc">30-40 turns &middot; ~45-75 min &middot; ~$0.80-2.00</span>
-          </button>
-          <button class="setup-option setup-option-card" data-value="long">
-            <span class="option-label">Long</span>
-            <span class="option-desc">50-70 turns &middot; ~90-150 min &middot; ~$2.00-5.00</span>
-          </button>
+        <h2>Difficulty &amp; Story Length</h2>
+        <div class="setup-inline-groups">
+          <div class="setup-inline-group">
+            <span class="setup-inline-label">Difficulty</span>
+            <div class="setup-options" data-group="difficulty">
+              <button class="setup-option" data-value="chill">Chill</button>
+              <button class="setup-option active" data-value="normal">Normal</button>
+              <button class="setup-option" data-value="hard">Hard</button>
+              <button class="setup-option" data-value="brutal">Brutal</button>
+            </div>
+          </div>
+          <div class="setup-inline-group">
+            <span class="setup-inline-label">Length</span>
+            <div class="setup-options" data-group="storyLength">
+              <button class="setup-option" data-value="short">Short</button>
+              <button class="setup-option active" data-value="medium">Medium</button>
+              <button class="setup-option" data-value="long">Long</button>
+            </div>
+          </div>
         </div>
       </div>
 

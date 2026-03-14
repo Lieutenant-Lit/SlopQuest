@@ -134,6 +134,7 @@ a {
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],
+textarea,
 select {
   font-family: var(--font-ui);
   font-size: 1rem;
@@ -147,9 +148,14 @@ select {
 }
 
 input:focus,
+textarea:focus,
 select:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: -1px;
+}
+
+textarea {
+  resize: vertical;
 }
 
 /* ===== BUTTONS ===== */

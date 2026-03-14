@@ -22,7 +22,7 @@
       // Player configuration
       p += 'The player has chosen these parameters:\n';
       p += '- Setting: ' + (setupConfig.setting || 'fantasy') + '\n';
-      p += '- Character archetype: ' + (setupConfig.archetype || 'wanderer') + '\n';
+      p += '- Character concept: ' + (setupConfig.archetype || 'wanderer') + '\n';
       p += '- Writing style: ' + (setupConfig.writingStyle || 'literary') + '\n';
       p += '- Tone: ' + (setupConfig.tone || 'dark and atmospheric') + '\n';
       p += '- Perspective: ' + (setupConfig.perspective || 'second person') + '\n';
@@ -34,6 +34,7 @@
       p += 'Generate a complete story skeleton following this EXACT schema:\n';
       p += '{\n';
       p += '  "title": "string — evocative story title",\n';
+      p += '  "player_name": "string — a fitting name for the player character, based on the setting and character concept",\n';
       p += '  "premise": "string — 2-3 sentence hook",\n';
       p += '  "central_question": "string — the dramatic question driving the story",\n';
       p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'sacrifice or survival\', \'mystery solved\', \'escape achieved\'",\n';

@@ -86,7 +86,6 @@
       // Restore text inputs from saved prefs
       document.getElementById('setup-setting-text').value = (prefs && prefs.setting) || '';
       document.getElementById('setup-archetype').value = (prefs && prefs.archetype) || '';
-      document.getElementById('setup-name').value = (prefs && prefs.characterName) || '';
       document.getElementById('setup-style-tone-text').value = (prefs && prefs.writingStyle) || '';
 
       // Highlight matching chips for restored text values
@@ -141,8 +140,7 @@
         perspective: this._selected.perspective || 'second person',
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
-        storyLength: this._selected.storyLength || 'medium',
-        characterName: document.getElementById('setup-name').value.trim() || 'The Wanderer'
+        storyLength: this._selected.storyLength || 'medium'
       };
 
       // Persist raw form values so onShow() can restore them next time
@@ -151,7 +149,6 @@
           setting: settingText,
           archetype: document.getElementById('setup-archetype').value.trim(),
           writingStyle: styleToneText,
-          characterName: document.getElementById('setup-name').value.trim(),
           perspective: this._selected.perspective,
           tense: this._selected.tense,
           difficulty: this._selected.difficulty,
@@ -192,6 +189,7 @@
         var state = SQ.GameState.get();
         state.skeleton = skeleton;
         state.meta.title = skeleton.title || 'Untitled Quest';
+        state.player.name = skeleton.player_name || state.player.name || 'The Wanderer';
         state.world_flags = skeleton.initial_world_flags || {};
 
         // Populate player inventory from skeleton's starting items
