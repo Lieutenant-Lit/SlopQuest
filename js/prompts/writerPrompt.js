@@ -37,9 +37,59 @@
       p += 'CURRENT POSITION:\n';
       p += JSON.stringify(gameState.current, null, 2) + '\n\n';
 
+      // Pacing context — give the Writer explicit act-level guidance
+      if (gameState.skeleton && Array.isArray(gameState.skeleton.acts)) {
+        var actIndex = (gameState.current.act || 1) - 1;
+        var currentAct = gameState.skeleton.acts[actIndex];
+        if (currentAct) {
+          var actStartScene = gameState.current.act_start_scene || 1;
+          var scenesInAct = (gameState.current.scene_number || 1) - actStartScene + 1;
+          var target = currentAct.target_scenes || 10;
+          var proximity = gameState.current.proximity_to_climax || 0.0;
+
+          p += 'CURRENT ACT PACING:\n';
+          p += '- Act ' + (actIndex + 1) + ': "' + currentAct.title + '"\n';
+          p += '- End condition: ' + currentAct.end_condition + '\n';
+          p += '- Key beats: ' + JSON.stringify(currentAct.key_beats) + '\n';
+          p += '- Scenes in this act: ' + scenesInAct + ' of ~' + target + ' target\n';
+          p += '- Proximity to climax: ' + proximity.toFixed(2) + '\n';
+          if (proximity >= 0.7) {
+            p += '- PACING DIRECTIVE: The act climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '". Choices should relate to the approaching climax.\n';
+          } else if (proximity >= 0.4) {
+            p += '- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n';
+          }
+          p += '\n';
+        }
+      }
+
       // Characters and relationships (for consistent character voices)
       p += 'RELATIONSHIPS:\n';
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
+
+      // Companion awareness — identify NPCs who should be present in scenes
+      if (gameState.skeleton && Array.isArray(gameState.skeleton.npcs)) {
+        var companions = gameState.skeleton.npcs.filter(function (npc) {
+          if (npc.companion) return true;
+          var role = (npc.role || '').toLowerCase();
+          return role.indexOf('companion') !== -1 ||
+                 role.indexOf('party member') !== -1 ||
+                 role.indexOf('traveling companion') !== -1 ||
+                 role.indexOf('sidekick') !== -1 ||
+                 role.indexOf('squire') !== -1;
+        });
+        if (companions.length > 0) {
+          p += 'COMPANIONS (present in every scene unless narratively separated):\n';
+          companions.forEach(function (c) {
+            var rel = gameState.relationships[c.name];
+            p += '- ' + c.name + ' (' + c.role + ')';
+            if (typeof rel === 'number') {
+              p += ' [relationship: ' + rel + ']';
+            }
+            p += '\n';
+          });
+          p += 'These characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\n';
+        }
+      }
 
       // Event log for continuity
       p += 'EVENT LOG (last 20):\n';
@@ -110,6 +160,8 @@
       p += '- Weave pending consequences into the narrative naturally when their triggers are near\n';
       p += '- Focus on prose quality, atmosphere, character voice, and dramatic tension\n';
       p += '- Do NOT include state_updates, health numbers, or mechanical data in your response\n';
+      p += '- Pace the story toward the current act\'s end condition. Check the CURRENT ACT PACING section for scene count and proximity\n';
+      p += '- When proximity_to_climax >= 0.8, your passage should feel like it\'s approaching a climax or turning point — increase urgency and stakes\n';
 
       return p;
     },

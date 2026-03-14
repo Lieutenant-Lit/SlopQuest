@@ -480,12 +480,18 @@
       if (updates.advance_act) {
         state.current.act = Math.min((state.current.act || 1) + 1, 3);
         state.current.proximity_to_climax = 0.0;
+        state.current.act_start_scene = state.current.scene_number;
         if (state.skeleton && Array.isArray(state.skeleton.acts)) {
           var newAct = state.skeleton.acts[state.current.act - 1];
           if (newAct && Array.isArray(newAct.locked_constraints)) {
             state.current.active_constraints = newAct.locked_constraints.slice();
           }
         }
+      }
+
+      // 11b. Apply proximity_to_climax from GM
+      if (typeof updates.proximity_to_climax === 'number') {
+        state.current.proximity_to_climax = Math.max(0, Math.min(1, updates.proximity_to_climax));
       }
 
       // 12. Merge choice metadata (outcome, consequence, narration_directive)
