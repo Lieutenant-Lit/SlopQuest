@@ -107,7 +107,7 @@
       p += '    "proximity_to_climax": "number 0.0-1.0 — REQUIRED (see PACING)",\n';
       p += '    "advance_act": "true or false — REQUIRED (see PACING)",\n';
       p += '    "game_over": false,\n';
-      p += '    "story_complete": false\n';
+      p += '    "story_complete": "true when Act 3 end_condition is met (see PACING)"\n';
       p += '  },\n';
       p += '  "choice_metadata": {\n';
       if (isHardOrBrutal) {
@@ -135,9 +135,11 @@
       p += '- The current act\'s target_scenes (in the skeleton) is the intended scene count for this act.\n';
       p += '- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n';
       p += '- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n';
+      p += '- MINIMUM SCENES: Do NOT set advance_act to true if scenes_in_act < 3. Every act needs at least 3 scenes to develop properly.\n';
       p += '- If scenes_in_act >= target_scenes AND the act\'s end_condition is narratively close to being met, set advance_act to true.\n';
       p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD set advance_act to true — the act has gone on too long. Drive the narrative forward.\n';
       p += '- When advance_act is true, also set proximity_to_climax to 1.0.\n';
+      p += '- STORY COMPLETION: If the current act is Act 3 (the FINAL act) and its end_condition is met, set story_complete to true INSTEAD of advance_act. This ends the story.\n';
       p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it.\n\n';
 
       // Time elapsed rules

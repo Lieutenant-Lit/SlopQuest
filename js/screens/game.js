@@ -489,8 +489,8 @@
         }
       }
 
-      // 11b. Apply proximity_to_climax from GM
-      if (typeof updates.proximity_to_climax === 'number') {
+      // 11b. Apply proximity_to_climax from GM (skip if act just advanced — reset takes precedence)
+      if (!updates.advance_act && typeof updates.proximity_to_climax === 'number') {
         state.current.proximity_to_climax = Math.max(0, Math.min(1, updates.proximity_to_climax));
       }
 
