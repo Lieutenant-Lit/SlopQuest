@@ -532,6 +532,8 @@
       }
       if (updates.game_over) _gmLog.gameOver = true;
       if (updates.story_complete) _gmLog.storyComplete = true;
+      if (typeof updates.proximity_to_climax === 'number') _gmLog.proximity = updates.proximity_to_climax;
+      if (updates.advance_act) _gmLog.advanceAct = true;
       _gmLog.choices = gmResponse.choice_metadata;
       _gmLog.event = updates.event_log_entry;
       SQ.Logger.info('GameMaster', 'Applied state updates', _gmLog);

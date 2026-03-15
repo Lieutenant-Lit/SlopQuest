@@ -55,8 +55,11 @@
           p += '- Proximity to climax: ' + proximity.toFixed(2) + '\n';
           if (proximity >= 0.7) {
             p += '- PACING DIRECTIVE: The act climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '". Choices should relate to the approaching climax.\n';
+            p += '- The next scene MUST directly advance toward or trigger the end condition. Do not introduce new subplots or social scenes.\n';
           } else if (proximity >= 0.4) {
             p += '- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n';
+          } else if (scenesInAct <= 2 && actIndex === 0) {
+            p += '- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n';
           }
           p += '\n';
         }

@@ -104,8 +104,8 @@
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
       p += '    "new_scene_context": "string — brief context for next passage",\n';
-      p += '    "proximity_to_climax": "number 0.0-1.0 — how close to this act\'s climax (see PACING section)",\n';
-      p += '    "advance_act": "boolean — true when the act\'s end_condition is met (see PACING section)",\n';
+      p += '    "proximity_to_climax": "number 0.0-1.0 — REQUIRED (see PACING)",\n';
+      p += '    "advance_act": "true or false — REQUIRED (see PACING)",\n';
       p += '    "game_over": false,\n';
       p += '    "story_complete": false\n';
       p += '  },\n';
@@ -123,8 +123,7 @@
       // General rules
       p += 'RULES:\n';
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
-      p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
-      p += '- Only include player_changes fields that actually changed\n';
+      p += '- Only include player_changes, relationship_changes, world_flag_changes, new_pending_consequences, and resolved_consequences when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act.\n';
       p += '- Relationship changes are DELTAS, not absolute values\n';
       p += '- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n';
       p += '- event_log_entry is required — always summarize what happened this turn\n';
