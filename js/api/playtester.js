@@ -50,23 +50,36 @@
 
     /**
      * Stop the playtest (manual termination or max turns).
-     * Generates the final report.
+     * Generates the final report and navigates to game over screen.
+     * @param {string} [reason] - Why the playtest stopped
+     * @param {object} [opts] - Options
+     * @param {boolean} [opts.skipNav] - Skip navigation to gameover (used when already transitioning)
      */
-    stop: function () {
+    stop: function (reason, opts) {
       if (this._stopped) return;
       this._stopped = true;
       this._active = false;
 
+      var stopReason = reason || 'manual_stop';
+      opts = opts || {};
+
       SQ.Logger.info('Playtester', 'Playtest stopped', {
         turnCount: this._turnCount,
-        reason: 'manual_stop_or_max_turns'
+        reason: stopReason
       });
 
-      // Hide the end-playtest button
+      // Hide the end-playtest button and turn counter
       var btn = document.getElementById('btn-end-playtest');
       if (btn) btn.classList.add('hidden');
+      var counter = document.getElementById('playtester-turn-counter');
+      if (counter) counter.classList.add('hidden');
 
-      this.generateReport('manual_stop');
+      this.generateReport(stopReason);
+
+      // Navigate to gameover screen so the report panel is visible
+      if (!opts.skipNav) {
+        SQ.showScreen('gameover');
+      }
     },
 
     /**
@@ -114,11 +127,7 @@
       // Check max turns
       if (this._turnCount >= this._maxTurns) {
         SQ.Logger.info('Playtester', 'Max turns reached', { turnCount: this._turnCount });
-        this._active = false;
-        this._stopped = true;
-        var btn = document.getElementById('btn-end-playtest');
-        if (btn) btn.classList.add('hidden');
-        this.generateReport('max_turns_reached');
+        this.stop('max_turns_reached');
         return;
       }
 
@@ -207,11 +216,7 @@
 
           // Give up — append error to memory and generate report
           self._memory += '\n\n[TURN ' + (self._turnCount + 1) + ': LLM call failed — ' + err.message + '. Playtest terminated early.]';
-          self._active = false;
-          self._stopped = true;
-          var btn = document.getElementById('btn-end-playtest');
-          if (btn) btn.classList.add('hidden');
-          self.generateReport('error: ' + err.message);
+          self.stop('error: ' + err.message);
         });
     },
 
@@ -234,7 +239,10 @@
 
       var btn = document.getElementById('btn-end-playtest');
       if (btn) btn.classList.add('hidden');
+      var counter = document.getElementById('playtester-turn-counter');
+      if (counter) counter.classList.add('hidden');
 
+      // Don't navigate here — game.js handles the gameover navigation
       this.generateReport(reason);
     },
 
@@ -320,8 +328,7 @@
      */
     _showReportIfOnGameOver: function () {
       var gameoverScreen = document.getElementById('screen-gameover');
-      if (gameoverScreen && !gameoverScreen.classList.contains('hidden') &&
-          gameoverScreen.style.display !== 'none') {
+      if (gameoverScreen && gameoverScreen.classList.contains('active')) {
         if (SQ.Screens.GameOver && SQ.Screens.GameOver._renderReport) {
           SQ.Screens.GameOver._renderReport();
         }

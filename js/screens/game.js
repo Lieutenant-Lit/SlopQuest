@@ -109,9 +109,9 @@
       var gsDebug = document.getElementById('gamestate-debug-panel');
       if (gsDebug) gsDebug.classList.add('hidden');
 
-      // Stop playtester if navigating away
+      // Stop playtester if navigating away (skip nav since we're already transitioning)
       if (SQ.Playtester && SQ.Playtester.isActive()) {
-        SQ.Playtester.stop();
+        SQ.Playtester.stop('navigated_away', { skipNav: true });
       }
     },
 
