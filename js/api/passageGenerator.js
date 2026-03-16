@@ -81,6 +81,8 @@
 
       if (attempt === 0) {
         SQ.Logger.info(label, 'Calling LLM', { model: model, temperature: options.temperature });
+        SQ.Logger.infoFull(label, 'System prompt', { prompt: systemPrompt });
+        SQ.Logger.infoFull(label, 'User prompt', { prompt: userPrompt });
       }
 
       return SQ.API.call(model, messages, options)
@@ -124,6 +126,7 @@
               choiceCount: response.choices ? Object.keys(response.choices).length : undefined
             });
           }
+          SQ.Logger.infoFull(label, 'Full response', response);
 
           return response;
         });
