@@ -78,14 +78,14 @@
         throw new Error('The AI returned an incomplete skeleton after ' + (MAX_RETRIES + 1) + ' attempts. Errors: ' + result.errors.join(', '));
       }
 
-      var _npcSummary = (skeleton.npcs || []).map(function (n) {
-        return n.name + ' (' + n.role + (n.companion ? ', companion' : '') + ')';
-      });
       SQ.Logger.info('Skeleton', 'Generated OK', {
         title: skeleton.title,
         acts: skeleton.acts ? skeleton.acts.length : 0,
-        npcs: _npcSummary
+        npcs: (skeleton.npcs || []).map(function (n) {
+          return n.name + ' (' + n.role + (n.companion ? ', companion' : '') + ')';
+        })
       });
+      SQ.Logger.infoFull('Skeleton', 'Full skeleton', skeleton);
 
       return skeleton;
     }
