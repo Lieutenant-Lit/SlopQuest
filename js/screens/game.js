@@ -471,6 +471,19 @@
         }
       }
 
+      // 9b. NPC overrides (merge updates into mutable NPC layer)
+      if (updates.npc_updates) {
+        if (!state.npc_overrides) state.npc_overrides = {};
+        for (var npcName in updates.npc_updates) {
+          if (updates.npc_updates.hasOwnProperty(npcName)) {
+            if (!state.npc_overrides[npcName]) {
+              state.npc_overrides[npcName] = {};
+            }
+            Object.assign(state.npc_overrides[npcName], updates.npc_updates[npcName]);
+          }
+        }
+      }
+
       // 10. Scene context update
       if (updates.new_scene_context) {
         state.current.scene_context = updates.new_scene_context;

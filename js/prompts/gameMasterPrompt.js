@@ -51,6 +51,12 @@
       p += 'RELATIONSHIPS:\n';
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
 
+      // NPC overrides — mutable NPC data layered on top of the skeleton
+      if (gameState.npc_overrides && Object.keys(gameState.npc_overrides).length > 0) {
+        p += 'NPC OVERRIDES (current mutable NPC data — updates layered on skeleton):\n';
+        p += JSON.stringify(gameState.npc_overrides, null, 2) + '\n\n';
+      }
+
       p += 'CURRENT POSITION:\n';
       p += JSON.stringify(gameState.current, null, 2) + '\n\n';
 
@@ -103,6 +109,7 @@
       p += '    "event_log_entry": "string — one-line summary of what happened",\n';
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
+      p += '    "npc_updates": { "npc_name": { "role": "string (optional)", "motivation": "string (optional)", "allegiance": "string (optional)", "secret_revealed": "boolean (optional)", "companion": "boolean (optional)", "notes": "string — brief freeform context (optional)" } },\n';
       p += '    "new_scene_context": "string — brief context for next passage",\n';
       p += '    "proximity_to_climax": "number 0.0-1.0 — REQUIRED (see PACING)",\n';
       p += '    "advance_act": "true or false — REQUIRED (see PACING)",\n';
@@ -128,7 +135,8 @@
       p += '- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n';
       p += '- event_log_entry is required — always summarize what happened this turn\n';
       p += '- choice_metadata must classify all four choices (A, B, C, D)\n';
-      p += '- CRITICAL: When a PLAYER\'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative status effects or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n\n';
+      p += '- CRITICAL: When a PLAYER\'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative status effects or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n';
+      p += '- npc_updates: include ONLY when an NPC\'s role, motivation, allegiance, or companion status meaningfully changes, or when a new narratively significant NPC is introduced. Do not create entries for ephemeral background characters. Use the NPC\'s exact name as the key — must match skeleton NPCs exactly.\n\n';
 
       // Pacing rules
       p += 'PACING — REQUIRED:\n';
