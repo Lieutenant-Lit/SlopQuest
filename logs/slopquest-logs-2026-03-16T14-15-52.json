@@ -1,0 +1,2476 @@
+[
+  {
+    "ts": "2026-03-16T13:25:24.472Z",
+    "level": "info",
+    "cat": "Setup",
+    "msg": "Starting new game",
+    "data": {
+      "config": {
+        "setting": "Firefly",
+        "archetype": "Captain Malcolm \"Mal\" Reynolds",
+        "writingStyle": "A typical episode of Firefly",
+        "tone": "A typical episode of Firefly",
+        "perspective": "second person",
+        "tense": "present",
+        "difficulty": "hard",
+        "storyLength": "short"
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:25:25.097Z",
+    "level": "info",
+    "cat": "Audio",
+    "msg": "Loaded voices from ElevenLabs",
+    "data": {
+      "count": 86
+    }
+  },
+  {
+    "ts": "2026-03-16T13:25:57.539Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 1719,
+        "completion_tokens": 1447,
+        "total_tokens": 3166,
+        "cost": 0.026862,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.026862,
+          "upstream_inference_prompt_cost": 0.005157,
+          "upstream_inference_completions_cost": 0.021705
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:25:57.543Z",
+    "level": "info",
+    "cat": "Skeleton",
+    "msg": "Generated OK",
+    "data": {
+      "title": "Ghosts of Ezra",
+      "acts": 3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:25:57.545Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:10.199Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2395,
+        "completion_tokens": 433,
+        "total_tokens": 2828,
+        "cost": 0.01368,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01368,
+          "upstream_inference_prompt_cost": 0.007185,
+          "upstream_inference_completions_cost": 0.006495
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:10.200Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "The engines of Serenity cut to silence as you bring her down through Ezra's thin atmosphere, brown c",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:10.200Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:20.074Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4552,
+        "completion_tokens": 434,
+        "total_tokens": 4986,
+        "cost": 0.020166,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.020166,
+          "upstream_inference_prompt_cost": 0.013656,
+          "upstream_inference_completions_cost": 0.00651
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:20.077Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Arrived at Ezra colony to find it eerily abandoned with Alliance ships maintaining orbital quarantine"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:26:20.078Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "proximity": 0.17,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Successful infiltration but risk of Alliance patrol encounter\",\"narration_directive\":\"Show Mal and Simon moving stealthily through empty streets toward the medical center, building tension about potential discovery\"},\"B\":{\"outcome\":\"severe_penalty\",\"consequence\":\"Alliance becomes immediately suspicious and demands boarding inspection\",\"narration_directive\":\"Alliance responds with hostility, demanding Serenity submit to inspection and questioning the...[clipped]",
+      "event": "Arrived at Ezra colony to find it eerily abandoned with Alliance ships maintaining orbital quarantine"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:20.831Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:33.176Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2539,
+        "completion_tokens": 422,
+        "total_tokens": 2961,
+        "cost": 0.013947,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.013947,
+          "upstream_inference_prompt_cost": 0.007617,
+          "upstream_inference_completions_cost": 0.00633
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:33.179Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "\"Take us around the perimeter, Wash,\" you order, studying the settlement through Serenity's viewport",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:33.180Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:43.565Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4732,
+        "completion_tokens": 445,
+        "total_tokens": 5177,
+        "cost": 0.020871,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.020871,
+          "upstream_inference_prompt_cost": 0.014196,
+          "upstream_inference_completions_cost": 0.006675
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:43.567Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Aerial reconnaissance of Ezra colony reveals signs of hasty evacuation, fresh graves, and mysterious energy readings from the main shaft"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:30:43.568Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "20m",
+      "proximity": 0.33,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Find evidence about your contact's fate and cargo delivery details\",\"narration_directive\":\"Landing at the mining office provides crucial information about the job and evacuation timeline without immediate danger\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Discover the source of Alliance concern but risk exposure to unknown energy phenomenon\",\"narration_directive\":\"Investigating the energy readings reveals important plot information but puts the c...[clipped]",
+      "event": "Aerial reconnaissance of Ezra colony reveals signs of hasty evacuation, fresh graves, and mysterious energy readings from the main shaft"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:32:41.798Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:32:54.029Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2514,
+        "completion_tokens": 418,
+        "total_tokens": 2932,
+        "cost": 0.013812,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.013812,
+          "upstream_inference_prompt_cost": 0.007542,
+          "upstream_inference_completions_cost": 0.00627
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:32:54.030Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You set Serenity down near the mining office, her engines barely whispering as you kill the power. T",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:32:54.031Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:33:07.287Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4759,
+        "completion_tokens": 573,
+        "total_tokens": 5332,
+        "cost": 0.022872,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022872,
+          "upstream_inference_prompt_cost": 0.014277,
+          "upstream_inference_completions_cost": 0.008595
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:33:07.290Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Landed at mining office and discovered evidence of mysterious outbreak requiring specialized medical supplies, contact James Holden missing"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:33:07.291Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "25m",
+      "proximity": 0.5,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Discover Holden's personal logs revealing Alliance involvement in covering up experimental mining accident\",\"narration_directive\":\"Computer files reveal Alliance black ops connection and timeline of cover-up without triggering immediate danger\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Find disturbing evidence at medical facility but risk exposure to lingering contamination\",\"narration_directive\":\"Medical facility investigation reveals horrific ...[clipped]",
+      "event": "Landed at mining office and discovered evidence of mysterious outbreak requiring specialized medical supplies, contact James Holden missing"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:37:41.357Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:37:53.842Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2585,
+        "completion_tokens": 430,
+        "total_tokens": 3015,
+        "cost": 0.014205,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014205,
+          "upstream_inference_prompt_cost": 0.007755,
+          "upstream_inference_completions_cost": 0.00645
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:37:53.844Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You slide behind Holden's desk, fingers dancing across the dusty keyboard. The screen flickers to li",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:37:53.845Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:38:07.168Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4815,
+        "completion_tokens": 581,
+        "total_tokens": 5396,
+        "cost": 0.02316,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02316,
+          "upstream_inference_prompt_cost": 0.014445,
+          "upstream_inference_completions_cost": 0.008715
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:38:07.172Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Accessed Holden's computer files revealing Alliance black ops cover-up of experimental mining accident and terraforming-era discovery"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:38:07.173Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Dr. Simon Tam: +5",
+      "proximity": 0.67,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Successfully copy files to portable drive, gaining concrete evidence while maintaining stealth\",\"narration_directive\":\"Efficient data extraction completed just before patrols arrive, evidence secured for later use\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Find physical evidence but trigger proximity sensors, alerting Alliance to your presence\",\"narration_directive\":\"Discovery of hard evidence comes at cost of blown cover, Alliance forces now ac...[clipped]",
+      "event": "Accessed Holden's computer files revealing Alliance black ops cover-up of experimental mining accident and terraforming-era discovery"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:24.675Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:37.563Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2618,
+        "completion_tokens": 465,
+        "total_tokens": 3083,
+        "cost": 0.014829,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014829,
+          "upstream_inference_prompt_cost": 0.007854,
+          "upstream_inference_completions_cost": 0.006975
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:37.563Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You slide the portable drive into Holden's terminal with practiced efficiency. Simon keeps watch by ",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:37.564Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:50.996Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4919,
+        "completion_tokens": 612,
+        "total_tokens": 5531,
+        "cost": 0.023937,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023937,
+          "upstream_inference_prompt_cost": 0.014757,
+          "upstream_inference_completions_cost": 0.00918
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:50.997Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully extracted Project Minerva files revealing Alliance black ops cover-up and connection to medical supplies as antidotes"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:40:50.997Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Dr. Simon Tam: +5",
+      "proximity": 0.83,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Radio transmission risks Alliance detection but warns crew of immediate danger\",\"narration_directive\":\"Urgent radio warning to Serenity crew about Alliance cover-up, but transmission may be intercepted by patrol forces\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Dangerous stealth mission to mining shaft where original incident occurred, risk of discovery\",\"narration_directive\":\"Tense infiltration toward the mining shaft to investigate ground zer...[clipped]",
+      "event": "Successfully extracted Project Minerva files revealing Alliance black ops cover-up and connection to medical supplies as antidotes"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:39.026Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:49.625Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2718,
+        "completion_tokens": 420,
+        "total_tokens": 3138,
+        "cost": 0.014454,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014454,
+          "upstream_inference_prompt_cost": 0.008154,
+          "upstream_inference_completions_cost": 0.0063
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:49.627Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You snatch the data pad and Project Minerva files, stuffing them inside your brown coat as the rumbl",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:49.628Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:59.251Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4967,
+        "completion_tokens": 427,
+        "total_tokens": 5394,
+        "cost": 0.021306,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.021306,
+          "upstream_inference_prompt_cost": 0.014901,
+          "upstream_inference_completions_cost": 0.006405
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:59.253Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully avoided Alliance patrol while securing Project Minerva evidence and learning medical supplies are antidotes to Alliance experiment"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:41:59.254Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "proximity": 1,
+      "advanceAct": true,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Simon reveals uncomfortable truths about Alliance experiments but becomes defensive about his own past\",\"narration_directive\":\"Tension builds between Mal and Simon as medical knowledge creates suspicion about Simon's background\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Crew is warned and Serenity prepared for quick departure, but Alliance patrol schedule makes immediate escape risky\",\"narration_directive\":\"Return to ship allows crew preparation...[clipped]",
+      "event": "Successfully avoided Alliance patrol while securing Project Minerva evidence and learning medical supplies are antidotes to Alliance experiment"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:30.272Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:42.143Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2714,
+        "completion_tokens": 446,
+        "total_tokens": 3160,
+        "cost": 0.014832,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014832,
+          "upstream_inference_prompt_cost": 0.008142,
+          "upstream_inference_completions_cost": 0.00669
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:42.147Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You and Simon make your way back through the colony's twisted streets, the Project Minerva files bur",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:42.148Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:54.320Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5062,
+        "completion_tokens": 582,
+        "total_tokens": 5644,
+        "cost": 0.023916,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023916,
+          "upstream_inference_prompt_cost": 0.015186,
+          "upstream_inference_completions_cost": 0.00873
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:54.323Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Returned to Serenity and briefed crew on Alliance experimentation, but patrol vehicles are converging on ship's location"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:42:54.324Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "newConsequences": 1,
+      "proximity": 1,
+      "advanceAct": true,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Immediate takeoff triggers Alliance pursuit and potential combat, but ensures escape from ground forces\",\"narration_directive\":\"High-speed departure under fire with Alliance ships scrambling to intercept\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Waiting allows clean departure but risks patrol discovering Serenity if timing is miscalculated\",\"narration_directive\":\"Tense waiting game as patrol passes dangerously close to hidden ship\"},\"C\":{\"outc...[clipped]",
+      "event": "Returned to Serenity and briefed crew on Alliance experimentation, but patrol vehicles are converging on ship's location"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:14.973Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:28.358Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2879,
+        "completion_tokens": 450,
+        "total_tokens": 3329,
+        "cost": 0.015387,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015387,
+          "upstream_inference_prompt_cost": 0.008637,
+          "upstream_inference_completions_cost": 0.00675
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:28.361Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You key the engine controls with practiced efficiency, lifting Serenity off her landing struts as th",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:28.363Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:38.915Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5225,
+        "completion_tokens": 466,
+        "total_tokens": 5691,
+        "cost": 0.022665,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022665,
+          "upstream_inference_prompt_cost": 0.015675,
+          "upstream_inference_completions_cost": 0.00699
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:38.918Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully navigated Serenity through mining tunnels to hidden valley, evading Alliance patrol convergence"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:44:38.919Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "20m",
+      "resolvedConsequences": 1,
+      "proximity": 0.14,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Webb provides intel on Alliance patrol patterns and suggests coordinated escape timing\",\"narration_directive\":\"Webb proves helpful with local knowledge, offering tactical advantage for escape planning\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Evidence transmission alerts Alliance to your exact location but creates public pressure\",\"narration_directive\":\"Transmission successful but Alliance triangulates signal, forcing immediate departure under ...[clipped]",
+      "event": "Successfully navigated Serenity through mining tunnels to hidden valley, evading Alliance patrol convergence"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:45:51.826Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:05.089Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2757,
+        "completion_tokens": 442,
+        "total_tokens": 3199,
+        "cost": 0.014901,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014901,
+          "upstream_inference_prompt_cost": 0.008271,
+          "upstream_inference_completions_cost": 0.00663
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:05.093Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You key up the comm to Webb's frequency, keeping the signal tight-beam and encrypted. The response c",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:05.095Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:15.295Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5119,
+        "completion_tokens": 449,
+        "total_tokens": 5568,
+        "cost": 0.022092,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022092,
+          "upstream_inference_prompt_cost": 0.015357,
+          "upstream_inference_completions_cost": 0.006735
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:15.298Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Contacted Webb who provided valuable Alliance patrol intel and identified escape window at oh-three-hundred"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:15.299Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Marcus Webb: +15",
+      "proximity": 0.28,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Crew escapes cleanly but Alliance coverup succeeds, Project Minerva evidence lost\",\"narration_directive\":\"Focus on successful escape but emphasize moral weight of leaving truth buried\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Transmission partially successful but Alliance triangulates signal, forcing hasty departure under fire\",\"narration_directive\":\"Show partial victory with immediate danger as Alliance closes in on transmission source\"},\"C\":{...[clipped]",
+      "event": "Contacted Webb who provided valuable Alliance patrol intel and identified escape window at oh-three-hundred"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:46:50.496Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:02.985Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2794,
+        "completion_tokens": 447,
+        "total_tokens": 3241,
+        "cost": 0.015087,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015087,
+          "upstream_inference_prompt_cost": 0.008382,
+          "upstream_inference_completions_cost": 0.006705
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:02.991Z",
+    "level": "warn",
+    "cat": "Writer",
+    "msg": "JSON parse failed (attempt 1)",
+    "data": {
+      "attempt": 0,
+      "error": "JSON.parse: expected property name or '}' at line 1 column 2 of the JSON data",
+      "rawPreview": "{\n  \"passage\": \"You nod grimly at Webb's transmission. \\\"Understood. We'll be ready.\\\" The next twenty-five minutes crawl by like hours as you prep Serenity for what might be the quietest takeoff of your career. Simon secures the medical bay while Kaylee runs final engine diagnostics, her usual cheerful demeanor replaced by tense focus. The Project Minerva files sit heavy in your coat pocket – evidence of Alliance experimentation that could bring down careers, maybe governments. But as you watch"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:16.214Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2794,
+        "completion_tokens": 483,
+        "total_tokens": 3277,
+        "cost": 0.015627,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015627,
+          "upstream_inference_prompt_cost": 0.008382,
+          "upstream_inference_completions_cost": 0.007245
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:16.217Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You nod grimly at Webb's intel. \"We leave at oh-three-hundred. Wash, prep for silent running — no tr",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:16.218Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:26.756Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5191,
+        "completion_tokens": 486,
+        "total_tokens": 5677,
+        "cost": 0.022863,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.022863,
+          "upstream_inference_prompt_cost": 0.015573,
+          "upstream_inference_completions_cost": 0.00729
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:26.759Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully escaped Ezra using Webb's intel, but chose to keep Project Minerva evidence hidden to protect crew"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:47:26.759Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "25m",
+      "proximity": 0.43,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Crew morale improves, gain future opportunity to expose Alliance crimes safely\",\"narration_directive\":\"Show Mal's determination to find justice without sacrificing crew, hint at future opportunities\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Simon's relationship deteriorates, crew questions Mal's moral compromises\",\"narration_directive\":\"Focus on Simon's disappointment and growing tension within crew about moral choices\"},\"C\":{\"outcome\":\"severe_...[clipped]",
+      "event": "Successfully escaped Ezra using Webb's intel, but chose to keep Project Minerva evidence hidden to protect crew"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:52:37.262Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T13:52:51.103Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2858,
+        "completion_tokens": 472,
+        "total_tokens": 3330,
+        "cost": 0.015654,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015654,
+          "upstream_inference_prompt_cost": 0.008574,
+          "upstream_inference_completions_cost": 0.00708
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:52:51.107Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "The weight of the decision settles over Serenity's bridge like dust after a firefight. You look arou",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T13:52:51.109Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T13:53:03.178Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5192,
+        "completion_tokens": 500,
+        "total_tokens": 5692,
+        "cost": 0.023076,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023076,
+          "upstream_inference_prompt_cost": 0.015576,
+          "upstream_inference_completions_cost": 0.0075
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T13:53:03.181Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Made decision to prioritize crew safety while preserving evidence for future justice, crew morale improved significantly"
+    }
+  },
+  {
+    "ts": "2026-03-16T13:53:03.183Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Dr. Simon Tam: +5, Marcus Webb: +10",
+      "proximity": 0.57,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Establish contact with independent journalists, gain reliable information network\",\"narration_directive\":\"Show arrival at Persephone and meeting with trustworthy journalists who can help expose the truth safely\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Religious networks are slower but more secure, but Haven has Alliance surveillance\",\"narration_directive\":\"Book's contacts are helpful but reveal Alliance is monitoring religious communications, ...[clipped]",
+      "event": "Made decision to prioritize crew safety while preserving evidence for future justice, crew morale improved significantly"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:28.885Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:41.980Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2882,
+        "completion_tokens": 473,
+        "total_tokens": 3355,
+        "cost": 0.015741,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015741,
+          "upstream_inference_prompt_cost": 0.008646,
+          "upstream_inference_completions_cost": 0.007095
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:41.982Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "Three days out from Ezra, Serenity touches down on Persephone's sprawling docks under cover of a rou",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:41.983Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:55.777Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5222,
+        "completion_tokens": 627,
+        "total_tokens": 5849,
+        "cost": 0.025071,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.025071,
+          "upstream_inference_prompt_cost": 0.015666,
+          "upstream_inference_completions_cost": 0.009405
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:55.779Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Arrived on Persephone and established contact with journalist Cassandra Cross, who confirmed broader Alliance conspiracy and offered coordinated media release"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:01:55.784Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "3d 2h 30m",
+      "relationships": "Cassandra Cross: +60",
+      "proximity": 0.8,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Going public makes you a high-priority Alliance target but gives the story credibility\",\"narration_directive\":\"Show Mal accepting the risk of becoming the face of the story, with Alliance response escalating quickly\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Webb's survivor testimony strengthens the case while keeping you relatively protected\",\"narration_directive\":\"Show Webb agreeing to testify, providing powerful firsthand account that validat...[clipped]",
+      "event": "Arrived on Persephone and established contact with journalist Cassandra Cross, who confirmed broader Alliance conspiracy and offered coordinated media release"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:25.471Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:37.807Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3008,
+        "completion_tokens": 434,
+        "total_tokens": 3442,
+        "cost": 0.015534,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015534,
+          "upstream_inference_prompt_cost": 0.009024,
+          "upstream_inference_completions_cost": 0.00651
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:37.811Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "Cassandra's eyes widen as you slide the medical supply manifest across the table. Her fingers trace ",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:37.814Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:52.292Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5310,
+        "completion_tokens": 650,
+        "total_tokens": 5960,
+        "cost": 0.02568,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02568,
+          "upstream_inference_prompt_cost": 0.01593,
+          "upstream_inference_completions_cost": 0.00975
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:52.297Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Medical manifest proves Alliance premeditation and criminal conspiracy, transforming evidence into smoking gun for prosecution"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:03:52.298Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Cassandra Cross: +15, Dr. Simon Tam: +5",
+      "proximity": 0.86,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Immediate publication triggers Alliance manhunt but ensures story breaks before they can suppress it\",\"narration_directive\":\"Show the immediate rush to publication and the dangerous but necessary urgency of getting ahead of Alliance suppression efforts\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Delayed publication ensures crew safety but risks Alliance discovering and suppressing the story\",\"narration_directive\":\"Show Cassandra agreeing to wait ...[clipped]",
+      "event": "Medical manifest proves Alliance premeditation and criminal conspiracy, transforming evidence into smoking gun for prosecution"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:22.903Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:33.592Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3064,
+        "completion_tokens": 425,
+        "total_tokens": 3489,
+        "cost": 0.015567,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.015567,
+          "upstream_inference_prompt_cost": 0.009192,
+          "upstream_inference_completions_cost": 0.006375
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:33.597Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "Cassandra's expression tightens, but she nods slowly. \"I understand your position, Captain. Protecti",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:33.599Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:44.520Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5395,
+        "completion_tokens": 547,
+        "total_tokens": 5942,
+        "cost": 0.02439,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02439,
+          "upstream_inference_prompt_cost": 0.016185,
+          "upstream_inference_completions_cost": 0.008205
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:44.523Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Negotiated delayed publication timeline with Cassandra, gaining 48-hour window but risking Alliance countermeasures"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:05:44.525Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Cassandra Cross: +5",
+      "newConsequences": 1,
+      "proximity": 0.93,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Secure departure ensures crew safety but reduces coordination time with journalist network\",\"narration_directive\":\"Show preparations for immediate departure while Cassandra expresses concern about reduced coordination time\"},\"B\":{\"outcome\":\"advance_risky\",\"consequence\":\"Story preparation begins but increases risk of Alliance detection during coordination phase\",\"narration_directive\":\"Show Cassandra beginning story preparation while Alliance monitorin...[clipped]",
+      "event": "Negotiated delayed publication timeline with Cassandra, gaining 48-hour window but risking Alliance countermeasures"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:03.281Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:14.466Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3192,
+        "completion_tokens": 429,
+        "total_tokens": 3621,
+        "cost": 0.016011,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016011,
+          "upstream_inference_prompt_cost": 0.009576,
+          "upstream_inference_completions_cost": 0.006435
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:14.471Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You key the comm with decisive finality. \"Cassandra, change of plans. We're burning atmo in twenty m",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:14.474Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:24.694Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5511,
+        "completion_tokens": 468,
+        "total_tokens": 5979,
+        "cost": 0.023553,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023553,
+          "upstream_inference_prompt_cost": 0.016533,
+          "upstream_inference_completions_cost": 0.00702
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:24.698Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Prepared for immediate departure from Persephone while Cassandra warned about reduced coordination time with journalist network"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:06:24.700Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "20m",
+      "proximity": 1,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Delayed departure allows better coordination but Alliance patrol spots Serenity during extended stay\",\"narration_directive\":\"Show successful protocol establishment but Alliance forces converging on the docks, creating immediate danger\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Clean departure with backup plan established, maintaining story security while ensuring crew safety\",\"narration_directive\":\"Show smooth departure with emergency protocols ...[clipped]",
+      "event": "Prepared for immediate departure from Persephone while Cassandra warned about reduced coordination time with journalist network"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:10.100Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:22.733Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3231,
+        "completion_tokens": 451,
+        "total_tokens": 3682,
+        "cost": 0.016458,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016458,
+          "upstream_inference_prompt_cost": 0.009693,
+          "upstream_inference_completions_cost": 0.006765
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:22.738Z",
+    "level": "warn",
+    "cat": "Writer",
+    "msg": "JSON parse failed (attempt 1)",
+    "data": {
+      "attempt": 0,
+      "error": "JSON.parse: expected property name or '}' at line 1 column 2 of the JSON data",
+      "rawPreview": "{\n  \"passage\": \"You tap your comm one last time. \\\"Cassandra, we're dusting off now, but I'm sending you some emergency contacts — people who can help if the Alliance comes knocking.\\\" You transmit Badger's encrypted frequency and a coded reference to Inara's diplomatic connections. \\\"These folks owe me favors, and they don't much care for Alliance overreach.\\\"\\n\\n\\\"Appreciated, Malcolm. My network's been through worse than Alliance censors.\\\" Her voice carries that steel you've come to respect."
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:35.478Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3231,
+        "completion_tokens": 455,
+        "total_tokens": 3686,
+        "cost": 0.016518,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016518,
+          "upstream_inference_prompt_cost": 0.009693,
+          "upstream_inference_completions_cost": 0.006825
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:35.482Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You hand Cassandra a small data pad with encrypted contact codes. \"These are secure channels to inde",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:35.485Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:49.272Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5569,
+        "completion_tokens": 613,
+        "total_tokens": 6182,
+        "cost": 0.025902,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.025902,
+          "upstream_inference_prompt_cost": 0.016707,
+          "upstream_inference_completions_cost": 0.009195
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:49.273Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Established backup journalist network and departed Persephone, but Alliance cruisers arrived and are conducting sensor sweeps"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:07:49.274Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "25m",
+      "relationships": "Cassandra Cross: +10",
+      "proximity": 1,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"High-speed chase through space with potential engine strain and Alliance pursuit\",\"narration_directive\":\"Show intense space chase with Serenity pushed to limits, Alliance ships in hot pursuit but gradually falling behind\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Successfully hide in asteroid field while Alliance searches elsewhere\",\"narration_directive\":\"Show tense hiding sequence in asteroid field, Alliance ships eventually moving on to search...[clipped]",
+      "event": "Established backup journalist network and departed Persephone, but Alliance cruisers arrived and are conducting sensor sweeps"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:08:44.458Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:08:56.198Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3264,
+        "completion_tokens": 415,
+        "total_tokens": 3679,
+        "cost": 0.016017,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016017,
+          "upstream_inference_prompt_cost": 0.009792,
+          "upstream_inference_completions_cost": 0.006225
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:08:56.203Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You guide Serenity deep into the asteroid field's shadow, cutting engines to minimum power as Allian",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:08:56.206Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:09:05.961Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5588,
+        "completion_tokens": 436,
+        "total_tokens": 6024,
+        "cost": 0.023304,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.023304,
+          "upstream_inference_prompt_cost": 0.016764,
+          "upstream_inference_completions_cost": 0.00654
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:09:05.965Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully hid in asteroid field while Alliance cruisers conducted close-range search, gaining breathing room with 37 hours left in publication window"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:09:05.968Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "23m",
+      "proximity": 1,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Core worlds journey takes too long, Alliance intercepts before reaching courts\",\"narration_directive\":\"Show the dangerous journey toward Core worlds with Alliance forces closing in and time running out\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Successful rendezvous with Cassandra for coordinated release within time window\",\"narration_directive\":\"Show successful meeting with Cassandra on Ariel, coordinated release preparations, and Alliance evid...[clipped]",
+      "event": "Successfully hid in asteroid field while Alliance cruisers conducted close-range search, gaining breathing room with 37 hours left in publication window"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:06.478Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:18.275Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3314,
+        "completion_tokens": 438,
+        "total_tokens": 3752,
+        "cost": 0.016512,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016512,
+          "upstream_inference_prompt_cost": 0.009942,
+          "upstream_inference_completions_cost": 0.00657
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:18.280Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "Ariel's medical district hums with typical Core world efficiency as Serenity touches down at a priva",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:18.283Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:30.176Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5650,
+        "completion_tokens": 536,
+        "total_tokens": 6186,
+        "cost": 0.02499,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02499,
+          "upstream_inference_prompt_cost": 0.01695,
+          "upstream_inference_completions_cost": 0.00804
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:30.181Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully rendezvoused with Cassandra on Ariel and prepared coordinated release of Project Minerva evidence across Core journalist networks"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:10:30.183Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "2h 15m",
+      "relationships": "Cassandra Cross: +10",
+      "resolvedConsequences": 1,
+      "proximity": 0.91,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Immediate broadcast triggers massive Alliance response but ensures story breaks before countermeasures\",\"narration_directive\":\"Show the evidence going live across the Core, massive public reaction, but Alliance forces mobilizing rapidly to hunt down the source\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Additional security protocols protect journalist network but reduce coordination window\",\"narration_directive\":\"Show enhanced security measures b...[clipped]",
+      "event": "Successfully rendezvoused with Cassandra on Ariel and prepared coordinated release of Project Minerva evidence across Core journalist networks"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:17.172Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:29.050Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3247,
+        "completion_tokens": 443,
+        "total_tokens": 3690,
+        "cost": 0.016386,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.016386,
+          "upstream_inference_prompt_cost": 0.009741,
+          "upstream_inference_completions_cost": 0.006645
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:29.054Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You lean forward, meeting Cassandra's intense gaze. \"We coordinate simultaneous release across multi",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:29.055Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:40.502Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5635,
+        "completion_tokens": 527,
+        "total_tokens": 6162,
+        "cost": 0.02481,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02481,
+          "upstream_inference_prompt_cost": 0.016905,
+          "upstream_inference_completions_cost": 0.007905
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:40.506Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully coordinated simultaneous release of Project Minerva evidence across six Core star systems, creating unstoppable information cascade"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:11:40.509Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Cassandra Cross: +10",
+      "proximity": 0.95,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Gain valuable intelligence on Alliance panic response and resource deployment\",\"narration_directive\":\"Show Alliance emergency channels in chaos as they realize the scope of the information release and their inability to contain it\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Successfully escape while Alliance forces are distracted by crisis management\",\"narration_directive\":\"Show smooth departure as Alliance resources are completely focused on dama...[clipped]",
+      "event": "Successfully coordinated simultaneous release of Project Minerva evidence across six Core star systems, creating unstoppable information cascade"
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:26.668Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:40.406Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 3330,
+        "completion_tokens": 460,
+        "total_tokens": 3790,
+        "cost": 0.01689,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01689,
+          "upstream_inference_prompt_cost": 0.00999,
+          "upstream_inference_completions_cost": 0.0069
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:40.410Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "The cortex feeds paint a picture of pure Alliance chaos. Emergency sessions called on three Core wor",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:40.413Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:51.513Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 5810,
+        "completion_tokens": 504,
+        "total_tokens": 6314,
+        "cost": 0.02499,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.02499,
+          "upstream_inference_prompt_cost": 0.01743,
+          "upstream_inference_completions_cost": 0.00756
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:51.517Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Successfully departed Ariel while Alliance forces focused on crisis management, gaining clear escape route to outer territories",
+      "storyComplete": true
+    }
+  },
+  {
+    "ts": "2026-03-16T14:12:51.520Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "2h 30m",
+      "relationships": "Marcus Webb: +10, Cassandra Cross: +5",
+      "storyComplete": true,
+      "proximity": 1,
+      "choices": "{\"A\":{\"outcome\":\"advance_safe\",\"consequence\":\"Reach outer rim safely with minimal Alliance interference, establishing secure base of operations\",\"narration_directive\":\"Show peaceful journey to rim territories with crew finally able to relax and plan for the future\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Webb reunites with family while crew enjoys brief respite on familiar world\",\"narration_directive\":\"Focus on Webb's emotional reunion and crew's satisfaction at completing their moral miss...[clipped]",
+      "event": "Successfully departed Ariel while Alliance forces focused on crisis management, gaining clear escape route to outer territories"
+    }
+  }
+]
