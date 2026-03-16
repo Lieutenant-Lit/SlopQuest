@@ -273,10 +273,11 @@
         SQ.HistoryStack.push(SQ.GameState.snapshot(), '', null);
 
         // Apply Writer response (passage + choices)
+        // Note: scene_number already starts at 1 from GameState.create(),
+        // so we don't increment here — the opening IS scene 1.
         var writerResponse = result.writerResponse;
         state.last_passage = writerResponse.passage;
         state.current_choices = writerResponse.choices;
-        state.current.scene_number = (state.current.scene_number || 0) + 1;
 
         // Queue TTS narration for the opening passage (on-demand: user clicks play)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
