@@ -267,7 +267,18 @@
       if (typeof raw !== 'string') return raw;
       // Strip markdown code fences
       var cleaned = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-      return JSON.parse(cleaned);
+      try {
+        return JSON.parse(cleaned);
+      } catch (_e) {
+        // Attempt repair: fix unescaped newlines inside JSON string values.
+        // LLMs at high temperature often produce multi-paragraph passages with
+        // literal newlines that aren't escaped, breaking JSON.parse().
+        var repaired = cleaned.replace(/("(?:[^"\\]|\\.)*")|(\n)/g, function (match, quoted, newline) {
+          if (quoted) return quoted;  // Already inside a properly quoted string
+          return '\\n';  // Bare newline outside quotes — escape it
+        });
+        return JSON.parse(repaired);
+      }
     }
   };
 })();

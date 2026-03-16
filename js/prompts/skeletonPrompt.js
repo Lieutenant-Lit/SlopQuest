@@ -66,7 +66,8 @@
       p += '      "motivation": "string",\n';
       p += '      "allegiance": "string — faction name or \'unaligned\'",\n';
       p += '      "secret": "string — hidden from player, known to skeleton",\n';
-      p += '      "initial_relationship": "number — -100 to 100"\n';
+      p += '      "initial_relationship": "number — -100 to 100",\n';
+      p += '      "companion": "boolean — true if this NPC travels with the player as a party member, false otherwise"\n';
       p += '    }\n';
       p += '  ],\n';
       p += '  "factions": [\n';
@@ -184,6 +185,7 @@
       p += '- An ending shape (not content, just form) that everything builds toward\n';
       p += '- Three acts with distinct purposes, locked constraints, and clear end conditions\n';
       p += '- Named NPCs with hidden motivations (count per story length setting above)\n';
+      p += '- At least one NPC should be a companion (companion: true) who travels with the player, unless the story concept is explicitly a solo journey\n';
       p += '- Factions with competing interests (count per story length setting above)\n';
       p += '- Target scenes per act matching the story length setting\n';
       p += '- World rules that create interesting constraints on player choices\n';

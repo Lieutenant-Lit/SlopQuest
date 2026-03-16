@@ -65,6 +65,7 @@
           time_of_day: '',
           in_game_time: { days: 0, hours: 0, minutes: 0, seconds: 0 },
           proximity_to_climax: 0.0,
+          act_start_scene: 1,
           active_constraints: [],
           scene_context: ''
         },

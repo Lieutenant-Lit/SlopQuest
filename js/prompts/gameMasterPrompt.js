@@ -104,9 +104,10 @@
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
       p += '    "new_scene_context": "string — brief context for next passage",\n';
-      p += '    "advance_act": false,\n';
+      p += '    "proximity_to_climax": "number 0.0-1.0 — REQUIRED (see PACING)",\n';
+      p += '    "advance_act": "true or false — REQUIRED (see PACING)",\n';
       p += '    "game_over": false,\n';
-      p += '    "story_complete": false\n';
+      p += '    "story_complete": "true when Act 3 end_condition is met (see PACING)"\n';
       p += '  },\n';
       p += '  "choice_metadata": {\n';
       if (isHardOrBrutal) {
@@ -122,13 +123,24 @@
       // General rules
       p += 'RULES:\n';
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
-      p += '- Only include changed fields in state_updates (omit unchanged fields)\n';
-      p += '- Only include player_changes fields that actually changed\n';
+      p += '- Only include player_changes, relationship_changes, world_flag_changes, new_pending_consequences, and resolved_consequences when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act.\n';
       p += '- Relationship changes are DELTAS, not absolute values\n';
-      p += '- Update proximity_to_climax based on how close the act\'s end condition is\n';
+      p += '- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n';
       p += '- event_log_entry is required — always summarize what happened this turn\n';
       p += '- choice_metadata must classify all four choices (A, B, C, D)\n';
       p += '- CRITICAL: When a PLAYER\'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative status effects or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n\n';
+
+      // Pacing rules
+      p += 'PACING — REQUIRED:\n';
+      p += '- The current act\'s target_scenes (in the skeleton) is the intended scene count for this act.\n';
+      p += '- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n';
+      p += '- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n';
+      p += '- MINIMUM SCENES: Do NOT set advance_act to true if scenes_in_act < 3. Every act needs at least 3 scenes to develop properly.\n';
+      p += '- If scenes_in_act >= target_scenes AND the act\'s end_condition is narratively close to being met, set advance_act to true.\n';
+      p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD set advance_act to true — the act has gone on too long. Drive the narrative forward.\n';
+      p += '- When advance_act is true, also set proximity_to_climax to 1.0.\n';
+      p += '- STORY COMPLETION: If the current act is Act 3 (the FINAL act) and its end_condition is met, set story_complete to true INSTEAD of advance_act. This ends the story.\n';
+      p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it.\n\n';
 
       // Time elapsed rules
       p += 'TIME ELAPSED — REQUIRED EVERY TURN:\n';
