@@ -285,26 +285,45 @@
 
         SQ.GameState.save();
 
-        // Wait for Game Master to apply state updates before showing the game
-        return result.gameMasterPromise.then(function (gmResponse) {
-          SQ.Screens.Game.applyGameMasterResponse(state, gmResponse);
-          SQ.GameState.save();
-        });
-      }).then(function () {
+        // Show game screen immediately — don't wait for GM (mirrors makeChoice flow)
         loadingOverlay.classList.add('hidden');
         self._resetButton();
         SQ.showScreen('game');
 
-        // Start playtester auto-play if enabled
-        if (SQ.PlayerConfig.isPlaytesterEnabled() && SQ.Playtester) {
-          SQ.Playtester.start({
-            maxTurns: setupConfig.playtesterMaxTurns || 20,
-            playstyle: setupConfig.playtesterPlaystyle || '',
-            focusPrimer: setupConfig.playtesterFocusPrimer || ''
+        // Disable choices while GM processes (same as makeChoice does)
+        SQ.Screens.Game._disableChoicesWithStatus('Updating game state...');
+
+        // Let GM resolve in background
+        result.gameMasterPromise.then(function (gmResponse) {
+          SQ.Screens.Game.applyGameMasterResponse(state, gmResponse);
+          SQ.Screens.Game._renderStatusBar(state);
+          SQ.Screens.Game._renderGameStateDebug(state);
+          SQ.GameState.save();
+
+          // Check for immediate game over (unlikely on opening but be safe)
+          if (state.game_over || state.story_complete) return;
+
+          // Enable choices — GM is done
+          SQ.Screens.Game._enableChoices();
+          SQ.Screens.Game._hideChoiceStatus();
+
+          // Start playtester AFTER GM finishes so scene 1 is fully visible
+          if (SQ.PlayerConfig.isPlaytesterEnabled() && SQ.Playtester) {
+            SQ.Playtester.start({
+              maxTurns: setupConfig.playtesterMaxTurns || 20,
+              playstyle: setupConfig.playtesterPlaystyle || '',
+              focusPrimer: setupConfig.playtesterFocusPrimer || ''
+            });
+            SQ.Playtester.onTurnComplete();
+          }
+        }).catch(function (gmErr) {
+          SQ.Logger.error('GameMaster', 'Opening GM failed', { error: gmErr.message });
+          SQ.ErrorOverlay.show(gmErr, {
+            onRetry: function () {
+              self.startGeneration();
+            }
           });
-          // Kick off the first turn decision
-          SQ.Playtester.onTurnComplete();
-        }
+        });
       }).catch(function (err) {
         SQ.Logger.error('Setup', 'Generation failed', { error: err.message });
         loadingOverlay.classList.add('hidden');
