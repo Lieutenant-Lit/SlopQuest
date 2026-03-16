@@ -80,7 +80,6 @@
       description: '15-20 turns, ~20-30 minutes',
       total_turns: { min: 15, max: 20 },
       turns_per_act: { min: 5, max: 7 },
-      npc_count: { min: 3, max: 4 },
       faction_count: { min: 1, max: 2 },
       subplot_threads: { min: 0, max: 1 },
       max_pending_consequences: 3
@@ -90,7 +89,6 @@
       description: '30-40 turns, ~45-75 minutes',
       total_turns: { min: 30, max: 40 },
       turns_per_act: { min: 10, max: 13 },
-      npc_count: { min: 5, max: 6 },
       faction_count: { min: 2, max: 3 },
       subplot_threads: { min: 1, max: 2 },
       max_pending_consequences: 7
@@ -100,7 +98,6 @@
       description: '50-70 turns, ~90-150 minutes',
       total_turns: { min: 50, max: 70 },
       turns_per_act: { min: 17, max: 23 },
-      npc_count: { min: 7, max: 9 },
       faction_count: { min: 3, max: 4 },
       subplot_threads: { min: 2, max: 4 },
       max_pending_consequences: 12

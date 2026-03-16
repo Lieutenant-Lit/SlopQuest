@@ -13,7 +13,7 @@
 (function () {
   var STORAGE_KEY = 'slopquest_logs';
   var MAX_ENTRIES = 500;
-  var MAX_BYTES = 512 * 1024; // 512 KB
+  var MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
   /** In-memory log buffer, loaded from localStorage on first access. */
   var _entries = null;
@@ -91,7 +91,7 @@
     return out;
   }
 
-  function _log(level, category, message, data) {
+  function _log(level, category, message, data, skipClip) {
     _load();
 
     var entry = {
@@ -101,7 +101,7 @@
       msg: message
     };
     if (data !== undefined) {
-      entry.data = _clip(data);
+      entry.data = skipClip ? data : _clip(data);
     }
 
     // Ring buffer — drop oldest if full
@@ -126,6 +126,11 @@
   SQ.Logger = {
     info: function (category, message, data) {
       _log('info', category, message, data);
+    },
+
+    /** Log at info level without clipping data (for large structured objects like skeletons). */
+    infoFull: function (category, message, data) {
+      _log('info', category, message, data, true);
     },
 
     warn: function (category, message, data) {

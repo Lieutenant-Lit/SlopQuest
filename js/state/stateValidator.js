@@ -215,6 +215,22 @@
         }
       }
 
+      // npc_updates — optional, soft validation (warn but don't fail)
+      if (response.state_updates && response.state_updates.npc_updates) {
+        var npcUpdates = response.state_updates.npc_updates;
+        if (typeof npcUpdates !== 'object' || Array.isArray(npcUpdates)) {
+          SQ.Logger.warn('Validator', 'npc_updates should be a plain object, ignoring');
+        } else {
+          for (var npcName in npcUpdates) {
+            if (npcUpdates.hasOwnProperty(npcName)) {
+              if (!npcName || typeof npcUpdates[npcName] !== 'object') {
+                SQ.Logger.warn('Validator', 'Invalid npc_updates entry for: ' + npcName);
+              }
+            }
+          }
+        }
+      }
+
       // choice_metadata is required
       if (!response.choice_metadata || typeof response.choice_metadata !== 'object') {
         errors.push('Missing choice_metadata object');

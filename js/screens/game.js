@@ -261,6 +261,15 @@
       var state = SQ.GameState.get();
       if (!state) return;
 
+      // Log the player's choice
+      var _choiceObj = state.current_choices && state.current_choices[choiceId];
+      SQ.Logger.info('Game', 'Choice made', {
+        choiceId: choiceId,
+        choiceText: _choiceObj ? (_choiceObj.text || _choiceObj.label) : undefined,
+        scene: state.current.scene_number,
+        act: state.current.act
+      });
+
       // Disable choice buttons during generation
       document.querySelectorAll('.btn-choice').forEach(function (btn) {
         btn.disabled = true;
@@ -272,6 +281,11 @@
         state.last_passage,
         choiceId
       );
+      SQ.Logger.info('Game', 'History snapshot saved', {
+        scene: state.current.scene_number,
+        act: state.current.act,
+        historyDepth: SQ.HistoryStack.length()
+      });
 
       self.showLoading();
 
@@ -471,6 +485,19 @@
         }
       }
 
+      // 9b. NPC overrides (merge updates into mutable NPC layer)
+      if (updates.npc_updates) {
+        if (!state.npc_overrides) state.npc_overrides = {};
+        for (var npcName in updates.npc_updates) {
+          if (updates.npc_updates.hasOwnProperty(npcName)) {
+            if (!state.npc_overrides[npcName]) {
+              state.npc_overrides[npcName] = {};
+            }
+            Object.assign(state.npc_overrides[npcName], updates.npc_updates[npcName]);
+          }
+        }
+      }
+
       // 10. Scene context update
       if (updates.new_scene_context) {
         state.current.scene_context = updates.new_scene_context;
@@ -487,6 +514,11 @@
             state.current.active_constraints = newAct.locked_constraints.slice();
           }
         }
+        SQ.Logger.info('Game', 'Act advanced', {
+          newAct: state.current.act,
+          scene: state.current.scene_number,
+          constraints: state.current.active_constraints
+        });
       }
 
       // 11b. Apply proximity_to_climax from GM (skip if act just advanced — reset takes precedence)
@@ -534,6 +566,9 @@
       if (updates.story_complete) _gmLog.storyComplete = true;
       if (typeof updates.proximity_to_climax === 'number') _gmLog.proximity = updates.proximity_to_climax;
       if (updates.advance_act) _gmLog.advanceAct = true;
+      if (updates.npc_updates && Object.keys(updates.npc_updates).length) {
+        _gmLog.npcUpdates = updates.npc_updates;
+      }
       _gmLog.choices = gmResponse.choice_metadata;
       _gmLog.event = updates.event_log_entry;
       SQ.Logger.info('GameMaster', 'Applied state updates', _gmLog);
@@ -569,6 +604,11 @@
       var isStoryComplete = updates.story_complete;
 
       if (isGameOver) {
+        SQ.Logger.info('Game', 'Game over', {
+          reason: updates.event_log_entry,
+          scene: state.current.scene_number,
+          act: state.current.act
+        });
         state.game_over = true;
         state.game_over_reason = updates.event_log_entry || 'The story has ended.';
         SQ.GameState.save();
@@ -577,6 +617,10 @@
       }
 
       if (isStoryComplete) {
+        SQ.Logger.info('Game', 'Story complete', {
+          scene: state.current.scene_number,
+          act: state.current.act
+        });
         state.story_complete = true;
         SQ.GameState.save();
         SQ.showScreen('gameover');

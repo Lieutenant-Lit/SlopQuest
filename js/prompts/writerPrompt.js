@@ -69,16 +69,20 @@
       p += 'RELATIONSHIPS:\n';
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
 
-      // Companion awareness — identify NPCs who should be present in scenes
-      if (gameState.skeleton && Array.isArray(gameState.skeleton.npcs)) {
-        var companions = gameState.skeleton.npcs.filter(function (npc) {
+      // NPC roster — merged skeleton NPCs + overrides + dynamic NPCs
+      var allNpcs = SQ.GameState.getNpcRoster();
+      if (allNpcs.length > 0) {
+        var companions = allNpcs.filter(function (npc) {
           if (npc.companion) return true;
           var role = (npc.role || '').toLowerCase();
           return role.indexOf('companion') !== -1 ||
                  role.indexOf('party member') !== -1 ||
                  role.indexOf('traveling companion') !== -1 ||
                  role.indexOf('sidekick') !== -1 ||
-                 role.indexOf('squire') !== -1;
+                 role.indexOf('squire') !== -1 ||
+                 role.indexOf('crew') !== -1 ||
+                 role.indexOf('first mate') !== -1 ||
+                 role.indexOf('crewmate') !== -1;
         });
         if (companions.length > 0) {
           p += 'COMPANIONS (present in every scene unless narratively separated):\n';
@@ -91,6 +95,26 @@
             p += '\n';
           });
           p += 'These characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\n';
+        }
+
+        // Full NPC roster for context
+        var nonCompanions = allNpcs.filter(function (npc) {
+          return companions.indexOf(npc) === -1;
+        });
+        if (nonCompanions.length > 0) {
+          p += 'KNOWN NPCs:\n';
+          nonCompanions.forEach(function (npc) {
+            var rel = gameState.relationships[npc.name];
+            p += '- ' + npc.name + ' (' + npc.role + ')';
+            if (typeof rel === 'number') {
+              p += ' [relationship: ' + rel + ']';
+            }
+            if (npc.notes) {
+              p += ' — ' + npc.notes;
+            }
+            p += '\n';
+          });
+          p += '\n';
         }
       }
 

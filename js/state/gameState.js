@@ -74,6 +74,7 @@
         event_log: [],
         backstory_summary: '',
         world_flags: {},
+        npc_overrides: {},
         last_passage: '',
         illustration_prompt: '',
         game_over: false,
@@ -147,6 +148,62 @@
     },
 
     /**
+     * Build a merged NPC roster: skeleton NPCs with overrides applied, plus dynamic NPCs.
+     * Returns an array of NPC objects for prompt consumption.
+     */
+    getNpcRoster: function () {
+      if (!this._current) return [];
+      var skeleton = this._current.skeleton;
+      var overrides = this._current.npc_overrides || {};
+      var roster = [];
+      var seen = {};
+
+      // Skeleton NPCs with any overrides applied
+      if (skeleton && Array.isArray(skeleton.npcs)) {
+        skeleton.npcs.forEach(function (npc) {
+          var merged = {
+            name: npc.name,
+            role: npc.role,
+            motivation: npc.motivation,
+            allegiance: npc.allegiance,
+            secret: npc.secret,
+            companion: npc.companion,
+            source: 'skeleton'
+          };
+          var ov = overrides[npc.name];
+          if (ov) {
+            if (ov.role) merged.role = ov.role;
+            if (ov.motivation) merged.motivation = ov.motivation;
+            if (ov.allegiance) merged.allegiance = ov.allegiance;
+            if (typeof ov.companion === 'boolean') merged.companion = ov.companion;
+            if (ov.secret_revealed) merged.secret_revealed = true;
+            if (ov.notes) merged.notes = ov.notes;
+          }
+          roster.push(merged);
+          seen[npc.name] = true;
+        });
+      }
+
+      // Dynamic NPCs (in overrides but not in skeleton)
+      for (var name in overrides) {
+        if (overrides.hasOwnProperty(name) && !seen[name]) {
+          var ov = overrides[name];
+          roster.push({
+            name: name,
+            role: ov.role || 'unknown',
+            motivation: ov.motivation || '',
+            allegiance: ov.allegiance || 'unaligned',
+            companion: ov.companion || false,
+            notes: ov.notes || '',
+            source: 'dynamic'
+          });
+        }
+      }
+
+      return roster;
+    },
+
+    /**
      * Save current state to localStorage.
      */
     save: function () {
@@ -163,6 +220,10 @@
         var raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           this._current = JSON.parse(raw);
+          // Migration: ensure npc_overrides exists for saves created before this feature
+          if (this._current && !this._current.npc_overrides) {
+            this._current.npc_overrides = {};
+          }
           return this._current;
         }
       } catch (e) {

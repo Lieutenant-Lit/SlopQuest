@@ -85,7 +85,6 @@
       p += 'STORY LENGTH RULES (' + storyLength.label + '):\n';
       p += '- Total turns: ' + storyLength.total_turns.min + '-' + storyLength.total_turns.max + '\n';
       p += '- Turns per act: ' + storyLength.turns_per_act.min + '-' + storyLength.turns_per_act.max + '\n';
-      p += '- NPC count: ' + storyLength.npc_count.min + '-' + storyLength.npc_count.max + '\n';
       p += '- Faction count: ' + storyLength.faction_count.min + '-' + storyLength.faction_count.max + '\n';
       p += '- Subplot threads: ' + storyLength.subplot_threads.min + '-' + storyLength.subplot_threads.max + '\n';
       p += '- Max pending consequences: ' + storyLength.max_pending_consequences + '\n\n';
@@ -184,8 +183,9 @@
       p += '- A clear central dramatic question that drives the entire story\n';
       p += '- An ending shape (not content, just form) that everything builds toward\n';
       p += '- Three acts with distinct purposes, locked constraints, and clear end conditions\n';
-      p += '- Named NPCs with hidden motivations (count per story length setting above)\n';
-      p += '- At least one NPC should be a companion (companion: true) who travels with the player, unless the story concept is explicitly a solo journey\n';
+      p += '- Named NPCs with hidden motivations. Include as many NPCs as the setting naturally demands. For established universes, include the important canonical characters. For original settings, create enough NPCs to support the story\'s factions and relationships. Avoid filler characters — every NPC should matter to the plot.\n';
+      p += '- Companion allocation: If the setting or character concept implies the player leads or belongs to a group (e.g. a ship crew, adventuring party, squad, band, heist team), mark MOST of the NPCs as companions (companion: true). These are the player\'s core cast. Only antagonists and quest-givers should be non-companions in ensemble settings.\n';
+      p += '- For solo-journey or lone-wolf concepts, one companion is enough — or zero if the concept demands isolation.\n';
       p += '- Factions with competing interests (count per story length setting above)\n';
       p += '- Target scenes per act matching the story length setting\n';
       p += '- World rules that create interesting constraints on player choices\n';

@@ -199,8 +199,9 @@
         if (skel.setting.description) parts.push('World description: ' + skel.setting.description);
       }
 
-      if (skel.npcs && skel.npcs.length > 0) {
-        var npcLines = skel.npcs.map(function (npc) {
+      var npcs = SQ.GameState.getNpcRoster();
+      if (npcs.length > 0) {
+        var npcLines = npcs.map(function (npc) {
           var bits = [npc.name];
           if (npc.role) bits.push('role: ' + npc.role);
           if (npc.motivation) bits.push('motivation: ' + npc.motivation);
