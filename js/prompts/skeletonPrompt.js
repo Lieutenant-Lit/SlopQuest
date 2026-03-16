@@ -185,7 +185,9 @@
       p += '- An ending shape (not content, just form) that everything builds toward\n';
       p += '- Three acts with distinct purposes, locked constraints, and clear end conditions\n';
       p += '- Named NPCs with hidden motivations (count per story length setting above)\n';
-      p += '- At least one NPC should be a companion (companion: true) who travels with the player, unless the story concept is explicitly a solo journey\n';
+      p += '- Companion allocation: If the setting or character concept implies the player leads or belongs to a group (e.g. a ship crew, adventuring party, squad, band, heist team), mark MOST of the NPCs as companions (companion: true). These are the player\'s core cast. Only antagonists and quest-givers should be non-companions in ensemble settings.\n';
+      p += '- For solo-journey or lone-wolf concepts, one companion is enough — or zero if the concept demands isolation.\n';
+      p += '- When the NPC count cap is low (e.g. 3-4 for short stories), prioritize the most important ensemble members rather than diluting with background characters.\n';
       p += '- Factions with competing interests (count per story length setting above)\n';
       p += '- Target scenes per act matching the story length setting\n';
       p += '- World rules that create interesting constraints on player choices\n';

@@ -52,9 +52,11 @@
       p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
 
       // NPC overrides — mutable NPC data layered on top of the skeleton
+      p += 'NPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n';
       if (gameState.npc_overrides && Object.keys(gameState.npc_overrides).length > 0) {
-        p += 'NPC OVERRIDES (current mutable NPC data — updates layered on skeleton):\n';
         p += JSON.stringify(gameState.npc_overrides, null, 2) + '\n\n';
+      } else {
+        p += '(none yet — use npc_updates in your response to add or modify NPC data)\n\n';
       }
 
       p += 'CURRENT POSITION:\n';
@@ -136,7 +138,7 @@
       p += '- event_log_entry is required — always summarize what happened this turn\n';
       p += '- choice_metadata must classify all four choices (A, B, C, D)\n';
       p += '- CRITICAL: When a PLAYER\'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative status effects or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n';
-      p += '- npc_updates: include ONLY when an NPC\'s role, motivation, allegiance, or companion status meaningfully changes, or when a new narratively significant NPC is introduced. Do not create entries for ephemeral background characters. Use the NPC\'s exact name as the key — must match skeleton NPCs exactly.\n\n';
+      p += '- npc_updates: include when an NPC\'s role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character\'s name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\n';
 
       // Pacing rules
       p += 'PACING — REQUIRED:\n';

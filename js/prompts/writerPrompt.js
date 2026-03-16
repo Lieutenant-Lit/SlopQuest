@@ -79,7 +79,10 @@
                  role.indexOf('party member') !== -1 ||
                  role.indexOf('traveling companion') !== -1 ||
                  role.indexOf('sidekick') !== -1 ||
-                 role.indexOf('squire') !== -1;
+                 role.indexOf('squire') !== -1 ||
+                 role.indexOf('crew') !== -1 ||
+                 role.indexOf('first mate') !== -1 ||
+                 role.indexOf('crewmate') !== -1;
         });
         if (companions.length > 0) {
           p += 'COMPANIONS (present in every scene unless narratively separated):\n';

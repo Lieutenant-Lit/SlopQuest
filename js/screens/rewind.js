@@ -154,8 +154,17 @@
      * @private
      */
     _executeRewind: function (index) {
+      var currentState = SQ.GameState.get();
       var snapshot = SQ.HistoryStack.rewindTo(index);
       if (snapshot) {
+        var restoredCurrent = (snapshot.state && snapshot.state.current) || {};
+        SQ.Logger.info('Game', 'Rewind executed', {
+          targetIndex: index,
+          fromScene: currentState ? currentState.current.scene_number : undefined,
+          fromAct: currentState ? currentState.current.act : undefined,
+          toScene: restoredCurrent.scene_number,
+          toAct: restoredCurrent.act
+        });
         SQ.GameState.restore(snapshot.state);
         SQ.GameState.save();
         SQ.showScreen('game');
