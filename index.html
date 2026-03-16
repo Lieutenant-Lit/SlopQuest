@@ -80,6 +80,25 @@
       </div>
 
       <div class="card">
+        <h2>Agentic Playtester</h2>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-playtester-toggle">
+          <span>Enable automated playtesting</span>
+        </label>
+        <p>An AI agent plays through the game automatically and generates a quality report.</p>
+        <div id="playtester-model-section" class="hidden">
+          <label class="card-label">Playtester Model</label>
+          <select id="playtester-model-select">
+            <option value="anthropic/claude-sonnet-4">Claude Sonnet (default)</option>
+            <option value="google/gemini-2.5-flash-preview">Gemini Flash</option>
+            <option value="openai/gpt-4o">GPT-4o</option>
+            <option value="custom">Custom model...</option>
+          </select>
+          <input type="text" id="playtester-model-custom-input" class="hidden" placeholder="org/model-name">
+        </div>
+      </div>
+
+      <div class="card">
         <h2>Developer</h2>
         <label class="setup-toggle">
           <input type="checkbox" id="settings-gamestate-debug-toggle">
@@ -197,6 +216,35 @@
         </div>
       </div>
 
+      <div class="card hidden" id="playtester-setup-card">
+        <h2>Playtest Configuration</h2>
+        <div class="setup-inline-group">
+          <span class="setup-inline-label setup-inline-label-title">Max Turns</span>
+          <div class="setup-options" data-group="playtesterMaxTurns">
+            <button class="setup-option" data-value="10">10</button>
+            <button class="setup-option active" data-value="20">20</button>
+            <button class="setup-option" data-value="40">40</button>
+            <button class="setup-option" data-value="custom">Custom</button>
+          </div>
+          <input type="number" id="setup-playtester-max-turns-custom" class="hidden" placeholder="Number of turns" min="1" max="200">
+        </div>
+        <div>
+          <label class="card-label">Playstyle</label>
+          <textarea id="setup-playtester-playstyle" rows="2" placeholder="e.g., try to break the plot, play cautiously, pick the riskiest option every time..."></textarea>
+        </div>
+        <div>
+          <label class="card-label">Focus Area</label>
+          <input type="text" id="setup-playtester-focus" placeholder="What should the playtester focus on?">
+          <div class="setup-chips" data-chip-target="setup-playtester-focus">
+            <button class="setup-chip" data-value="Bug hunting">Bug hunting</button>
+            <button class="setup-chip" data-value="Writing quality">Writing quality</button>
+            <button class="setup-chip" data-value="Skeleton alignment">Skeleton alignment</button>
+            <button class="setup-chip" data-value="Break the game">Break the game</button>
+            <button class="setup-chip" data-value="Difficulty balance">Difficulty balance</button>
+          </div>
+        </div>
+      </div>
+
       <button id="btn-start-game" class="btn btn-primary btn-large">Generate Story</button>
     </div>
   </div>
@@ -230,6 +278,8 @@
       <div id="passage-text" class="passage">
         <p class="placeholder-text">Your adventure will appear here...</p>
       </div>
+      <div id="playtester-turn-counter" class="playtester-turn-counter hidden"></div>
+      <button id="btn-end-playtest" class="btn btn-secondary btn-end-playtest hidden">End Playtest &amp; Report</button>
       <div id="choices-container">
         <button class="btn btn-choice" data-choice="A">
           <span class="choice-label">A</span>
@@ -303,6 +353,14 @@
       </div>
       <div id="gameover-stats" class="gameover-stats"></div>
       <div id="gameover-event-log" class="gameover-event-log hidden"></div>
+      <div id="playtest-report-panel" class="playtest-report hidden">
+        <h2>Playtest Report</h2>
+        <div id="playtest-report-content"></div>
+        <div class="playtest-report-actions">
+          <button id="btn-copy-report" class="btn btn-secondary">Copy to Clipboard</button>
+          <button id="btn-download-report" class="btn btn-secondary">Download as .md</button>
+        </div>
+      </div>
       <div class="button-group" id="gameover-actions">
         <button id="btn-rewind-from-death" class="btn btn-primary btn-large">Rewind Timeline</button>
         <button id="btn-new-game-from-death" class="btn btn-secondary btn-large">New Game</button>
@@ -375,6 +433,10 @@
   <script src="js/prompts/skeletonPrompt.js"></script>
   <script src="js/prompts/writerPrompt.js"></script>
   <script src="js/prompts/gameMasterPrompt.js"></script>
+  <script src="js/prompts/playtesterPrompt.js"></script>
+
+  <!-- Playtester module -->
+  <script src="js/api/playtester.js"></script>
 
   <!-- Screen modules -->
   <script src="js/screens/settings.js"></script>

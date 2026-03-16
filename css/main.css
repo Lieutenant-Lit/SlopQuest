@@ -1461,3 +1461,121 @@ textarea {
     --max-width: 720px;
   }
 }
+
+/* ===== AGENTIC PLAYTESTER ===== */
+
+.playtester-turn-counter {
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(124, 111, 240, 0.1);
+  border: 1px solid rgba(124, 111, 240, 0.3);
+  border-radius: var(--radius);
+}
+
+.btn-end-playtest {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+  background: rgba(224, 96, 112, 0.15);
+  border-color: rgba(224, 96, 112, 0.4);
+  color: #e06070;
+}
+
+.btn-end-playtest:hover {
+  background: rgba(224, 96, 112, 0.25);
+}
+
+/* Playtest report panel on game over screen */
+.playtest-report {
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.playtest-report h2 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
+#playtest-report-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
+}
+
+#playtest-report-content h1,
+#playtest-report-content h2,
+#playtest-report-content h3 {
+  color: var(--text);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+#playtest-report-content h2 {
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--spacing-xs);
+}
+
+#playtest-report-content h3 {
+  font-size: 1rem;
+}
+
+#playtest-report-content p {
+  margin: var(--spacing-xs) 0;
+  line-height: 1.6;
+}
+
+#playtest-report-content ul {
+  margin: var(--spacing-xs) 0;
+  padding-left: var(--spacing-md);
+}
+
+#playtest-report-content li {
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.5;
+}
+
+#playtest-report-content code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+#playtest-report-content strong {
+  color: var(--accent);
+}
+
+.playtest-report-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border);
+}
+
+.playtest-report-actions .btn {
+  flex: 1;
+}
+
+.playtest-report-loading {
+  text-align: center;
+  padding: var(--spacing-lg);
+}
+
+.playtest-report-loading .spinner {
+  margin: 0 auto var(--spacing-sm);
+}
+
+.playtest-report-loading p {
+  color: var(--text-muted);
+}

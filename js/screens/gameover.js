@@ -16,6 +16,33 @@
         SQ.HistoryStack.clear();
         SQ.showScreen('setup');
       });
+
+      // Playtest report buttons
+      document.getElementById('btn-copy-report').addEventListener('click', function () {
+        var report = SQ.Playtester && SQ.Playtester.getReport();
+        if (report && navigator.clipboard) {
+          navigator.clipboard.writeText(report).then(function () {
+            var btn = document.getElementById('btn-copy-report');
+            btn.textContent = 'Copied!';
+            setTimeout(function () { btn.textContent = 'Copy to Clipboard'; }, 2000);
+          });
+        }
+      });
+
+      document.getElementById('btn-download-report').addEventListener('click', function () {
+        var report = SQ.Playtester && SQ.Playtester.getReport();
+        if (!report) return;
+
+        var blob = new Blob([report], { type: 'text/markdown' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'playtest-report-' + new Date().toISOString().slice(0, 10) + '.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
     },
 
     onShow: function () {
@@ -47,6 +74,9 @@
       // Configure buttons
       this._configureButtons(isDeath, isComplete);
 
+      // Handle playtest report
+      this._renderReport();
+
       // On story completion, clear the saved game from localStorage
       // (but not on death — player can close and resume at death screen)
       if (isComplete) {
@@ -56,6 +86,103 @@
     },
 
     onHide: function () {},
+
+    /**
+     * Render the playtest report panel if a report is available or pending.
+     * Can be called externally by Playtester when report generation completes.
+     * @private
+     */
+    _renderReport: function () {
+      var panel = document.getElementById('playtest-report-panel');
+      var contentEl = document.getElementById('playtest-report-content');
+      if (!panel || !contentEl) return;
+
+      if (!SQ.Playtester) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      var report = SQ.Playtester.getReport();
+
+      if (report) {
+        // Report is ready — render it
+        contentEl.innerHTML = this._renderMarkdown(report);
+        panel.classList.remove('hidden');
+      } else if (SQ.Playtester.getReportPromise()) {
+        // Report is being generated — show spinner
+        contentEl.innerHTML = '<div class="playtest-report-loading"><div class="spinner"></div><p>Generating playtest report...</p></div>';
+        panel.classList.remove('hidden');
+
+        // Wait for report to finish, then re-render
+        var self = this;
+        SQ.Playtester.getReportPromise().then(function () {
+          self._renderReport();
+        });
+      } else {
+        panel.classList.add('hidden');
+      }
+    },
+
+    /**
+     * Simple markdown to HTML converter for the playtest report.
+     * Handles: headings, bold, bullet lists, paragraphs.
+     * @private
+     */
+    _renderMarkdown: function (md) {
+      if (!md) return '';
+      var lines = md.split('\n');
+      var html = '';
+      var inList = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+
+        // Headings
+        if (line.match(/^### /)) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h3>' + this._escape(line.slice(4)) + '</h3>';
+        } else if (line.match(/^## /)) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h2>' + this._escape(line.slice(3)) + '</h2>';
+        } else if (line.match(/^# /)) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h1>' + this._escape(line.slice(2)) + '</h1>';
+        }
+        // Bullet lists
+        else if (line.match(/^\s*[-*] /)) {
+          if (!inList) { html += '<ul>'; inList = true; }
+          var content = line.replace(/^\s*[-*] /, '');
+          html += '<li>' + this._formatInline(content) + '</li>';
+        }
+        // Empty line
+        else if (line.trim() === '') {
+          if (inList) { html += '</ul>'; inList = false; }
+        }
+        // Paragraph text
+        else {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<p>' + this._formatInline(line) + '</p>';
+        }
+      }
+
+      if (inList) html += '</ul>';
+      return html;
+    },
+
+    /**
+     * Format inline markdown: **bold**, *italic*, `code`.
+     * @private
+     */
+    _formatInline: function (text) {
+      var escaped = this._escape(text);
+      // Bold
+      escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic
+      escaped = escaped.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      // Inline code
+      escaped = escaped.replace(/`(.+?)`/g, '<code>$1</code>');
+      return escaped;
+    },
 
     /**
      * Render the death/ending passage text.
@@ -155,11 +282,13 @@
       var rewindBtn = document.getElementById('btn-rewind-from-death');
       var newGameBtn = document.getElementById('btn-new-game-from-death');
 
-      if (isComplete) {
-        // Story complete — no rewind (save already cleared), New Game is primary
+      // During playtester runs, always show New Game as primary
+      var isPlaytest = SQ.Playtester && (SQ.Playtester.getReport() || SQ.Playtester.getReportPromise());
+
+      if (isComplete || isPlaytest) {
         rewindBtn.classList.add('hidden');
         newGameBtn.className = 'btn btn-primary btn-large';
-        newGameBtn.textContent = 'New Game';
+        newGameBtn.textContent = isPlaytest ? 'New Playtest' : 'New Game';
       } else {
         // Death — Rewind is primary action
         if (SQ.HistoryStack.length() > 0) {

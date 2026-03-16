@@ -48,6 +48,13 @@
         self._enableChoices();
       });
 
+      // End playtest button
+      document.getElementById('btn-end-playtest').addEventListener('click', function () {
+        if (SQ.Playtester && SQ.Playtester.isActive()) {
+          SQ.Playtester.stop();
+        }
+      });
+
       // Audio playback controls
       document.getElementById('btn-audio-playpause').addEventListener('click', function () {
         SQ.AudioDirector.togglePlayPause();
@@ -82,6 +89,17 @@
     onShow: function () {
       this._isInitialRender = true;
       this.renderState();
+
+      // Show/hide playtester UI elements
+      var endBtn = document.getElementById('btn-end-playtest');
+      var turnCounter = document.getElementById('playtester-turn-counter');
+      if (SQ.Playtester && SQ.Playtester.isActive()) {
+        if (endBtn) endBtn.classList.remove('hidden');
+        if (turnCounter) turnCounter.classList.remove('hidden');
+      } else {
+        if (endBtn) endBtn.classList.add('hidden');
+        if (turnCounter) turnCounter.classList.add('hidden');
+      }
     },
 
     onHide: function () {
@@ -90,6 +108,11 @@
       if (debugPanel) debugPanel.classList.add('hidden');
       var gsDebug = document.getElementById('gamestate-debug-panel');
       if (gsDebug) gsDebug.classList.add('hidden');
+
+      // Stop playtester if navigating away
+      if (SQ.Playtester && SQ.Playtester.isActive()) {
+        SQ.Playtester.stop();
+      }
     },
 
     /**
@@ -341,6 +364,11 @@
           self._enableChoices();
           self._hideChoiceStatus();
 
+          // Playtester auto-play hook
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester.onTurnComplete();
+          }
+
         }).catch(function (err) {
           SQ.Logger.error('GameMaster', 'Generation failed', { error: err.message });
 
@@ -367,6 +395,11 @@
                 if (state.game_over || state.story_complete) return;
                 self._enableChoices();
                 self._hideChoiceStatus();
+
+                // Playtester auto-play hook (GM retry path)
+                if (SQ.Playtester && SQ.Playtester.isActive()) {
+                  SQ.Playtester.onTurnComplete();
+                }
               }).catch(function (retryErr) {
                 SQ.Logger.error('GameMaster', 'Retry failed', { error: retryErr.message });
                 SQ.ErrorOverlay.show(retryErr, {
@@ -612,6 +645,9 @@
         state.game_over = true;
         state.game_over_reason = updates.event_log_entry || 'The story has ended.';
         SQ.GameState.save();
+        if (SQ.Playtester && SQ.Playtester.isActive()) {
+          SQ.Playtester._onGameEnd('game_over');
+        }
         SQ.showScreen('gameover');
         return;
       }
@@ -623,6 +659,9 @@
         });
         state.story_complete = true;
         SQ.GameState.save();
+        if (SQ.Playtester && SQ.Playtester.isActive()) {
+          SQ.Playtester._onGameEnd('story_complete');
+        }
         SQ.showScreen('gameover');
         return;
       }

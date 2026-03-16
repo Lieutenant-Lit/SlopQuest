@@ -81,6 +81,35 @@
         SQ.PlayerConfig.setLoggingEnabled(this.checked);
       });
 
+      // Playtester toggle
+      document.getElementById('settings-playtester-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setPlaytesterEnabled(this.checked);
+        var modelSection = document.getElementById('playtester-model-section');
+        if (this.checked) {
+          modelSection.classList.remove('hidden');
+        } else {
+          modelSection.classList.add('hidden');
+        }
+      });
+
+      // Playtester model selection
+      document.getElementById('playtester-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('playtester-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('playtester', this.value);
+        }
+      });
+
+      document.getElementById('playtester-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('playtester', this.value.trim());
+        }
+      });
+
       // View logs button
       document.getElementById('btn-view-logs').addEventListener('click', function () {
         SQ.LogViewer.show();
@@ -173,6 +202,33 @@
       // Set logging toggle state
       document.getElementById('settings-log-toggle').checked =
         SQ.PlayerConfig.isLoggingEnabled();
+
+      // Set playtester toggle state and model selector
+      var playtesterEnabled = SQ.PlayerConfig.isPlaytesterEnabled();
+      document.getElementById('settings-playtester-toggle').checked = playtesterEnabled;
+      var playtesterModelSection = document.getElementById('playtester-model-section');
+      if (playtesterEnabled) {
+        playtesterModelSection.classList.remove('hidden');
+      } else {
+        playtesterModelSection.classList.add('hidden');
+      }
+
+      var currentPlaytesterModel = SQ.PlayerConfig.getModel('playtester');
+      var playtesterSelect = document.getElementById('playtester-model-select');
+      var playtesterFound = false;
+      for (var k = 0; k < playtesterSelect.options.length; k++) {
+        if (playtesterSelect.options[k].value === currentPlaytesterModel) {
+          playtesterSelect.selectedIndex = k;
+          playtesterFound = true;
+          break;
+        }
+      }
+      if (!playtesterFound && currentPlaytesterModel) {
+        playtesterSelect.value = 'custom';
+        var playtesterCustomInput = document.getElementById('playtester-model-custom-input');
+        playtesterCustomInput.classList.remove('hidden');
+        playtesterCustomInput.value = currentPlaytesterModel;
+      }
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();

@@ -11,13 +11,24 @@
     init: function () {
       var self = this;
 
-      // Wire up all single-select option groups (perspective, tense, difficulty, storyLength)
+      // Wire up all single-select option groups (perspective, tense, difficulty, storyLength, playtesterMaxTurns)
       document.querySelectorAll('#screen-setup .setup-options').forEach(function (group) {
         var groupName = group.getAttribute('data-group');
         group.addEventListener('click', function (e) {
           var btn = e.target.closest('.setup-option');
           if (!btn) return;
           self.selectOption(group, groupName, btn);
+
+          // Show/hide custom max turns input
+          if (groupName === 'playtesterMaxTurns') {
+            var customInput = document.getElementById('setup-playtester-max-turns-custom');
+            if (btn.getAttribute('data-value') === 'custom') {
+              customInput.classList.remove('hidden');
+              customInput.focus();
+            } else {
+              customInput.classList.add('hidden');
+            }
+          }
         });
       });
 
@@ -66,7 +77,8 @@
         perspective: (prefs && prefs.perspective) || 'second person',
         tense: (prefs && prefs.tense) || 'present',
         difficulty: (prefs && prefs.difficulty) || 'normal',
-        storyLength: (prefs && prefs.storyLength) || 'medium'
+        storyLength: (prefs && prefs.storyLength) || 'medium',
+        playtesterMaxTurns: (prefs && prefs.playtesterMaxTurns) || '20'
       };
 
       // Activate matching option buttons
@@ -101,6 +113,29 @@
           }
         });
       });
+
+      // Show/hide playtester setup card
+      var playtesterCard = document.getElementById('playtester-setup-card');
+      if (SQ.PlayerConfig.isPlaytesterEnabled()) {
+        playtesterCard.classList.remove('hidden');
+      } else {
+        playtesterCard.classList.add('hidden');
+      }
+
+      // Restore playtester fields from saved prefs
+      document.getElementById('setup-playtester-playstyle').value =
+        (prefs && prefs.playtesterPlaystyle) || '';
+      document.getElementById('setup-playtester-focus').value =
+        (prefs && prefs.playtesterFocus) || '';
+
+      // Show custom max turns input if 'custom' was selected
+      var customMaxInput = document.getElementById('setup-playtester-max-turns-custom');
+      if (this._selected.playtesterMaxTurns === 'custom') {
+        customMaxInput.classList.remove('hidden');
+        customMaxInput.value = (prefs && prefs.playtesterMaxTurnsCustom) || '';
+      } else {
+        customMaxInput.classList.add('hidden');
+      }
 
       // Reset generate button
       var btn = document.getElementById('btn-start-game');
@@ -143,6 +178,24 @@
         storyLength: this._selected.storyLength || 'medium'
       };
 
+      // Add playtester config if enabled
+      var playtesterPlaystyle = document.getElementById('setup-playtester-playstyle').value.trim();
+      var playtesterFocus = document.getElementById('setup-playtester-focus').value.trim();
+      var playtesterMaxTurnsSelection = this._selected.playtesterMaxTurns || '20';
+      var playtesterMaxTurnsCustom = document.getElementById('setup-playtester-max-turns-custom').value.trim();
+
+      if (SQ.PlayerConfig.isPlaytesterEnabled()) {
+        var maxTurns = 20;
+        if (playtesterMaxTurnsSelection === 'custom') {
+          maxTurns = parseInt(playtesterMaxTurnsCustom, 10) || 20;
+        } else {
+          maxTurns = parseInt(playtesterMaxTurnsSelection, 10) || 20;
+        }
+        config.playtesterMaxTurns = maxTurns;
+        config.playtesterPlaystyle = playtesterPlaystyle;
+        config.playtesterFocusPrimer = playtesterFocus;
+      }
+
       // Persist raw form values so onShow() can restore them next time
       try {
         localStorage.setItem('slopquest_setup_prefs', JSON.stringify({
@@ -152,7 +205,11 @@
           perspective: this._selected.perspective,
           tense: this._selected.tense,
           difficulty: this._selected.difficulty,
-          storyLength: this._selected.storyLength
+          storyLength: this._selected.storyLength,
+          playtesterMaxTurns: playtesterMaxTurnsSelection,
+          playtesterMaxTurnsCustom: playtesterMaxTurnsCustom,
+          playtesterPlaystyle: playtesterPlaystyle,
+          playtesterFocus: playtesterFocus
         }));
       } catch (e) { /* localStorage full or unavailable */ }
 
@@ -237,6 +294,17 @@
         loadingOverlay.classList.add('hidden');
         self._resetButton();
         SQ.showScreen('game');
+
+        // Start playtester auto-play if enabled
+        if (SQ.PlayerConfig.isPlaytesterEnabled() && SQ.Playtester) {
+          SQ.Playtester.start({
+            maxTurns: setupConfig.playtesterMaxTurns || 20,
+            playstyle: setupConfig.playtesterPlaystyle || '',
+            focusPrimer: setupConfig.playtesterFocusPrimer || ''
+          });
+          // Kick off the first turn decision
+          SQ.Playtester.onTurnComplete();
+        }
       }).catch(function (err) {
         SQ.Logger.error('Setup', 'Generation failed', { error: err.message });
         loadingOverlay.classList.add('hidden');
