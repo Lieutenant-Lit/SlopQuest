@@ -53,7 +53,11 @@
           p += '- Key beats: ' + JSON.stringify(currentAct.key_beats) + '\n';
           p += '- Scenes in this act: ' + scenesInAct + ' of ~' + target + ' target\n';
           p += '- Proximity to climax: ' + proximity.toFixed(2) + '\n';
-          if (proximity >= 0.7) {
+          if (proximity >= 0.7 && actIndex === 2) {
+            p += '- PACING DIRECTIVE: This is the FINAL ACT and the story climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '".\n';
+            p += '- The next scene MUST directly advance toward or trigger the end condition. Do not introduce new subplots.\n';
+            p += '- CONCLUSION AWARENESS: This may be the FINAL PASSAGE of the entire story. If this scene resolves the end condition, write it as a definitive, satisfying conclusion. Provide narrative closure — resolve character arcs, reflect on the journey, and end with a strong final image or moment. Do NOT write it as if more scenes follow. The choices you provide may never be seen.\n';
+          } else if (proximity >= 0.7) {
             p += '- PACING DIRECTIVE: The act climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '". Choices should relate to the approaching climax.\n';
             p += '- The next scene MUST directly advance toward or trigger the end condition. Do not introduce new subplots or social scenes.\n';
           } else if (proximity >= 0.4) {

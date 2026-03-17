@@ -38,7 +38,8 @@
       // 404 on image-focused models that don't accept text generation params.
       return SQ.API.call(model, messages, {
         modalities: ['image', 'text'],
-        timeout: IMAGE_TIMEOUT_MS
+        timeout: IMAGE_TIMEOUT_MS,
+        source: 'image'
       })
         .then(function (response) {
           return SQ.ImageGenerator._extractImageUrl(response);

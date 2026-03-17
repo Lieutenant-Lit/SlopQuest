@@ -172,9 +172,8 @@
       }
 
       p += '## API Cost Summary\n';
-      p += '- Include the cost data provided in the user prompt exactly as given\n';
-      p += '- Format as a clear breakdown showing total cost, per-model costs, and average cost per turn\n';
-      p += '- If voice or image costs are included, list them as separate line items\n\n';
+      p += '- Copy the COST DATA section from the user prompt VERBATIM into this section\n';
+      p += '- Do NOT reformat it as a table or change its structure in any way\n\n';
 
       p += '## Overall Assessment\n';
       p += '- Summary quality rating (Excellent / Good / Fair / Poor)\n';

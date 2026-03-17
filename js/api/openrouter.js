@@ -173,7 +173,7 @@
           }
           SQ.Logger.info('API', 'Call OK', { model: model, usage: data.usage });
           if (SQ.API.onUsage) {
-            SQ.API.onUsage(model, data.usage || {});
+            SQ.API.onUsage(model, data.usage || {}, options.source || '');
           }
           var msg = data.choices[0].message;
 

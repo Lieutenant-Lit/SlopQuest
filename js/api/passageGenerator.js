@@ -33,7 +33,7 @@
       // Phase 1: Call The Writer
       return self._attemptCall(
         writerModel, writerSystem, writerUser,
-        { temperature: 0.9, max_tokens: 2000 },
+        { temperature: 0.9, max_tokens: 2000, source: 'writer' },
         'Writer',
         function (response) { return SQ.StateValidator.validatePassageResponse(response); },
         0
@@ -46,7 +46,7 @@
 
         var gameMasterPromise = self._attemptCall(
           gmModel, gmSystem, gmUser,
-          { temperature: 0.3, max_tokens: 1500 },
+          { temperature: 0.3, max_tokens: 1500, source: 'gamemaster' },
           'GameMaster',
           function (response) { return SQ.StateValidator.validateGameMasterResponse(response, difficulty); },
           0
