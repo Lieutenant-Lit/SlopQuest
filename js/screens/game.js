@@ -889,6 +889,18 @@
           SQ.showScreen('gameover');
 
         } else if (terminalType === 'advances_act') {
+          // Explicitly advance the act (finale GM doesn't set advance_act)
+          state.current.act = Math.min((state.current.act || 1) + 1, 3);
+          state.current.proximity_to_climax = 0.0;
+          state.current.act_start_scene = state.current.scene_number;
+          if (state.skeleton && Array.isArray(state.skeleton.acts)) {
+            var newAct = state.skeleton.acts[state.current.act - 1];
+            if (newAct && Array.isArray(newAct.locked_constraints)) {
+              state.current.active_constraints = newAct.locked_constraints.slice();
+            }
+          }
+          SQ.Logger.info('Game', 'Act advanced via terminal choice', { newAct: state.current.act });
+          SQ.GameState.save();
           self._showActTransition(state);
 
         } else if (terminalType === 'conclusion') {
@@ -922,8 +934,7 @@
       container.classList.remove('hidden');
 
       var continueBtn = document.getElementById('btn-act-continue');
-      var nextAct = Math.min((state.current.act || 1), 3);
-      continueBtn.querySelector('.choice-text').textContent = 'Continue to Act ' + nextAct;
+      continueBtn.querySelector('.choice-text').textContent = 'Continue to Act ' + (state.current.act || 2);
       continueBtn.classList.remove('hidden');
 
       var self = this;
