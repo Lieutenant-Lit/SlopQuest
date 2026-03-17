@@ -16,7 +16,7 @@
         return { valid: false, errors: ['State is not an object'] };
       }
 
-      var requiredFields = ['meta', 'player', 'relationships', 'current', 'pending_consequences', 'event_log', 'world_flags'];
+      var requiredFields = ['meta', 'player', 'relationships', 'current', 'event_log', 'world_flags'];
       for (var i = 0; i < requiredFields.length; i++) {
         if (!(requiredFields[i] in state)) {
           errors.push('Missing required field: ' + requiredFields[i]);

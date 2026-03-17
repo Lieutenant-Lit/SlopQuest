@@ -69,7 +69,6 @@
           active_constraints: [],
           scene_context: ''
         },
-        pending_consequences: [],
         current_choices: null,
         event_log: [],
         backstory_summary: '',

@@ -62,27 +62,6 @@
       p += 'CURRENT POSITION:\n';
       p += JSON.stringify(gameState.current, null, 2) + '\n\n';
 
-      p += 'PENDING CONSEQUENCES:\n';
-      p += JSON.stringify(gameState.pending_consequences, null, 2) + '\n\n';
-
-      // Flag expired consequences that MUST be resolved
-      var expired = (gameState.pending_consequences || []).filter(function (c) {
-        if (!c.time_remaining) return false;
-        var total = ((c.time_remaining.days || 0) * 86400) +
-                    ((c.time_remaining.hours || 0) * 3600) +
-                    ((c.time_remaining.minutes || 0) * 60) +
-                    (c.time_remaining.seconds || 0);
-        return total <= 0;
-      });
-      if (expired.length > 0) {
-        p += 'EXPIRED CONSEQUENCES — MUST RESOLVE THIS TURN:\n';
-        p += 'The following consequences have reached time_remaining = 0. You MUST include their IDs in resolved_consequences AND reflect their impact in state_updates (status effects, relationship changes, world flags, etc.). Do NOT ignore expired consequences.\n';
-        expired.forEach(function (c) {
-          p += '- ' + c.id + ': ' + c.description + ' (severity: ' + c.severity + ')\n';
-        });
-        p += '\n';
-      }
-
       p += 'EVENT LOG (last 20):\n';
       p += JSON.stringify(gameState.event_log.slice(-20), null, 2) + '\n';
       if (gameState.backstory_summary) {
@@ -117,6 +96,7 @@
       p += '          "description": "string — current narrative description of the condition",\n';
       p += '          "severity": "number 0.0-1.0 — how debilitating (1.0 = completely debilitating, 0.5 = significant, 0.1 = minor)",\n';
       p += '          "time_remaining": "{ days, hours, minutes, seconds } OR null if no auto-expiry",\n';
+      p += '          "type": "string — \'condition\' (default: injuries, buffs, states) or \'threat\' (approaching dangers that fire when timer expires)",\n';
       p += '          "removal_condition": "string describing what removes this effect, OR null if timer-only",\n';
       p += '          "lethal": "boolean — if true, character dies when timer expires unresolved"\n';
       p += '        }\n';
@@ -124,8 +104,6 @@
       p += '      "skills": ["full current skills list"]\n';
       p += '    },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
-      p += '    "new_pending_consequences": [ { "id": "string", "description": "string", "trigger": "string", "severity": "string", "time_remaining": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 } } ],\n';
-      p += '    "resolved_consequences": [ "ids of consequences that fired this turn" ],\n';
       p += '    "event_log_entry": "string — one-line summary of what happened",\n';
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
@@ -152,7 +130,7 @@
       // General rules
       p += 'RULES:\n';
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
-      p += '- Only include player_changes, relationship_changes, world_flag_changes, new_pending_consequences, and resolved_consequences when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n';
+      p += '- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n';
       p += '- location: REQUIRED every turn — describe where the scene takes place (e.g. "St. Bartholomew\'s Church", "The Thames docks")\n';
       p += '- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n';
       p += '- Relationship changes are DELTAS, not absolute values\n';
@@ -198,13 +176,13 @@
       p += '- Severity scale: 1.0 = completely debilitating, 0.7 = severely impaired, 0.5 = significant but manageable, 0.3 = noticeable nuisance, 0.1 = almost healed.\n';
       p += '- time_remaining can be null for effects with no natural expiry (e.g. a curse that requires a specific action to remove).\n';
       p += '- removal_condition can be set for effects that need specific actions (e.g. "Find the Witch of the Moor to break this curse"). Can be combined with time_remaining.\n';
-      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above. Realistic settings = realistic healing (broken bone: weeks, minor cut: days). Fantasy/sci-fi = faster if the setting provides healing methods.\n\n';
-
-      // Pending consequences rules
-      p += 'PENDING CONSEQUENCES:\n';
-      p += '- New consequences use time_remaining ({ days, hours, minutes, seconds }) instead of scenes_remaining. Estimate how much in-game time before the consequence triggers.\n';
-      p += '- The client ticks down consequence time_remaining by time_elapsed each turn.\n';
-      p += '- When a consequence\'s time_remaining reaches zero, it has TRIGGERED. You MUST resolve it: add its ID to resolved_consequences and apply its effects (new status effects, relationship penalties, world flag changes, etc.). Never leave an expired consequence unresolved.\n\n';
+      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above. Realistic settings = realistic healing (broken bone: weeks, minor cut: days). Fantasy/sci-fi = faster if the setting provides healing methods.\n';
+      p += '- TYPE FIELD: Every status effect has a type — "condition" (default) or "threat".\n';
+      p += '  - "condition": Physical/mental states — injuries, poisons, buffs, curses. Non-lethal conditions auto-expire when their timer runs out. Lethal conditions persist past expiry.\n';
+      p += '  - "threat": Approaching dangers, looming consequences, ticking time-bombs. Examples: { id: "hunted_by_guards_001", name: "Hunted by Guards", type: "threat", description: "The city watch is searching for you after the tavern brawl", severity: 0.6, time_remaining: { hours: 2 } }. Threats ALWAYS persist past timer expiry — they never go away on their own. When a threat\'s timer expires, it has TRIGGERED. You MUST resolve it next turn: remove it from the list and reflect its impact (new conditions, relationship changes, world flag changes, etc.).\n';
+      p += '  - If you omit type, it defaults to "condition".\n';
+      p += '- Use threats to represent any approaching danger or ticking time-bomb: pursuing enemies, structural collapse, incoming storms, spreading fires, political deadlines, etc.\n';
+      p += '- The client ticks down all status effect timers (conditions AND threats) by time_elapsed each turn.\n\n';
 
       // Difficulty-specific rules
       if (difficulty === 'chill') {
@@ -213,7 +191,7 @@
         p += '- NEVER create lethal status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Effects are inconveniences, not threats.\n';
         p += '- Effects heal quickly — reduce severity generously each turn. Minor injuries resolve within a few in-game hours.\n';
-        p += '- Consequences are mild: lost items, delayed progress, NPC annoyance — never life-threatening\n';
+        p += '- Threat-type effects should represent mild narrative tension (e.g. "Shopkeeper is suspicious"), not real danger.\n';
         p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
         p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
@@ -223,7 +201,7 @@
         p += '- NEVER create lethal status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Injuries matter but are never fatal.\n';
         p += '- Healing is realistic for the setting. A serious wound takes days to heal, but the player should have opportunities to find medicine or rest.\n';
-        p += '- Consequences are meaningful but recoverable: injuries, lost items, relationship damage\n';
+        p += '- Threat-type effects are meaningful but recoverable. When threats trigger, the consequences should be manageable.\n';
         p += '- Approximately 2 safe and 2 risky choices per turn.\n';
         p += '- NPCs can be upset but always have a path to reconciliation.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
@@ -234,7 +212,7 @@
         p += '- Lethal status effects are allowed but MUST be foreshadowed. If an effect will kill the player, there should have been clues in earlier passages.\n';
         p += '- Lethal effects must give the player at least one turn to address them (set time_remaining to allow at least one more scene).\n';
         p += '- Full severity range (0.0-1.0). Injuries are serious and heal realistically.\n';
-        p += '- Pending consequences escalate fast: short time windows before they trigger.\n';
+        p += '- Threat-type effects should have short time windows before triggering.\n';
         p += '- NPCs have low forgiveness. Burning a relationship has lasting consequences.\n';
         p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
         p += '- game_over outcomes are available — use for genre-appropriate failures (death, permanent loss, catastrophic failure).\n';
@@ -247,7 +225,7 @@
         p += '- Lethal status effects are common. Unattended wounds can worsen and become lethal.\n';
         p += '- Injuries stack — multiple status effects compound the character\'s impairment.\n';
         p += '- Healing is slow without supplies. Rest alone barely reduces severity. Medicine, magic, or proper treatment is required for meaningful recovery.\n';
-        p += '- Pending consequences trigger quickly — short time windows. No grace period.\n';
+        p += '- Threat timers are extremely short — no grace period. Dangers escalate fast.\n';
         p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
         p += '- Create cascading danger: if the player is already injured or burdened with status effects, make the situation worse.\n';
@@ -361,9 +339,6 @@
       p += 'CURRENT POSITION:\n';
       p += JSON.stringify(gameState.current, null, 2) + '\n\n';
 
-      p += 'PENDING CONSEQUENCES:\n';
-      p += JSON.stringify(gameState.pending_consequences, null, 2) + '\n\n';
-
       p += 'EVENT LOG (last 20):\n';
       p += JSON.stringify(gameState.event_log.slice(-20), null, 2) + '\n\n';
 
@@ -382,7 +357,6 @@
       p += '      "skills": ["full current skills list"]\n';
       p += '    },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
-      p += '    "resolved_consequences": [ "ids of consequences resolved by this ending" ],\n';
       p += '    "event_log_entry": "string — one-line summary of the terminal outcome",\n';
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
@@ -402,11 +376,11 @@
         p += '- Apply the consequences of the failure. The event_log_entry should describe the failure clearly — it will be displayed as the game over reason.\n';
       } else if (terminalType === 'advances_act') {
         p += '- This COMPLETES the current act. The act\'s end_condition has been triggered.\n';
-        p += '- Apply any consequences of completing this act. Resolve any relevant pending consequences.\n';
+        p += '- Apply any consequences of completing this act. Resolve active threats by removing them from status_effects.\n';
         p += '- The event_log_entry should summarize the act\'s resolution.\n';
       } else if (terminalType === 'conclusion') {
         p += '- This CONCLUDES the entire story. The Act 3 end_condition has been met.\n';
-        p += '- Apply final consequences. Resolve all remaining pending consequences.\n';
+        p += '- Apply final consequences. Clear all remaining threats from status_effects.\n';
         p += '- The event_log_entry should summarize the story\'s conclusion.\n';
       }
 

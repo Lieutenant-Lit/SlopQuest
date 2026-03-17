@@ -14,7 +14,7 @@
       game_over_frequency: 'never',
       hint_transparency: 'obvious',
       relationship_decay_rate: 'slow',
-      pending_consequence_speed: 'slow',
+      threat_timer_pressure: 'relaxed',
       recovery_paths: 'always available',
       npc_forgiveness: 'high',
       allow_lethal_effects: false,
@@ -30,7 +30,7 @@
       game_over_frequency: 'never',
       hint_transparency: 'moderate',
       relationship_decay_rate: 'normal',
-      pending_consequence_speed: 'normal',
+      threat_timer_pressure: 'moderate',
       recovery_paths: 'usually available',
       npc_forgiveness: 'moderate',
       allow_lethal_effects: false,
@@ -46,7 +46,7 @@
       game_over_frequency: 'rare',
       hint_transparency: 'subtle',
       relationship_decay_rate: 'fast',
-      pending_consequence_speed: 'fast',
+      threat_timer_pressure: 'urgent',
       recovery_paths: 'sometimes available',
       npc_forgiveness: 'low',
       allow_lethal_effects: true,
@@ -62,7 +62,7 @@
       game_over_frequency: 'common',
       hint_transparency: 'cryptic',
       relationship_decay_rate: 'aggressive',
-      pending_consequence_speed: 'immediate',
+      threat_timer_pressure: 'immediate',
       recovery_paths: 'rarely available',
       npc_forgiveness: 'none',
       allow_lethal_effects: true,
@@ -81,8 +81,7 @@
       total_turns: { min: 15, max: 20 },
       turns_per_act: { min: 5, max: 7 },
       faction_count: { min: 1, max: 2 },
-      subplot_threads: { min: 0, max: 1 },
-      max_pending_consequences: 3
+      subplot_threads: { min: 0, max: 1 }
     },
     medium: {
       label: 'Medium',
@@ -90,8 +89,7 @@
       total_turns: { min: 30, max: 40 },
       turns_per_act: { min: 10, max: 13 },
       faction_count: { min: 2, max: 3 },
-      subplot_threads: { min: 1, max: 2 },
-      max_pending_consequences: 7
+      subplot_threads: { min: 1, max: 2 }
     },
     long: {
       label: 'Long',
@@ -99,8 +97,7 @@
       total_turns: { min: 50, max: 70 },
       turns_per_act: { min: 17, max: 23 },
       faction_count: { min: 3, max: 4 },
-      subplot_threads: { min: 2, max: 4 },
-      max_pending_consequences: 12
+      subplot_threads: { min: 2, max: 4 }
     }
   };
 })();

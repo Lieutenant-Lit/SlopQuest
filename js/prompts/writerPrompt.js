@@ -181,6 +181,7 @@
         gameState.player.status_effects.forEach(function (effect) {
           if (typeof effect === 'object' && effect.name) {
             p += '- ' + effect.name;
+            if (effect.type === 'threat') p += ' [THREAT]';
             if (typeof effect.severity === 'number') {
               if (effect.severity >= 0.7) p += ' (severe)';
               else if (effect.severity >= 0.4) p += ' (moderate)';
@@ -203,12 +204,6 @@
         p += 'Use this for natural time references (time of day, how long since events, etc.).\n\n';
       }
 
-      // Pending consequences — Writer needs to know what's looming for narrative hooks
-      if (gameState.pending_consequences && gameState.pending_consequences.length > 0) {
-        p += 'ACTIVE NARRATIVE THREADS (pending consequences to weave into the story):\n';
-        p += JSON.stringify(gameState.pending_consequences, null, 2) + '\n\n';
-      }
-
       // Response schema — passage + choices only
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
@@ -228,7 +223,7 @@
       p += '- Keep the passage between 150-300 words\n';
       p += '- All four choices should feel plausible and interesting\n';
       p += '- Never reveal information the skeleton marks as hidden/secret unless the act\'s end condition has been met\n';
-      p += '- Weave pending consequences into the narrative naturally when their triggers are near\n';
+      p += '- Weave threat-type status effects into the narrative as approaching dangers — build tension as their timers count down\n';
       p += '- Focus on prose quality, atmosphere, character voice, and dramatic tension\n';
       p += '- Do NOT include state_updates, health numbers, or mechanical data in your response\n';
       p += '- Pace the story toward the current act\'s end condition. Check the CURRENT ACT PACING section for scene count and proximity\n';

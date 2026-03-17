@@ -86,8 +86,7 @@
       p += '- Total turns: ' + storyLength.total_turns.min + '-' + storyLength.total_turns.max + '\n';
       p += '- Turns per act: ' + storyLength.turns_per_act.min + '-' + storyLength.turns_per_act.max + '\n';
       p += '- Faction count: ' + storyLength.faction_count.min + '-' + storyLength.faction_count.max + '\n';
-      p += '- Subplot threads: ' + storyLength.subplot_threads.min + '-' + storyLength.subplot_threads.max + '\n';
-      p += '- Max pending consequences: ' + storyLength.max_pending_consequences + '\n\n';
+      p += '- Subplot threads: ' + storyLength.subplot_threads.min + '-' + storyLength.subplot_threads.max + '\n\n';
 
       // Difficulty rules
       p += 'DIFFICULTY RULES (' + difficulty.label + '):\n';
@@ -97,7 +96,7 @@
       p += '- Game over frequency: ' + difficulty.game_over_frequency + '\n';
       p += '- Hint transparency: ' + difficulty.hint_transparency + '\n';
       p += '- Relationship decay rate: ' + difficulty.relationship_decay_rate + '\n';
-      p += '- Pending consequence speed: ' + difficulty.pending_consequence_speed + '\n';
+      p += '- Threat timer pressure: ' + difficulty.threat_timer_pressure + '\n';
       p += '- Recovery paths: ' + difficulty.recovery_paths + '\n';
       p += '- NPC forgiveness: ' + difficulty.npc_forgiveness + '\n\n';
 
@@ -122,7 +121,7 @@
         p += '- Death is possible but rare: include at most 1 lethal choice per act\n';
         p += '- Lethal choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
         p += '- Include severe consequences: serious status effects, permanent NPC hostility, lost items\n';
-        p += '- Pending consequences should escalate quickly (1-2 scenes) and hit hard when they trigger\n';
+        p += '- Threat-type status effects should have short time windows and hit hard when they trigger\n';
         p += '- Recovery paths exist but require sacrifice — healing requires effort, alliances cost favors\n';
         p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
       } else if (setupConfig.difficulty === 'brutal') {
@@ -132,7 +131,7 @@
         p += '- No scene may have more than two advance_safe options\n';
         p += '- At least one death per act must be non-obvious (requires interpreting earlier clues)\n';
         p += '- Create genuine trap logic — choices that SOUND safe but are lethal based on earlier context the player may not have noticed\n';
-        p += '- Consequences are immediate and severe. Pending consequences trigger within 0-1 scenes\n';
+        p += '- Consequences are immediate and severe. Threat timers should be extremely short\n';
         p += '- NPCs never forgive. A single wrong move with an NPC should permanently close that relationship\n';
         p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';
       }
