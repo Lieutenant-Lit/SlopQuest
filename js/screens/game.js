@@ -531,22 +531,53 @@
         state.current.scene_context = updates.new_scene_context;
       }
 
-      // 11. Act advancement
+      // 10b. Location and time of day
+      if (updates.location) {
+        state.current.location = updates.location;
+      }
+      if (updates.time_of_day) {
+        state.current.time_of_day = updates.time_of_day;
+      }
+
+      // 11. Act advancement — with client-side guards
       if (updates.advance_act) {
-        state.current.act = Math.min((state.current.act || 1) + 1, 3);
-        state.current.proximity_to_climax = 0.0;
-        state.current.act_start_scene = state.current.scene_number;
-        if (state.skeleton && Array.isArray(state.skeleton.acts)) {
-          var newAct = state.skeleton.acts[state.current.act - 1];
-          if (newAct && Array.isArray(newAct.locked_constraints)) {
-            state.current.active_constraints = newAct.locked_constraints.slice();
-          }
+        var scenesInAct = (state.current.scene_number || 1) - (state.current.act_start_scene || 1) + 1;
+        var currentActIndex = (state.current.act || 1) - 1;
+        var targetScenes = 10;
+        if (state.skeleton && Array.isArray(state.skeleton.acts) && state.skeleton.acts[currentActIndex]) {
+          targetScenes = state.skeleton.acts[currentActIndex].target_scenes || 10;
         }
-        SQ.Logger.info('Game', 'Act advanced', {
-          newAct: state.current.act,
-          scene: state.current.scene_number,
-          constraints: state.current.active_constraints
-        });
+        var minScenes = Math.max(3, Math.ceil(targetScenes * 0.5));
+
+        if (scenesInAct < minScenes) {
+          SQ.Logger.warn('Game', 'Blocked premature act advancement', {
+            act: state.current.act,
+            scenesInAct: scenesInAct,
+            minRequired: minScenes,
+            targetScenes: targetScenes
+          });
+          // Cap proximity to prevent immediate re-triggering
+          if (typeof updates.proximity_to_climax === 'number' && updates.proximity_to_climax >= 1.0) {
+            updates.proximity_to_climax = 0.85;
+          }
+          updates.advance_act = false;
+        } else {
+          state.current.act = Math.min((state.current.act || 1) + 1, 3);
+          state.current.proximity_to_climax = 0.0;
+          state.current.act_start_scene = state.current.scene_number;
+          if (state.skeleton && Array.isArray(state.skeleton.acts)) {
+            var newAct = state.skeleton.acts[state.current.act - 1];
+            if (newAct && Array.isArray(newAct.locked_constraints)) {
+              state.current.active_constraints = newAct.locked_constraints.slice();
+            }
+          }
+          SQ.Logger.info('Game', 'Act advanced', {
+            newAct: state.current.act,
+            scene: state.current.scene_number,
+            scenesInPreviousAct: scenesInAct,
+            constraints: state.current.active_constraints
+          });
+        }
       }
 
       // 11b. Apply proximity_to_climax from GM (skip if act just advanced — reset takes precedence)
@@ -630,6 +661,16 @@
       // 16. Check for game over or story complete
       var isGameOver = updates.game_over;
       var isStoryComplete = updates.story_complete;
+
+      // Guard: story_complete only valid in Act 3
+      if (isStoryComplete && (state.current.act || 1) < 3) {
+        SQ.Logger.warn('Game', 'Blocked premature story_complete', {
+          act: state.current.act,
+          scene: state.current.scene_number
+        });
+        isStoryComplete = false;
+        updates.story_complete = false;
+      }
 
       if (isGameOver) {
         SQ.Logger.info('Game', 'Game over', {

@@ -65,6 +65,24 @@
       p += 'PENDING CONSEQUENCES:\n';
       p += JSON.stringify(gameState.pending_consequences, null, 2) + '\n\n';
 
+      // Flag expired consequences that MUST be resolved
+      var expired = (gameState.pending_consequences || []).filter(function (c) {
+        if (!c.time_remaining) return false;
+        var total = ((c.time_remaining.days || 0) * 86400) +
+                    ((c.time_remaining.hours || 0) * 3600) +
+                    ((c.time_remaining.minutes || 0) * 60) +
+                    (c.time_remaining.seconds || 0);
+        return total <= 0;
+      });
+      if (expired.length > 0) {
+        p += 'EXPIRED CONSEQUENCES — MUST RESOLVE THIS TURN:\n';
+        p += 'The following consequences have reached time_remaining = 0. You MUST include their IDs in resolved_consequences AND reflect their impact in state_updates (status effects, relationship changes, world flags, etc.). Do NOT ignore expired consequences.\n';
+        expired.forEach(function (c) {
+          p += '- ' + c.id + ': ' + c.description + ' (severity: ' + c.severity + ')\n';
+        });
+        p += '\n';
+      }
+
       p += 'EVENT LOG (last 20):\n';
       p += JSON.stringify(gameState.event_log.slice(-20), null, 2) + '\n';
       if (gameState.backstory_summary) {
@@ -113,6 +131,8 @@
       p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
       p += '    "npc_updates": { "npc_name": { "role": "string (optional)", "motivation": "string (optional)", "allegiance": "string (optional)", "secret_revealed": "boolean (optional)", "companion": "boolean (optional)", "notes": "string — brief freeform context (optional)" } },\n';
       p += '    "new_scene_context": "string — brief context for next passage",\n';
+      p += '    "location": "string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)",\n';
+      p += '    "time_of_day": "string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight",\n';
       p += '    "proximity_to_climax": "number 0.0-1.0 — REQUIRED (see PACING)",\n';
       p += '    "advance_act": "true or false — REQUIRED (see PACING)",\n';
       p += '    "game_over": false,\n';
@@ -132,7 +152,9 @@
       // General rules
       p += 'RULES:\n';
       p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
-      p += '- Only include player_changes, relationship_changes, world_flag_changes, new_pending_consequences, and resolved_consequences when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act.\n';
+      p += '- Only include player_changes, relationship_changes, world_flag_changes, new_pending_consequences, and resolved_consequences when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n';
+      p += '- location: REQUIRED every turn — describe where the scene takes place (e.g. "St. Bartholomew\'s Church", "The Thames docks")\n';
+      p += '- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n';
       p += '- Relationship changes are DELTAS, not absolute values\n';
       p += '- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n';
       p += '- event_log_entry is required — always summarize what happened this turn\n';
@@ -145,11 +167,12 @@
       p += '- The current act\'s target_scenes (in the skeleton) is the intended scene count for this act.\n';
       p += '- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n';
       p += '- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n';
-      p += '- MINIMUM SCENES: Do NOT set advance_act to true if scenes_in_act < 3. Every act needs at least 3 scenes to develop properly.\n';
+      p += '- MINIMUM SCENES PER ACT: Do NOT set advance_act to true unless scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Every act needs substantial development. The client enforces this — premature advancement will be rejected.\n';
+      p += '- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n';
       p += '- If scenes_in_act >= target_scenes AND the act\'s end_condition is narratively close to being met, set advance_act to true.\n';
       p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD set advance_act to true — the act has gone on too long. Drive the narrative forward.\n';
       p += '- When advance_act is true, also set proximity_to_climax to 1.0.\n';
-      p += '- STORY COMPLETION: If the current act is Act 3 (the FINAL act) and its end_condition is met, set story_complete to true INSTEAD of advance_act. This ends the story.\n';
+      p += '- STORY COMPLETION: Set story_complete to true ONLY when the current act is Act 3 (the FINAL act) AND its end_condition is narratively met. NEVER set story_complete in Act 1 or Act 2 — the client will reject it. This ends the story.\n';
       p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it.\n\n';
 
       // Time elapsed rules
@@ -172,7 +195,8 @@
       // Pending consequences rules
       p += 'PENDING CONSEQUENCES:\n';
       p += '- New consequences use time_remaining ({ days, hours, minutes, seconds }) instead of scenes_remaining. Estimate how much in-game time before the consequence triggers.\n';
-      p += '- The client ticks down consequence time_remaining by time_elapsed each turn.\n\n';
+      p += '- The client ticks down consequence time_remaining by time_elapsed each turn.\n';
+      p += '- When a consequence\'s time_remaining reaches zero, it has TRIGGERED. You MUST resolve it: add its ID to resolved_consequences and apply its effects (new status effects, relationship penalties, world flag changes, etc.). Never leave an expired consequence unresolved.\n\n';
 
       // Difficulty-specific rules
       if (difficulty === 'chill') {

@@ -115,6 +115,47 @@
             p += '\n';
           });
           p += '\n';
+
+          // NPC introduction directives — nudge Writer to introduce key NPCs
+          if (gameState.current) {
+            var proximity = gameState.current.proximity_to_climax || 0;
+            var eventLogText = (gameState.event_log || []).join(' ').toLowerCase();
+            var unintroducedKey = [];
+
+            nonCompanions.forEach(function (npc) {
+              var role = (npc.role || '').toLowerCase();
+              var isKeyNpc = role.indexOf('antagonist') !== -1 ||
+                             role.indexOf('ally') !== -1 ||
+                             role.indexOf('mentor') !== -1 ||
+                             role.indexOf('rival') !== -1 ||
+                             role.indexOf('villain') !== -1 ||
+                             role.indexOf('love interest') !== -1 ||
+                             role.indexOf('quest giver') !== -1;
+              if (isKeyNpc && eventLogText.indexOf(npc.name.toLowerCase()) === -1) {
+                unintroducedKey.push(npc);
+              }
+            });
+
+            if (unintroducedKey.length > 0) {
+              p += 'NPC INTRODUCTION DIRECTIVES:\n';
+              if (proximity >= 0.5) {
+                p += 'The following key NPCs have NOT yet appeared and MUST be introduced soon — the act is past its midpoint:\n';
+              } else if (proximity >= 0.3) {
+                p += 'The following key NPCs have not yet appeared. Consider introducing one of them in this scene:\n';
+              } else {
+                p += 'These key NPCs should be introduced during this act. Look for natural opportunities:\n';
+              }
+              unintroducedKey.forEach(function (npc) {
+                p += '- ' + npc.name + ' (' + npc.role + ')';
+                if (npc.motivation) p += ' — motivation: ' + npc.motivation;
+                p += '\n';
+              });
+              if (proximity >= 0.5) {
+                p += 'If you do not introduce them now, the story will lack the character dynamics needed for the climax.\n';
+              }
+              p += '\n';
+            }
+          }
         }
       }
 
@@ -189,6 +230,7 @@
       p += '- Do NOT include state_updates, health numbers, or mechanical data in your response\n';
       p += '- Pace the story toward the current act\'s end condition. Check the CURRENT ACT PACING section for scene count and proximity\n';
       p += '- When proximity_to_climax >= 0.8, your passage should feel like it\'s approaching a climax or turning point — increase urgency and stakes\n';
+      p += '- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n';
 
       return p;
     },
