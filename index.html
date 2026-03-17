@@ -29,25 +29,45 @@
         <h2>Passage Writer Model</h2>
         <p>The creative LLM that writes story passages and dialogue.</p>
         <select id="writer-model-select">
-          <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
-          <option value="anthropic/claude-opus-4">Claude Opus 4</option>
-          <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
-          <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
-          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
-          <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
-          <option value="openai/gpt-4o">GPT-4o</option>
-          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-          <option value="openai/gpt-4.1">GPT-4.1</option>
-          <option value="openai/o3-mini">o3-mini</option>
-          <option value="deepseek/deepseek-chat">DeepSeek V3</option>
-          <option value="deepseek/deepseek-r1">DeepSeek R1</option>
-          <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
-          <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
-          <option value="mistralai/mistral-large-2411">Mistral Large</option>
-          <option value="mistralai/mistral-small-2503">Mistral Small</option>
-          <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
-          <option value="cohere/command-r-plus">Command R+</option>
-          <option value="custom">Custom model...</option>
+          <optgroup label="Anthropic">
+            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+            <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+            <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+            <option value="anthropic/claude-opus-4.5">Claude Opus 4.5</option>
+            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
+          </optgroup>
+          <optgroup label="Google">
+            <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+          </optgroup>
+          <optgroup label="OpenAI">
+            <option value="openai/gpt-4o">GPT-4o</option>
+            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+            <option value="openai/o3-mini">o3-mini</option>
+          </optgroup>
+          <optgroup label="DeepSeek">
+            <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+            <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+          </optgroup>
+          <optgroup label="Meta">
+            <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+            <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+          </optgroup>
+          <optgroup label="Mistral">
+            <option value="mistralai/mistral-large-2512">Mistral Large</option>
+            <option value="mistralai/mistral-small-creative-20251216">Mistral Small Creative</option>
+          </optgroup>
+          <optgroup label="xAI">
+            <option value="x-ai/grok-3">Grok 3</option>
+            <option value="x-ai/grok-3-mini">Grok 3 Mini</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="qwen/qwen3-235b-a22b-07-25">Qwen 3 235B</option>
+            <option value="qwen/qwen3-32b-04-28">Qwen 3 32B</option>
+            <option value="cohere/command-r-plus">Command R+</option>
+            <option value="custom">Custom model...</option>
+          </optgroup>
         </select>
         <input type="text" id="writer-model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
@@ -56,25 +76,45 @@
         <h2>Game Master Model</h2>
         <p>The analytical LLM that manages game state, rules, and story structure.</p>
         <select id="gm-model-select">
-          <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
-          <option value="anthropic/claude-opus-4">Claude Opus 4</option>
-          <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
-          <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
-          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
-          <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
-          <option value="openai/gpt-4o">GPT-4o</option>
-          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-          <option value="openai/gpt-4.1">GPT-4.1</option>
-          <option value="openai/o3-mini">o3-mini</option>
-          <option value="deepseek/deepseek-chat">DeepSeek V3</option>
-          <option value="deepseek/deepseek-r1">DeepSeek R1</option>
-          <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
-          <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
-          <option value="mistralai/mistral-large-2411">Mistral Large</option>
-          <option value="mistralai/mistral-small-2503">Mistral Small</option>
-          <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
-          <option value="cohere/command-r-plus">Command R+</option>
-          <option value="custom">Custom model...</option>
+          <optgroup label="Anthropic">
+            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+            <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+            <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+            <option value="anthropic/claude-opus-4.5">Claude Opus 4.5</option>
+            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
+          </optgroup>
+          <optgroup label="Google">
+            <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+          </optgroup>
+          <optgroup label="OpenAI">
+            <option value="openai/gpt-4o">GPT-4o</option>
+            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+            <option value="openai/o3-mini">o3-mini</option>
+          </optgroup>
+          <optgroup label="DeepSeek">
+            <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+            <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+          </optgroup>
+          <optgroup label="Meta">
+            <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+            <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+          </optgroup>
+          <optgroup label="Mistral">
+            <option value="mistralai/mistral-large-2512">Mistral Large</option>
+            <option value="mistralai/mistral-small-3.1-24b-instruct-2503">Mistral Small</option>
+          </optgroup>
+          <optgroup label="xAI">
+            <option value="x-ai/grok-3">Grok 3</option>
+            <option value="x-ai/grok-3-mini">Grok 3 Mini</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="qwen/qwen3-235b-a22b-07-25">Qwen 3 235B</option>
+            <option value="qwen/qwen3-32b-04-28">Qwen 3 32B</option>
+            <option value="cohere/command-r-plus">Command R+</option>
+            <option value="custom">Custom model...</option>
+          </optgroup>
         </select>
         <input type="text" id="gm-model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
@@ -131,25 +171,45 @@
         <div id="playtester-model-section" class="hidden">
           <label class="card-label">Playtester Model</label>
           <select id="playtester-model-select">
-            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
-            <option value="anthropic/claude-opus-4">Claude Opus 4</option>
-            <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
-            <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
-            <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
-            <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
-            <option value="openai/gpt-4o">GPT-4o</option>
-            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-            <option value="openai/gpt-4.1">GPT-4.1</option>
-            <option value="openai/o3-mini">o3-mini</option>
-            <option value="deepseek/deepseek-chat">DeepSeek V3</option>
-            <option value="deepseek/deepseek-r1">DeepSeek R1</option>
-            <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
-            <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
-            <option value="mistralai/mistral-large-2411">Mistral Large</option>
-            <option value="mistralai/mistral-small-2503">Mistral Small</option>
-            <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
-            <option value="cohere/command-r-plus">Command R+</option>
-            <option value="custom">Custom model...</option>
+            <optgroup label="Anthropic">
+              <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+              <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+              <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+              <option value="anthropic/claude-opus-4.5">Claude Opus 4.5</option>
+              <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
+            </optgroup>
+            <optgroup label="Google">
+              <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+            </optgroup>
+            <optgroup label="OpenAI">
+              <option value="openai/gpt-4o">GPT-4o</option>
+              <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+              <option value="openai/o3-mini">o3-mini</option>
+            </optgroup>
+            <optgroup label="DeepSeek">
+              <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+              <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+            </optgroup>
+            <optgroup label="Meta">
+              <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+              <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+            </optgroup>
+            <optgroup label="Mistral">
+              <option value="mistralai/mistral-large-2512">Mistral Large</option>
+              <option value="mistralai/mistral-small-3.1-24b-instruct-2503">Mistral Small</option>
+            </optgroup>
+            <optgroup label="xAI">
+              <option value="x-ai/grok-3">Grok 3</option>
+              <option value="x-ai/grok-3-mini">Grok 3 Mini</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="qwen/qwen3-235b-a22b-07-25">Qwen 3 235B</option>
+              <option value="qwen/qwen3-32b-04-28">Qwen 3 32B</option>
+              <option value="cohere/command-r-plus">Command R+</option>
+              <option value="custom">Custom model...</option>
+            </optgroup>
           </select>
           <input type="text" id="playtester-model-custom-input" class="hidden" placeholder="org/model-name">
         </div>
