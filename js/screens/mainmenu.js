@@ -24,10 +24,6 @@
         SQ.showScreen('setup');
       });
 
-      // Settings — navigate to settings screen
-      document.getElementById('btn-open-settings').addEventListener('click', function () {
-        SQ.showScreen('settings');
-      });
     },
 
     onShow: function () {

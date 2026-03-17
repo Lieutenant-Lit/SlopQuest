@@ -120,9 +120,12 @@
         self.validateElevenLabsKey();
       });
 
-      // Save & continue to main menu
-      document.getElementById('btn-save-settings').addEventListener('click', function () {
-        SQ.showScreen('mainmenu');
+      // Back button — return to previous screen (or mainmenu as fallback)
+      document.getElementById('btn-settings-back').addEventListener('click', function () {
+        var target = SQ._previousScreen || 'mainmenu';
+        // Don't navigate back to settings itself
+        if (target === 'settings') target = 'mainmenu';
+        SQ.showScreen(target);
       });
     },
 
@@ -152,10 +155,10 @@
         customInput.value = currentModel;
       }
 
-      // Hide back button if no API key yet (first-time user)
-      var backBtn = document.querySelector('#screen-settings .btn-back');
+      // Hide back button if no API key yet and no previous screen (first-time user)
+      var backBtn = document.getElementById('btn-settings-back');
       if (backBtn) {
-        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData) {
+        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData || SQ._previousScreen) {
           backBtn.classList.remove('hidden');
         } else {
           backBtn.classList.add('hidden');

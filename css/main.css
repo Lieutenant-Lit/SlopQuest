@@ -251,6 +251,21 @@ textarea {
   gap: var(--spacing-sm);
 }
 
+/* ===== SCREEN HEADER ROW (gear icon positioning) ===== */
+.screen-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.screen-header-row h1 {
+  flex: 1;
+}
+
+.screen-header-row .btn-back {
+  margin-bottom: 0;
+}
+
 /* ===== GAME SCREEN ===== */
 .game-header-row {
   display: flex;
