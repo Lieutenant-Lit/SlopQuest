@@ -86,37 +86,20 @@
 
       // Subscribe to API usage events
       var self = this;
-      SQ.API.onUsage = function (modelId, usage) {
+      SQ.API.onUsage = function (modelId, usage, source) {
         if (!self._costTracker) return;
         var pt = usage.prompt_tokens || 0;
         var ct = usage.completion_tokens || 0;
 
-        // Categorize by matching against current model config
-        var writerModel = SQ.PlayerConfig.getModel('passage');
-        var gmModel = SQ.PlayerConfig.getModel('gamemaster');
-        var skeletonModel = SQ.PlayerConfig.getModel('skeleton');
-        var imageModel = SQ.PlayerConfig.getModel('image');
-        var playtesterModel = SQ.PlayerConfig.getModel('playtester');
-
+        // Categorize by source label (threaded through API call options)
         var bucket;
-        if (modelId === playtesterModel) {
-          bucket = self._costTracker.playtester;
-        } else if (modelId === imageModel) {
-          bucket = self._costTracker.image;
-        } else if (modelId === gmModel || modelId === skeletonModel) {
-          // Skeleton and GM often use the same model — distinguish by whether
-          // we have a skeleton yet (skeleton call happens before any turns)
-          var state = SQ.GameState.get();
-          if (!state || !state.skeleton) {
-            bucket = self._costTracker.skeleton;
-          } else {
-            bucket = self._costTracker.gamemaster;
-          }
-        } else if (modelId === writerModel) {
-          bucket = self._costTracker.writer;
-        } else {
-          // Unknown model — attribute to gamemaster as fallback
-          bucket = self._costTracker.gamemaster;
+        switch (source) {
+          case 'writer':     bucket = self._costTracker.writer; break;
+          case 'gamemaster': bucket = self._costTracker.gamemaster; break;
+          case 'skeleton':   bucket = self._costTracker.skeleton; break;
+          case 'image':      bucket = self._costTracker.image; break;
+          case 'playtester': bucket = self._costTracker.playtester; break;
+          default:           bucket = self._costTracker.gamemaster; break;
         }
 
         bucket.model = modelId;
@@ -257,7 +240,7 @@
 
       SQ.Logger.info('Playtester', 'Deciding turn ' + (this._turnCount + 1));
 
-      SQ.API.call(model, messages, { temperature: 0.4, max_tokens: 1500 })
+      SQ.API.call(model, messages, { temperature: 0.4, max_tokens: 1500, source: 'playtester' })
         .then(function (raw) {
           if (!self._active) return; // Stopped while waiting
 
@@ -367,7 +350,7 @@
 
       SQ.Logger.info('Playtester', 'Generating report...', { outcome: outcome });
 
-      this._reportPromise = SQ.API.call(model, messages, { temperature: 0.3, max_tokens: 4000 })
+      this._reportPromise = SQ.API.call(model, messages, { temperature: 0.3, max_tokens: 4000, source: 'playtester' })
         .then(function (raw) {
           var response;
           try {
@@ -389,7 +372,7 @@
           SQ.Logger.error('Playtester', 'Report generation failed', { error: err.message });
 
           // Retry once
-          return SQ.API.call(model, messages, { temperature: 0.3, max_tokens: 4000 })
+          return SQ.API.call(model, messages, { temperature: 0.3, max_tokens: 4000, source: 'playtester' })
             .then(function (raw) {
               var response;
               try {
@@ -450,68 +433,67 @@
 
       var t = this._costTracker;
       var turns = this._turnCount || 1;
-      var lines = [];
       var totalCost = 0;
+      var totalInput = 0;
+      var totalOutput = 0;
+      var totalCalls = 0;
 
-      // Writer
-      if (t.writer.calls > 0) {
-        var writerCost = calcCost(t.writer.model, t.writer.prompt_tokens, t.writer.completion_tokens);
-        totalCost += writerCost;
-        lines.push('- **Writer** (' + t.writer.model + '): ' + t.writer.calls + ' calls, ' +
-          t.writer.prompt_tokens + ' input / ' + t.writer.completion_tokens + ' output tokens, ' +
-          formatCost(writerCost) + ' total, ' + formatCost(writerCost / turns) + ' avg/turn');
+      // Collect rows
+      var rows = [];
+
+      function addRow(label, bucket) {
+        var cost = calcCost(bucket.model, bucket.prompt_tokens, bucket.completion_tokens);
+        totalCost += cost;
+        totalInput += bucket.prompt_tokens;
+        totalOutput += bucket.completion_tokens;
+        totalCalls += bucket.calls;
+        rows.push({
+          label: label,
+          model: bucket.model,
+          calls: bucket.calls,
+          input: bucket.prompt_tokens,
+          output: bucket.completion_tokens,
+          cost: cost
+        });
       }
 
-      // Game Master
-      if (t.gamemaster.calls > 0) {
-        var gmCost = calcCost(t.gamemaster.model, t.gamemaster.prompt_tokens, t.gamemaster.completion_tokens);
-        totalCost += gmCost;
-        lines.push('- **Game Master** (' + t.gamemaster.model + '): ' + t.gamemaster.calls + ' calls, ' +
-          t.gamemaster.prompt_tokens + ' input / ' + t.gamemaster.completion_tokens + ' output tokens, ' +
-          formatCost(gmCost) + ' total, ' + formatCost(gmCost / turns) + ' avg/turn');
-      }
+      if (t.writer.calls > 0) addRow('Writer', t.writer);
+      if (t.gamemaster.calls > 0) addRow('Game Master', t.gamemaster);
+      if (t.skeleton.calls > 0) addRow('Skeleton', t.skeleton);
+      if (t.playtester.calls > 0) addRow('Playtester', t.playtester);
+      if (t.image.calls > 0) addRow('Image', t.image);
 
-      // Skeleton
-      if (t.skeleton.calls > 0) {
-        var skelCost = calcCost(t.skeleton.model, t.skeleton.prompt_tokens, t.skeleton.completion_tokens);
-        totalCost += skelCost;
-        lines.push('- **Skeleton** (' + t.skeleton.model + '): ' + t.skeleton.calls + ' calls, ' +
-          t.skeleton.prompt_tokens + ' input / ' + t.skeleton.completion_tokens + ' output tokens, ' +
-          formatCost(skelCost));
-      }
-
-      // Playtester agent
-      if (t.playtester.calls > 0) {
-        var ptCost = calcCost(t.playtester.model, t.playtester.prompt_tokens, t.playtester.completion_tokens);
-        totalCost += ptCost;
-        lines.push('- **Playtester Agent** (' + t.playtester.model + '): ' + t.playtester.calls + ' calls, ' +
-          t.playtester.prompt_tokens + ' input / ' + t.playtester.completion_tokens + ' output tokens, ' +
-          formatCost(ptCost));
-      }
-
-      // Image
-      if (t.image.calls > 0) {
-        var imgCost = calcCost(t.image.model, t.image.prompt_tokens, t.image.completion_tokens);
-        totalCost += imgCost;
-        lines.push('- **Image** (' + t.image.model + '): ' + t.image.calls + ' calls, ' +
-          formatCost(imgCost));
-      }
-
-      // Voice
       if (t.voice.calls > 0) {
         var voiceCost = t.voice.characters * ELEVENLABS_COST_PER_CHAR;
         totalCost += voiceCost;
-        lines.push('- **Voice (ElevenLabs)**: ' + t.voice.calls + ' segments, ' +
-          t.voice.characters.toLocaleString() + ' characters, ' + formatCost(voiceCost));
+        rows.push({
+          label: 'Voice (TTS)',
+          model: 'ElevenLabs',
+          calls: t.voice.calls,
+          input: t.voice.characters,
+          output: 0,
+          cost: voiceCost,
+          isVoice: true
+        });
       }
 
-      var summary = '**Total estimated cost: ' + formatCost(totalCost) + '** (' + turns + ' turns)\n';
-      if (turns > 0) {
-        summary += '**Average cost per turn: ' + formatCost(totalCost / turns) + '**\n\n';
-      }
-      summary += lines.join('\n');
+      // Build summary lines
+      var s = '';
+      s += 'Total: ' + formatCost(totalCost) + ' over ' + turns + ' turns';
+      s += ' (' + formatCost(totalCost / turns) + '/turn avg)\n\n';
 
-      return summary;
+      rows.forEach(function (r) {
+        s += '- ' + r.label + ' (' + r.model + '): ';
+        s += r.calls + ' calls, ';
+        if (r.isVoice) {
+          s += r.input.toLocaleString() + ' chars, ';
+        } else {
+          s += r.input.toLocaleString() + ' in / ' + r.output.toLocaleString() + ' out tokens, ';
+        }
+        s += formatCost(r.cost) + '\n';
+      });
+
+      return s;
     },
 
     /**

@@ -42,7 +42,8 @@
       return SQ.API.call(model, messages, {
         temperature: 0.8,
         max_tokens: 8000,
-        timeout: 90000
+        timeout: 90000,
+        source: 'skeleton'
       })
         .then(function (raw) {
           return self._parseAndValidate(raw, setupConfig, model, systemPrompt, userMsg, attempt);

@@ -241,15 +241,67 @@
           var key = required[i];
           if (!response.choice_metadata[key]) {
             errors.push('Missing choice_metadata.' + key);
-          } else if (isHardOrBrutal) {
+          } else {
+            // outcome required on ALL difficulties
             if (!response.choice_metadata[key].outcome) {
-              errors.push('choice_metadata.' + key + ' missing outcome (required on ' + difficulty + ')');
+              errors.push('choice_metadata.' + key + ' missing outcome');
             }
-            if (!response.choice_metadata[key].narration_directive) {
+            // narration_directive required on Hard/Brutal only
+            if (isHardOrBrutal && !response.choice_metadata[key].narration_directive) {
               errors.push('choice_metadata.' + key + ' missing narration_directive (required on ' + difficulty + ')');
             }
           }
         }
+      }
+
+      return {
+        valid: errors.length === 0,
+        errors: errors
+      };
+    },
+
+    /**
+     * Validate a finale Game Master response.
+     * Expects state_updates with event_log_entry but NO choice_metadata.
+     * @param {object} response - Parsed JSON from finale GM call
+     * @returns {{ valid: boolean, errors: string[] }}
+     */
+    validateFinaleGMResponse: function (response) {
+      var errors = [];
+
+      if (!response || typeof response !== 'object') {
+        return { valid: false, errors: ['Response is not an object'] };
+      }
+
+      if (!response.state_updates || typeof response.state_updates !== 'object') {
+        errors.push('Missing state_updates object');
+      } else {
+        if (typeof response.state_updates.event_log_entry !== 'string' || !response.state_updates.event_log_entry) {
+          errors.push('Missing or empty event_log_entry');
+        }
+      }
+
+      return {
+        valid: errors.length === 0,
+        errors: errors
+      };
+    },
+
+    /**
+     * Validate a finale Writer response.
+     * Expects passage text but NO choices.
+     * @param {object} response - Parsed JSON from finale Writer call
+     * @returns {{ valid: boolean, errors: string[] }}
+     */
+    validateFinaleWriterResponse: function (response) {
+      var errors = [];
+
+      if (!response || typeof response !== 'object') {
+        return { valid: false, errors: ['Response is not an object'] };
+      }
+
+      if (typeof response.passage !== 'string' || response.passage.length === 0) {
+        errors.push('Missing or empty passage text');
       }
 
       return {

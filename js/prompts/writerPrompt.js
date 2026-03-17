@@ -53,7 +53,10 @@
           p += '- Key beats: ' + JSON.stringify(currentAct.key_beats) + '\n';
           p += '- Scenes in this act: ' + scenesInAct + ' of ~' + target + ' target\n';
           p += '- Proximity to climax: ' + proximity.toFixed(2) + '\n';
-          if (proximity >= 0.7) {
+          if (proximity >= 0.7 && actIndex === 2) {
+            p += '- PACING DIRECTIVE: This is the FINAL ACT and the story climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '".\n';
+            p += '- The next scene MUST directly advance toward or trigger the end condition. Do not introduce new subplots.\n';
+          } else if (proximity >= 0.7) {
             p += '- PACING DIRECTIVE: The act climax is IMMINENT. Build urgency. Drive toward the end condition: "' + currentAct.end_condition + '". Choices should relate to the approaching climax.\n';
             p += '- The next scene MUST directly advance toward or trigger the end condition. Do not introduce new subplots or social scenes.\n';
           } else if (proximity >= 0.4) {
@@ -115,6 +118,47 @@
             p += '\n';
           });
           p += '\n';
+
+          // NPC introduction directives — nudge Writer to introduce key NPCs
+          if (gameState.current) {
+            var proximity = gameState.current.proximity_to_climax || 0;
+            var eventLogText = (gameState.event_log || []).join(' ').toLowerCase();
+            var unintroducedKey = [];
+
+            nonCompanions.forEach(function (npc) {
+              var role = (npc.role || '').toLowerCase();
+              var isKeyNpc = role.indexOf('antagonist') !== -1 ||
+                             role.indexOf('ally') !== -1 ||
+                             role.indexOf('mentor') !== -1 ||
+                             role.indexOf('rival') !== -1 ||
+                             role.indexOf('villain') !== -1 ||
+                             role.indexOf('love interest') !== -1 ||
+                             role.indexOf('quest giver') !== -1;
+              if (isKeyNpc && eventLogText.indexOf(npc.name.toLowerCase()) === -1) {
+                unintroducedKey.push(npc);
+              }
+            });
+
+            if (unintroducedKey.length > 0) {
+              p += 'NPC INTRODUCTION DIRECTIVES:\n';
+              if (proximity >= 0.5) {
+                p += 'The following key NPCs have NOT yet appeared and MUST be introduced soon — the act is past its midpoint:\n';
+              } else if (proximity >= 0.3) {
+                p += 'The following key NPCs have not yet appeared. Consider introducing one of them in this scene:\n';
+              } else {
+                p += 'These key NPCs should be introduced during this act. Look for natural opportunities:\n';
+              }
+              unintroducedKey.forEach(function (npc) {
+                p += '- ' + npc.name + ' (' + npc.role + ')';
+                if (npc.motivation) p += ' — motivation: ' + npc.motivation;
+                p += '\n';
+              });
+              if (proximity >= 0.5) {
+                p += 'If you do not introduce them now, the story will lack the character dynamics needed for the climax.\n';
+              }
+              p += '\n';
+            }
+          }
         }
       }
 
@@ -189,6 +233,7 @@
       p += '- Do NOT include state_updates, health numbers, or mechanical data in your response\n';
       p += '- Pace the story toward the current act\'s end condition. Check the CURRENT ACT PACING section for scene count and proximity\n';
       p += '- When proximity_to_climax >= 0.8, your passage should feel like it\'s approaching a climax or turning point — increase urgency and stakes\n';
+      p += '- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n';
 
       return p;
     },
@@ -221,14 +266,137 @@
             p += '\nYou MUST narrate this outcome exactly as classified. Do not soften, alter, or provide alternatives to the predetermined outcome.';
           }
 
-          // Death-specific instruction
-          if (choice.outcome === 'death') {
-            p += '\n\nThe character DIES here. Narrate the death vividly and definitively. Do not offer survival, last-minute rescues, or "barely alive" outcomes.';
+          // Game over instruction (death, failure, etc.)
+          if (choice.outcome === 'game_over') {
+            p += '\n\nThe character has FAILED irreversibly. Narrate the failure vividly and definitively. Do not offer survival, last-minute rescues, or recovery.';
           }
         }
       }
 
       p += '\n\nGenerate the next passage and four new choices. Respond with ONLY the JSON object.';
+      return p;
+    },
+
+    /**
+     * Build the system prompt for a finale Writer call.
+     * Called after the finale GM has resolved state — the Writer writes a conclusive passage with NO choices.
+     * @param {object} gameState - Full game state
+     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @returns {string} System prompt
+     */
+    buildFinaleSystem: function (gameState, terminalType) {
+      var meta = gameState.meta || {};
+      var p = '';
+
+      // Role and style (same as normal)
+      p += 'You are The Writer for an interactive gamebook. You write vivid, engaging prose in ';
+      p += (meta.perspective || 'second person') + ' perspective, ';
+      p += (meta.tense || 'present') + ' tense, with a ';
+      p += (meta.writing_style || 'literary') + ' style and ';
+      p += (meta.tone || 'dark and atmospheric') + ' tone.\n\n';
+
+      // Terminal-type specific role
+      if (terminalType === 'game_over') {
+        p += 'You are writing the FINAL passage of the character\'s journey. The character has FAILED IRREVERSIBLY.\n';
+        p += 'This could be death, permanent loss, catastrophic failure, or any genre-appropriate ending. ';
+        p += 'Narrate the failure vividly and definitively. No escape, no survival, no continuation.\n\n';
+      } else if (terminalType === 'advances_act') {
+        p += 'You are writing the FINAL passage of the current act. The act\'s end condition has been triggered.\n';
+        p += 'Write a satisfying conclusion to this chapter of the story. Resolve the act\'s central conflict. ';
+        p += 'End with a sense of closure for this chapter while leaving narrative threads for the next act. ';
+        p += 'Do NOT set up immediate next steps — a transition prompt will handle moving to the next act.\n\n';
+      } else if (terminalType === 'conclusion') {
+        p += 'You are writing the FINAL passage of the ENTIRE STORY. The story\'s ultimate end condition has been met.\n';
+        p += 'Provide definitive narrative closure. Resolve character arcs. Reflect on the journey. ';
+        p += 'End with a strong final image or moment that feels earned and satisfying.\n\n';
+      }
+
+      p += 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\n';
+
+      // Story skeleton
+      p += 'STORY SKELETON:\n';
+      p += JSON.stringify(gameState.skeleton, null, 2) + '\n\n';
+
+      // Scene context
+      p += 'CURRENT POSITION:\n';
+      p += JSON.stringify(gameState.current, null, 2) + '\n\n';
+
+      // Relationships
+      p += 'RELATIONSHIPS:\n';
+      p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
+
+      // NPC roster
+      var allNpcs = SQ.GameState.getNpcRoster();
+      if (allNpcs.length > 0) {
+        p += 'KNOWN NPCs:\n';
+        allNpcs.forEach(function (npc) {
+          var rel = gameState.relationships[npc.name];
+          p += '- ' + npc.name + ' (' + npc.role + ')';
+          if (typeof rel === 'number') p += ' [relationship: ' + rel + ']';
+          if (npc.notes) p += ' — ' + npc.notes;
+          p += '\n';
+        });
+        p += '\n';
+      }
+
+      // Event log for continuity
+      p += 'EVENT LOG (last 20):\n';
+      p += JSON.stringify(gameState.event_log.slice(-20), null, 2) + '\n\n';
+
+      // Player identity
+      p += 'PLAYER CHARACTER:\n';
+      p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
+      p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
+
+      // Status effects
+      if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
+        p += 'ACTIVE STATUS EFFECTS:\n';
+        gameState.player.status_effects.forEach(function (effect) {
+          if (typeof effect === 'object' && effect.name) {
+            p += '- ' + effect.name;
+            if (effect.description) p += ': ' + effect.description;
+            p += '\n';
+          }
+        });
+        p += '\n';
+      }
+
+      // Response schema — passage ONLY, NO choices
+      p += 'Respond with this exact JSON structure:\n';
+      p += '{\n';
+      p += '  "passage": "string — the conclusive narrative passage, 200-400 words"\n';
+      p += '}\n\n';
+
+      p += 'RULES:\n';
+      p += '- Respond with ONLY the JSON object — nothing before it, nothing after it\n';
+      p += '- Write 200-400 words — longer than normal to provide a satisfying conclusion\n';
+      p += '- Do NOT include a "choices" field — this is a terminal passage with no choices\n';
+      p += '- Focus on prose quality, emotional resonance, and narrative closure\n';
+      p += '- Do NOT include state_updates, health numbers, or mechanical data\n';
+
+      return p;
+    },
+
+    /**
+     * Build the user prompt for a finale Writer call.
+     * @param {object} gameState - Full game state
+     * @param {string} choiceId - Which choice was selected (A/B/C/D)
+     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {object} gmResponse - The finale GM response (for event_log_entry context)
+     * @returns {string} User prompt
+     */
+    buildFinaleUser: function (gameState, choiceId, terminalType, gmResponse) {
+      var choice = gameState.current_choices && gameState.current_choices[choiceId];
+      var p = 'The player chose option ' + choiceId + '.';
+      if (choice && choice.text) p += '\nChoice text: "' + choice.text + '"';
+
+      p += '\n\nTERMINAL TYPE: ' + terminalType.toUpperCase();
+
+      if (gmResponse && gmResponse.state_updates && gmResponse.state_updates.event_log_entry) {
+        p += '\nGAME MASTER SUMMARY: ' + gmResponse.state_updates.event_log_entry;
+      }
+
+      p += '\n\nWrite the final passage. No choices needed. Respond with ONLY the JSON object: { "passage": "..." }';
       return p;
     }
   };
