@@ -3,6 +3,42 @@
  * First screen for new players. Accessible from main menu via Settings button.
  */
 (function () {
+  var MODEL_INFO = {
+    'anthropic/claude-sonnet-4':      { desc: 'Strong creative writing and reliable structured output.', cost: '~$0.01–0.03' },
+    'anthropic/claude-sonnet-4.5':    { desc: 'Latest Sonnet with improved prose and reasoning.', cost: '~$0.02–0.05' },
+    'anthropic/claude-opus-4':        { desc: 'Top-tier intelligence and nuance. Premium pricing.', cost: '~$0.10–0.30' },
+    'anthropic/claude-opus-4.5':      { desc: 'Most capable Claude model. Exceptional prose quality.', cost: '~$0.15–0.45' },
+    'anthropic/claude-haiku-4.5':     { desc: 'Fast and cheap. Great for structured tasks and JSON.', cost: '~$0.002–0.005' },
+    'google/gemini-2.5-pro':          { desc: 'Google\'s flagship model. Strong reasoning and writing.', cost: '~$0.01–0.03' },
+    'google/gemini-2.5-flash':        { desc: 'Fast and affordable. Good general-purpose model.', cost: '~$0.001–0.004' },
+    'google/gemini-2.0-flash-001':    { desc: 'Previous-gen Flash. Very cheap but less capable.', cost: '~$0.001–0.003' },
+    'openai/gpt-4o':                  { desc: 'OpenAI\'s versatile flagship. Solid all-around.', cost: '~$0.01–0.03' },
+    'openai/gpt-4o-mini':             { desc: 'Lightweight GPT-4o. Good value for simpler tasks.', cost: '~$0.001–0.004' },
+    'openai/o3-mini':                 { desc: 'Reasoning-focused model. Methodical but slower.', cost: '~$0.01–0.04' },
+    'deepseek/deepseek-chat':         { desc: 'Strong open-weight model. Excellent value.', cost: '~$0.001–0.003' },
+    'deepseek/deepseek-r1':           { desc: 'Reasoning-focused DeepSeek. Thorough but verbose.', cost: '~$0.005–0.02' },
+    'meta-llama/llama-4-maverick':    { desc: 'Meta\'s large Llama 4. Creative and capable.', cost: '~$0.002–0.006' },
+    'meta-llama/llama-4-scout':       { desc: 'Smaller Llama 4. Fast and cost-effective.', cost: '~$0.001–0.003' },
+    'mistralai/mistral-large-2512':   { desc: 'Mistral\'s flagship. Strong multilingual support.', cost: '~$0.008–0.024' },
+    'mistralai/mistral-small-creative-20251216': { desc: 'Tuned for creative writing. Compact and fast.', cost: '~$0.001–0.003' },
+    'mistralai/mistral-small-3.1-24b-instruct-2503': { desc: 'Small instruction-tuned model. Quick and cheap.', cost: '~$0.001–0.003' },
+    'x-ai/grok-3':                    { desc: 'xAI\'s flagship. Witty tone, strong reasoning.', cost: '~$0.01–0.03' },
+    'x-ai/grok-3-mini':              { desc: 'Lightweight Grok. Affordable with decent quality.', cost: '~$0.003–0.01' },
+    'qwen/qwen3-235b-a22b-07-25':    { desc: 'Large Qwen model. Competitive open-weight option.', cost: '~$0.002–0.006' },
+    'qwen/qwen3-32b-04-28':          { desc: 'Smaller Qwen. Budget-friendly with good results.', cost: '~$0.001–0.002' },
+    'cohere/command-r-plus':          { desc: 'Cohere\'s top model. Good at following instructions.', cost: '~$0.01–0.03' }
+  };
+
+  function updateModelDesc(descId, modelId) {
+    var el = document.getElementById(descId);
+    if (!el) return;
+    var info = MODEL_INFO[modelId];
+    if (info) {
+      el.textContent = info.desc + ' Est. ' + info.cost + '/turn.';
+    } else {
+      el.textContent = 'Custom model — no cost estimate available.';
+    }
+  }
   SQ.Screens.Settings = {
     init: function () {
       var self = this;
@@ -22,11 +58,13 @@
           customInput.classList.add('hidden');
           SQ.PlayerConfig.setModel('passage', this.value);
         }
+        updateModelDesc('writer-model-desc', this.value);
       });
 
       document.getElementById('writer-model-custom-input').addEventListener('change', function () {
         if (this.value.trim()) {
           SQ.PlayerConfig.setModel('passage', this.value.trim());
+          updateModelDesc('writer-model-desc', this.value.trim());
         }
       });
 
@@ -41,12 +79,14 @@
           SQ.PlayerConfig.setModel('skeleton', this.value);
           SQ.PlayerConfig.setModel('gamemaster', this.value);
         }
+        updateModelDesc('gm-model-desc', this.value);
       });
 
       document.getElementById('gm-model-custom-input').addEventListener('change', function () {
         if (this.value.trim()) {
           SQ.PlayerConfig.setModel('skeleton', this.value.trim());
           SQ.PlayerConfig.setModel('gamemaster', this.value.trim());
+          updateModelDesc('gm-model-desc', this.value.trim());
         }
       });
 
@@ -156,10 +196,14 @@
       }
 
       // Set writer model selector to current value
-      this._syncModelSelect('writer-model-select', 'writer-model-custom-input', SQ.PlayerConfig.getModel('passage'));
+      var writerModel = SQ.PlayerConfig.getModel('passage');
+      this._syncModelSelect('writer-model-select', 'writer-model-custom-input', writerModel);
+      updateModelDesc('writer-model-desc', writerModel);
 
       // Set GM model selector to current value
-      this._syncModelSelect('gm-model-select', 'gm-model-custom-input', SQ.PlayerConfig.getModel('gamemaster'));
+      var gmModel = SQ.PlayerConfig.getModel('gamemaster');
+      this._syncModelSelect('gm-model-select', 'gm-model-custom-input', gmModel);
+      updateModelDesc('gm-model-desc', gmModel);
 
       // Hide back button if no API key yet and no previous screen (first-time user)
       var backBtn = document.getElementById('btn-settings-back');

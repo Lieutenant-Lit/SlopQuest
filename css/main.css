@@ -131,6 +131,14 @@ a {
   margin: 0 0 var(--spacing-xs) 0;
 }
 
+.model-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: var(--spacing-xs) 0 0 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],

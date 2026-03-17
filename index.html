@@ -70,6 +70,7 @@
           </optgroup>
         </select>
         <input type="text" id="writer-model-custom-input" class="hidden" placeholder="org/model-name">
+        <p class="model-desc" id="writer-model-desc"></p>
       </div>
 
       <div class="card">
@@ -77,11 +78,11 @@
         <p>The analytical LLM that manages game state, rules, and story structure.</p>
         <select id="gm-model-select">
           <optgroup label="Anthropic">
-            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5 (default)</option>
+            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4</option>
             <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
             <option value="anthropic/claude-opus-4">Claude Opus 4</option>
             <option value="anthropic/claude-opus-4.5">Claude Opus 4.5</option>
-            <option value="anthropic/claude-haiku-4.5">Claude Haiku 4.5</option>
           </optgroup>
           <optgroup label="Google">
             <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
@@ -117,6 +118,7 @@
           </optgroup>
         </select>
         <input type="text" id="gm-model-custom-input" class="hidden" placeholder="org/model-name">
+        <p class="model-desc" id="gm-model-desc"></p>
       </div>
 
       <!-- Illustrations temporarily disabled — will be revisited in a later phase -->
