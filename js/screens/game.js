@@ -974,10 +974,11 @@
         // Render passage
         self._renderPassage(state.last_passage, true);
 
-        // Restore choice buttons visibility
+        // Restore choice buttons visibility (but hide the Continue button)
         document.querySelectorAll('.btn-choice').forEach(function (btn) {
           btn.classList.remove('hidden');
         });
+        document.getElementById('btn-act-continue').classList.add('hidden');
 
         // Show choices disabled while waiting for GM
         self.renderChoices(state.current_choices, true);
