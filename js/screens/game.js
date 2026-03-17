@@ -935,6 +935,7 @@
 
       var continueBtn = document.getElementById('btn-act-continue');
       continueBtn.querySelector('.choice-text').textContent = 'Continue to Act ' + (state.current.act || 2);
+      continueBtn.disabled = false;
       continueBtn.classList.remove('hidden');
 
       var self = this;
