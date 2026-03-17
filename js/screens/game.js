@@ -144,8 +144,19 @@
       // Choices — hide if game over or story complete
       if (state.game_over || state.story_complete) {
         document.getElementById('choices-container').classList.add('hidden');
+      } else if (!state.current_choices) {
+        // Terminal passage with no choices (e.g. mid-act-transition resume)
+        document.getElementById('choices-container').classList.remove('hidden');
+        document.querySelectorAll('.btn-choice').forEach(function (btn) {
+          btn.classList.add('hidden');
+        });
+        this._showActTransition(state);
       } else {
         document.getElementById('choices-container').classList.remove('hidden');
+        document.querySelectorAll('.btn-choice').forEach(function (btn) {
+          btn.classList.remove('hidden');
+        });
+        document.getElementById('btn-act-continue').classList.add('hidden');
         this.renderChoices(state.current_choices, !this._isInitialRender);
         this._hideChoiceStatus();
       }
@@ -305,6 +316,13 @@
         historyDepth: SQ.HistoryStack.length()
       });
 
+      // Check for terminal choice (game_over, advances_act, conclusion)
+      var terminalType = self._getTerminalType(choiceId, state);
+      if (terminalType) {
+        self._handleTerminalChoice(choiceId, state, terminalType);
+        return;
+      }
+
       self.showLoading();
 
       // Hide illustrations (disabled for this phase)
@@ -438,155 +456,12 @@
      */
     applyGameMasterResponse: function (state, gmResponse) {
       var updates = gmResponse.state_updates || {};
-      var timeElapsed = updates.time_elapsed || null;
 
-      // 1. Player changes (inventory, status_effects, skills)
-      if (updates.player_changes) {
-        var pc = updates.player_changes;
-        if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
-        if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
-        if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
-      }
-
-      // 2. Advance in-game clock
-      if (timeElapsed) {
-        SQ.GameState.advanceTime(timeElapsed);
-      }
-
-      // 3. Tick down status effect timers and auto-remove expired non-lethal effects
-      if (timeElapsed && Array.isArray(state.player.status_effects)) {
-        state.player.status_effects = state.player.status_effects.filter(function (effect) {
-          if (!effect.time_remaining) return true; // no timer = keep
-          var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
-          effect.time_remaining = result.time;
-          if (result.expired) {
-            // Lethal effects expiring = the GM should have set game_over, but keep the effect
-            // so it's visible in the game over screen
-            return !!effect.lethal;
-          }
-          return true;
-        });
-      }
-
-      // 4. New pending consequences
-      if (Array.isArray(updates.new_pending_consequences)) {
-        updates.new_pending_consequences.forEach(function (c) {
-          state.pending_consequences.push(c);
-        });
-      }
-
-      // 5. Resolved consequences — remove by id
-      if (Array.isArray(updates.resolved_consequences)) {
-        state.pending_consequences = state.pending_consequences.filter(function (c) {
-          return updates.resolved_consequences.indexOf(c.id) === -1;
-        });
-      }
-
-      // 6. Tick down pending consequence timers
-      if (timeElapsed) {
-        state.pending_consequences.forEach(function (c) {
-          if (c.time_remaining) {
-            var result = SQ.GameState.subtractTime(c.time_remaining, timeElapsed);
-            c.time_remaining = result.time;
-          }
-        });
-      }
-
-      // 7. Event log entry
-      if (updates.event_log_entry) {
-        state.event_log.push(updates.event_log_entry);
-      }
-
-      // 8. World flag changes
-      if (updates.world_flag_changes) {
-        Object.assign(state.world_flags, updates.world_flag_changes);
-      }
-
-      // 9. Relationship changes (deltas, not absolutes)
-      if (updates.relationship_changes) {
-        for (var name in updates.relationship_changes) {
-          if (updates.relationship_changes.hasOwnProperty(name)) {
-            var delta = updates.relationship_changes[name];
-            state.relationships[name] = (state.relationships[name] || 0) + delta;
-            state.relationships[name] = Math.max(-100, Math.min(100, state.relationships[name]));
-          }
-        }
-      }
-
-      // 9b. NPC overrides (merge updates into mutable NPC layer)
-      if (updates.npc_updates) {
-        if (!state.npc_overrides) state.npc_overrides = {};
-        for (var npcName in updates.npc_updates) {
-          if (updates.npc_updates.hasOwnProperty(npcName)) {
-            if (!state.npc_overrides[npcName]) {
-              state.npc_overrides[npcName] = {};
-            }
-            Object.assign(state.npc_overrides[npcName], updates.npc_updates[npcName]);
-          }
-        }
-      }
-
-      // 10. Scene context update
-      if (updates.new_scene_context) {
-        state.current.scene_context = updates.new_scene_context;
-      }
-
-      // 10b. Location and time of day
-      if (updates.location) {
-        state.current.location = updates.location;
-      }
-      if (updates.time_of_day) {
-        state.current.time_of_day = updates.time_of_day;
-      }
-
-      // 11. Act advancement — with client-side guards
-      if (updates.advance_act) {
-        var scenesInAct = (state.current.scene_number || 1) - (state.current.act_start_scene || 1) + 1;
-        var currentActIndex = (state.current.act || 1) - 1;
-        var targetScenes = 10;
-        if (state.skeleton && Array.isArray(state.skeleton.acts) && state.skeleton.acts[currentActIndex]) {
-          targetScenes = state.skeleton.acts[currentActIndex].target_scenes || 10;
-        }
-        var minScenes = Math.max(3, Math.ceil(targetScenes * 0.5));
-
-        if (scenesInAct < minScenes) {
-          SQ.Logger.warn('Game', 'Blocked premature act advancement', {
-            act: state.current.act,
-            scenesInAct: scenesInAct,
-            minRequired: minScenes,
-            targetScenes: targetScenes
-          });
-          // Cap proximity to prevent immediate re-triggering
-          if (typeof updates.proximity_to_climax === 'number' && updates.proximity_to_climax >= 1.0) {
-            updates.proximity_to_climax = 0.85;
-          }
-          updates.advance_act = false;
-        } else {
-          state.current.act = Math.min((state.current.act || 1) + 1, 3);
-          state.current.proximity_to_climax = 0.0;
-          state.current.act_start_scene = state.current.scene_number;
-          if (state.skeleton && Array.isArray(state.skeleton.acts)) {
-            var newAct = state.skeleton.acts[state.current.act - 1];
-            if (newAct && Array.isArray(newAct.locked_constraints)) {
-              state.current.active_constraints = newAct.locked_constraints.slice();
-            }
-          }
-          SQ.Logger.info('Game', 'Act advanced', {
-            newAct: state.current.act,
-            scene: state.current.scene_number,
-            scenesInPreviousAct: scenesInAct,
-            constraints: state.current.active_constraints
-          });
-        }
-      }
-
-      // 11b. Apply proximity_to_climax from GM (skip if act just advanced — reset takes precedence)
-      if (!updates.advance_act && typeof updates.proximity_to_climax === 'number') {
-        state.current.proximity_to_climax = Math.max(0, Math.min(1, updates.proximity_to_climax));
-      }
+      // Apply shared state updates (steps 1-11b)
+      this._applyStateUpdates(state, updates);
 
       // 12. Merge choice metadata (outcome, consequence, narration_directive)
-      if (gmResponse.choice_metadata) {
+      if (gmResponse.choice_metadata && state.current_choices) {
         var keys = ['A', 'B', 'C', 'D'];
         for (var i = 0; i < keys.length; i++) {
           var k = keys[i];
@@ -596,8 +471,49 @@
         }
       }
 
+      // 12b. Guard terminal outcome pre-classifications
+      if (state.current_choices) {
+        var diffKey = (state.meta && state.meta.difficulty) || 'normal';
+        var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
+        var guardKeys = ['A', 'B', 'C', 'D'];
+
+        for (var g = 0; g < guardKeys.length; g++) {
+          var gk = guardKeys[g];
+          var ch = state.current_choices[gk];
+          if (!ch || !ch.outcome) continue;
+
+          // Guard: game_over only on difficulties that allow it
+          if (ch.outcome === 'game_over' && !diffConfig.allow_game_over) {
+            SQ.Logger.warn('Game', 'Stripped game_over outcome on ' + diffKey, { choice: gk });
+            ch.outcome = 'advance_risky';
+          }
+
+          // Guard: advances_act only when minimum scene count met
+          if (ch.outcome === 'advances_act') {
+            var scenesInAct = (state.current.scene_number || 1) - (state.current.act_start_scene || 1) + 1;
+            var actIdx = (state.current.act || 1) - 1;
+            var tgtScenes = 10;
+            if (state.skeleton && Array.isArray(state.skeleton.acts) && state.skeleton.acts[actIdx]) {
+              tgtScenes = state.skeleton.acts[actIdx].target_scenes || 10;
+            }
+            var minRequired = Math.max(3, Math.ceil(tgtScenes * 0.5));
+            if (scenesInAct < minRequired) {
+              SQ.Logger.warn('Game', 'Stripped premature advances_act outcome', { choice: gk, scenesInAct: scenesInAct, minRequired: minRequired });
+              ch.outcome = 'advance_safe';
+            }
+          }
+
+          // Guard: conclusion only valid in Act 3
+          if (ch.outcome === 'conclusion' && (state.current.act || 1) < 3) {
+            SQ.Logger.warn('Game', 'Stripped premature conclusion outcome', { choice: gk, act: state.current.act });
+            ch.outcome = 'advance_safe';
+          }
+        }
+      }
+
       // Log GM state updates — build object conditionally to avoid undefined noise
       var _gmLog = {};
+      var timeElapsed = updates.time_elapsed || null;
       if (timeElapsed) _gmLog.time = SQ.GameState.formatDuration(timeElapsed);
       var _efx = (state.player.status_effects || []);
       if (_efx.length) {
@@ -739,6 +655,358 @@
       if (statusEl) {
         statusEl.classList.add('hidden');
       }
+    },
+
+    /**
+     * Apply shared state_updates to game state.
+     * Extracted from applyGameMasterResponse — used by both normal and finale flows.
+     * Handles steps 1-11b: player changes, time, effects, consequences, event log,
+     * world flags, relationships, NPCs, location, act advancement, proximity.
+     * @param {object} state - Game state to mutate
+     * @param {object} updates - The state_updates object from GM response
+     * @private
+     */
+    _applyStateUpdates: function (state, updates) {
+      var timeElapsed = updates.time_elapsed || null;
+
+      // 1. Player changes (inventory, status_effects, skills)
+      if (updates.player_changes) {
+        var pc = updates.player_changes;
+        if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
+        if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
+        if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
+      }
+
+      // 2. Advance in-game clock
+      if (timeElapsed) {
+        SQ.GameState.advanceTime(timeElapsed);
+      }
+
+      // 3. Tick down status effect timers and auto-remove expired non-lethal effects
+      if (timeElapsed && Array.isArray(state.player.status_effects)) {
+        state.player.status_effects = state.player.status_effects.filter(function (effect) {
+          if (!effect.time_remaining) return true;
+          var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
+          effect.time_remaining = result.time;
+          if (result.expired) {
+            return !!effect.lethal;
+          }
+          return true;
+        });
+      }
+
+      // 4. New pending consequences
+      if (Array.isArray(updates.new_pending_consequences)) {
+        updates.new_pending_consequences.forEach(function (c) {
+          state.pending_consequences.push(c);
+        });
+      }
+
+      // 5. Resolved consequences — remove by id
+      if (Array.isArray(updates.resolved_consequences)) {
+        state.pending_consequences = state.pending_consequences.filter(function (c) {
+          return updates.resolved_consequences.indexOf(c.id) === -1;
+        });
+      }
+
+      // 6. Tick down pending consequence timers
+      if (timeElapsed) {
+        state.pending_consequences.forEach(function (c) {
+          if (c.time_remaining) {
+            var result = SQ.GameState.subtractTime(c.time_remaining, timeElapsed);
+            c.time_remaining = result.time;
+          }
+        });
+      }
+
+      // 7. Event log entry
+      if (updates.event_log_entry) {
+        state.event_log.push(updates.event_log_entry);
+      }
+
+      // 8. World flag changes
+      if (updates.world_flag_changes) {
+        Object.assign(state.world_flags, updates.world_flag_changes);
+      }
+
+      // 9. Relationship changes (deltas, not absolutes)
+      if (updates.relationship_changes) {
+        for (var name in updates.relationship_changes) {
+          if (updates.relationship_changes.hasOwnProperty(name)) {
+            var delta = updates.relationship_changes[name];
+            state.relationships[name] = (state.relationships[name] || 0) + delta;
+            state.relationships[name] = Math.max(-100, Math.min(100, state.relationships[name]));
+          }
+        }
+      }
+
+      // 9b. NPC overrides (merge updates into mutable NPC layer)
+      if (updates.npc_updates) {
+        if (!state.npc_overrides) state.npc_overrides = {};
+        for (var npcName in updates.npc_updates) {
+          if (updates.npc_updates.hasOwnProperty(npcName)) {
+            if (!state.npc_overrides[npcName]) {
+              state.npc_overrides[npcName] = {};
+            }
+            Object.assign(state.npc_overrides[npcName], updates.npc_updates[npcName]);
+          }
+        }
+      }
+
+      // 10. Scene context update
+      if (updates.new_scene_context) {
+        state.current.scene_context = updates.new_scene_context;
+      }
+
+      // 10b. Location and time of day
+      if (updates.location) {
+        state.current.location = updates.location;
+      }
+      if (updates.time_of_day) {
+        state.current.time_of_day = updates.time_of_day;
+      }
+
+      // 11. Act advancement — with client-side guards
+      if (updates.advance_act) {
+        var scenesInAct = (state.current.scene_number || 1) - (state.current.act_start_scene || 1) + 1;
+        var currentActIndex = (state.current.act || 1) - 1;
+        var targetScenes = 10;
+        if (state.skeleton && Array.isArray(state.skeleton.acts) && state.skeleton.acts[currentActIndex]) {
+          targetScenes = state.skeleton.acts[currentActIndex].target_scenes || 10;
+        }
+        var minScenes = Math.max(3, Math.ceil(targetScenes * 0.5));
+
+        if (scenesInAct < minScenes) {
+          SQ.Logger.warn('Game', 'Blocked premature act advancement', {
+            act: state.current.act,
+            scenesInAct: scenesInAct,
+            minRequired: minScenes,
+            targetScenes: targetScenes
+          });
+          if (typeof updates.proximity_to_climax === 'number' && updates.proximity_to_climax >= 1.0) {
+            updates.proximity_to_climax = 0.85;
+          }
+          updates.advance_act = false;
+        } else {
+          state.current.act = Math.min((state.current.act || 1) + 1, 3);
+          state.current.proximity_to_climax = 0.0;
+          state.current.act_start_scene = state.current.scene_number;
+          if (state.skeleton && Array.isArray(state.skeleton.acts)) {
+            var newAct = state.skeleton.acts[state.current.act - 1];
+            if (newAct && Array.isArray(newAct.locked_constraints)) {
+              state.current.active_constraints = newAct.locked_constraints.slice();
+            }
+          }
+          SQ.Logger.info('Game', 'Act advanced', {
+            newAct: state.current.act,
+            scene: state.current.scene_number,
+            scenesInPreviousAct: scenesInAct,
+            constraints: state.current.active_constraints
+          });
+        }
+      }
+
+      // 11b. Apply proximity_to_climax from GM (skip if act just advanced — reset takes precedence)
+      if (!updates.advance_act && typeof updates.proximity_to_climax === 'number') {
+        state.current.proximity_to_climax = Math.max(0, Math.min(1, updates.proximity_to_climax));
+      }
+    },
+
+    /**
+     * Check if a choice has a terminal outcome type.
+     * @param {string} choiceId - A/B/C/D
+     * @param {object} state - Game state
+     * @returns {string|null} Terminal type or null
+     * @private
+     */
+    _getTerminalType: function (choiceId, state) {
+      var choice = state.current_choices && state.current_choices[choiceId];
+      if (!choice || !choice.outcome) return null;
+      var outcome = choice.outcome;
+      if (outcome === 'game_over' || outcome === 'advances_act' || outcome === 'conclusion') {
+        return outcome;
+      }
+      return null;
+    },
+
+    /**
+     * Handle a terminal choice: GM-finale then Writer-finale, no forward choices.
+     * @param {string} choiceId - A/B/C/D
+     * @param {object} state - Game state
+     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @private
+     */
+    _handleTerminalChoice: function (choiceId, state, terminalType) {
+      var self = this;
+
+      SQ.Logger.info('Game', 'Terminal choice selected', {
+        choiceId: choiceId,
+        terminalType: terminalType,
+        scene: state.current.scene_number,
+        act: state.current.act
+      });
+
+      self.showLoading();
+      self._hideIllustration();
+
+      SQ.PassageGenerator.generateFinale(state, choiceId, terminalType).then(function (result) {
+        self.hideLoading();
+
+        // Apply GM finale state updates (no choice_metadata)
+        self._applyStateUpdates(state, result.gmResponse.state_updates || {});
+
+        // Store finale passage and clear choices
+        state.last_passage = result.writerResponse.passage;
+        state.current_choices = null;
+        SQ.GameState.save();
+
+        // Render the finale passage
+        self._renderPassage(state.last_passage, true);
+
+        // Hide choice buttons
+        document.querySelectorAll('.btn-choice').forEach(function (btn) {
+          btn.classList.add('hidden');
+        });
+
+        // Update status bar and debug panel
+        self._renderStatusBar(state);
+        self._renderGameStateDebug(state);
+
+        // Audio narration
+        if (SQ.PlayerConfig.isNarrationEnabled() && result.writerResponse.passage) {
+          SQ.AudioDirector.prepareForPassage(result.writerResponse.passage, state);
+        }
+
+        // Route to appropriate UI transition
+        if (terminalType === 'game_over') {
+          state.game_over = true;
+          state.game_over_reason = (result.gmResponse.state_updates && result.gmResponse.state_updates.event_log_entry) || 'The story has ended.';
+          SQ.GameState.save();
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester._onGameEnd('game_over');
+          }
+          // Navigate to gameover after reading delay handled by gameover screen
+          SQ.showScreen('gameover');
+
+        } else if (terminalType === 'advances_act') {
+          self._showActTransition(state);
+
+        } else if (terminalType === 'conclusion') {
+          state.story_complete = true;
+          SQ.GameState.save();
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester._onGameEnd('story_complete');
+          }
+          SQ.showScreen('gameover');
+        }
+
+      }).catch(function (err) {
+        self.hideLoading();
+        self._enableChoices();
+        SQ.Logger.error('Finale', 'Generation failed', { error: err.message });
+        SQ.ErrorOverlay.show(err, {
+          onRetry: function () {
+            self._handleTerminalChoice(choiceId, state, terminalType);
+          }
+        });
+      });
+    },
+
+    /**
+     * Show a "Continue to Act X" button after an act-completing finale passage.
+     * @param {object} state - Game state
+     * @private
+     */
+    _showActTransition: function (state) {
+      var container = document.getElementById('choices-container');
+      container.classList.remove('hidden');
+
+      var continueBtn = document.getElementById('btn-act-continue');
+      var nextAct = Math.min((state.current.act || 1), 3);
+      continueBtn.querySelector('.choice-text').textContent = 'Continue to Act ' + nextAct;
+      continueBtn.classList.remove('hidden');
+
+      var self = this;
+      continueBtn.onclick = function () {
+        continueBtn.classList.add('hidden');
+        self._startNewAct(state);
+      };
+
+      // Playtester auto-play: auto-click continue
+      if (SQ.Playtester && SQ.Playtester.isActive()) {
+        setTimeout(function () {
+          continueBtn.click();
+        }, 500);
+      }
+    },
+
+    /**
+     * Start the first turn of a new act via the normal generate flow.
+     * @param {object} state - Game state
+     * @private
+     */
+    _startNewAct: function (state) {
+      var self = this;
+
+      SQ.Logger.info('Game', 'Starting new act', { act: state.current.act });
+
+      self.showLoading();
+
+      SQ.PassageGenerator.generate(state, null).then(function (result) {
+        var writerResponse = result.writerResponse;
+        self.hideLoading();
+
+        // Apply Writer response (passage + choices + scene number)
+        self.applyWriterResponse(state, writerResponse);
+
+        // Render passage
+        self._renderPassage(state.last_passage, true);
+
+        // Restore choice buttons visibility
+        document.querySelectorAll('.btn-choice').forEach(function (btn) {
+          btn.classList.remove('hidden');
+        });
+
+        // Show choices disabled while waiting for GM
+        self.renderChoices(state.current_choices, true);
+        self._disableChoicesWithStatus('Updating game state...');
+        self._renderStatusBar(state);
+        self._renderGameStateDebug(state);
+
+        // Audio
+        if (SQ.PlayerConfig.isNarrationEnabled() && writerResponse.passage) {
+          SQ.AudioDirector.prepareForPassage(writerResponse.passage, state);
+        }
+
+        // Wait for GM response
+        result.gameMasterPromise.then(function (gmResponse) {
+          self.applyGameMasterResponse(state, gmResponse);
+          self._renderStatusBar(state);
+          self._renderGameStateDebug(state);
+          if (state.game_over || state.story_complete) return;
+          self._enableChoices();
+          self._hideChoiceStatus();
+
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester.onTurnComplete();
+          }
+        }).catch(function (err) {
+          SQ.Logger.error('GameMaster', 'New act GM failed', { error: err.message });
+          SQ.ErrorOverlay.show(err, {
+            onRetry: function () {
+              self._startNewAct(state);
+            }
+          });
+        });
+      }).catch(function (err) {
+        self.hideLoading();
+        SQ.Logger.error('Writer', 'New act Writer failed', { error: err.message });
+        SQ.ErrorOverlay.show(err, {
+          onRetry: function () {
+            self._startNewAct(state);
+          }
+        });
+      });
     },
 
     /**

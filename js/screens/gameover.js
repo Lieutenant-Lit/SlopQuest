@@ -57,7 +57,7 @@
       if (isComplete) {
         titleEl.textContent = 'Story Complete';
       } else if (isDeath) {
-        titleEl.textContent = 'You Died';
+        titleEl.textContent = 'Game Over';
       } else {
         titleEl.textContent = 'Game Over';
       }

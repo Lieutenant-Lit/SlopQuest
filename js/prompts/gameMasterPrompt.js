@@ -140,10 +140,10 @@
       p += '  },\n';
       p += '  "choice_metadata": {\n';
       if (isHardOrBrutal) {
-        p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|death|hidden_benefit", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
+        p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
         p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       } else {
-        p += '    "A": { "outcome": "advance_safe|advance_risky", "consequence": "brief mechanical note" },\n';
+        p += '    "A": { "outcome": "advance_safe|advance_risky|hidden_benefit|advances_act|conclusion", "consequence": "brief mechanical note" },\n';
         p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       }
       p += '  }\n';
@@ -167,13 +167,21 @@
       p += '- The current act\'s target_scenes (in the skeleton) is the intended scene count for this act.\n';
       p += '- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n';
       p += '- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n';
-      p += '- MINIMUM SCENES PER ACT: Do NOT set advance_act to true unless scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Every act needs substantial development. The client enforces this — premature advancement will be rejected.\n';
+      p += '- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n';
       p += '- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n';
-      p += '- If scenes_in_act >= target_scenes AND the act\'s end_condition is narratively close to being met, set advance_act to true.\n';
-      p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD set advance_act to true — the act has gone on too long. Drive the narrative forward.\n';
-      p += '- When advance_act is true, also set proximity_to_climax to 1.0.\n';
-      p += '- STORY COMPLETION: Set story_complete to true ONLY when the current act is Act 3 (the FINAL act) AND its end_condition is narratively met. NEVER set story_complete in Act 1 or Act 2 — the client will reject it. This ends the story.\n';
-      p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it.\n\n';
+      p += '- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n';
+      p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n';
+      p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it, including advances_act choices.\n\n';
+
+      // Terminal outcomes rules
+      p += 'TERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n';
+      p += '- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act\'s end_condition. At most ONE advances_act choice per set of four.\n';
+      p += '- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3\'s end_condition and complete the story. At most ONE conclusion choice per set of four.\n';
+      if (diffConfig.allow_game_over) {
+        p += '- game_over: Use when the choice leads to an irreversible failure appropriate to the genre (death, permanent loss, catastrophic failure, etc.). At most ONE game_over choice per set of four.\n';
+      }
+      p += '- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n';
+      p += '- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\n';
 
       // Time elapsed rules
       p += 'TIME ELAPSED — REQUIRED EVERY TURN:\n';
@@ -201,22 +209,24 @@
       // Difficulty-specific rules
       if (difficulty === 'chill') {
         p += 'CHILL MODE RULES (MANDATORY):\n';
-        p += '- NEVER set game_over to true. The player cannot die on Chill.\n';
+        p += '- NEVER use game_over outcome on choices. The player cannot fail/die on Chill.\n';
         p += '- NEVER create lethal status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Effects are inconveniences, not threats.\n';
         p += '- Effects heal quickly — reduce severity generously each turn. Minor injuries resolve within a few in-game hours.\n';
         p += '- Consequences are mild: lost items, delayed progress, NPC annoyance — never life-threatening\n';
         p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
         p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
+        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       } else if (difficulty === 'normal') {
         p += 'NORMAL MODE RULES (MANDATORY):\n';
-        p += '- NEVER set game_over to true. The player cannot die on Normal.\n';
+        p += '- NEVER use game_over outcome on choices. The player cannot fail/die on Normal.\n';
         p += '- NEVER create lethal status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Injuries matter but are never fatal.\n';
         p += '- Healing is realistic for the setting. A serious wound takes days to heal, but the player should have opportunities to find medicine or rest.\n';
         p += '- Consequences are meaningful but recoverable: injuries, lost items, relationship damage\n';
         p += '- Approximately 2 safe and 2 risky choices per turn.\n';
         p += '- NPCs can be upset but always have a path to reconciliation.\n';
+        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       } else if (difficulty === 'hard') {
         p += 'HARD MODE RULES (MANDATORY):\n';
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
@@ -227,6 +237,8 @@
         p += '- Pending consequences escalate fast: short time windows before they trigger.\n';
         p += '- NPCs have low forgiveness. Burning a relationship has lasting consequences.\n';
         p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
+        p += '- game_over outcomes are available — use for genre-appropriate failures (death, permanent loss, catastrophic failure).\n';
+        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       } else if (difficulty === 'brutal') {
         p += 'BRUTAL MODE RULES (MANDATORY):\n';
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
@@ -236,9 +248,10 @@
         p += '- Injuries stack — multiple status effects compound the character\'s impairment.\n';
         p += '- Healing is slow without supplies. Rest alone barely reduces severity. Medicine, magic, or proper treatment is required for meaningful recovery.\n';
         p += '- Pending consequences trigger quickly — short time windows. No grace period.\n';
-        p += '- Some death choices should appear safe. The "obvious" safe choice may actually be lethal.\n';
+        p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
         p += '- Create cascading danger: if the player is already injured or burdened with status effects, make the situation worse.\n';
+        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       }
 
       return p;
@@ -276,7 +289,7 @@
           p += '- ADVANCE_SAFE: No new negative status effects. Existing effects may improve. No penalties.\n';
           p += '- ADVANCE_RISKY: Moderate consequences — new status effects or worsened existing ones are appropriate.\n';
           p += '- SEVERE_PENALTY: Heavy consequences — serious injuries, dangerous status effects as described.\n';
-          p += '- DEATH: set game_over to true.\n';
+          p += '- GAME_OVER: set game_over to true — the character has failed irreversibly.\n';
           p += '- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\n';
         }
       }
@@ -301,6 +314,124 @@
       p += '2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\n';
       p += 'Respond with ONLY the JSON object.';
 
+      return p;
+    },
+
+    /**
+     * Build the system prompt for a finale GM call.
+     * Called when a player selects a terminal choice (game_over, advances_act, conclusion).
+     * Returns state_updates only — no choice_metadata.
+     * @param {object} gameState - Full game state
+     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @returns {string} System prompt
+     */
+    buildFinaleSystem: function (gameState, terminalType) {
+      var meta = gameState.meta || {};
+      var difficulty = meta.difficulty || 'normal';
+      var diffConfig = SQ.DifficultyConfig[difficulty] || SQ.DifficultyConfig.normal;
+
+      var p = '';
+
+      // Role
+      p += 'You are The Game Master for an interactive gamebook. The player has selected a TERMINAL choice.\n';
+      p += 'Apply the final mechanical consequences for this ' + terminalType.toUpperCase() + ' outcome.\n\n';
+
+      p += 'OUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\n';
+
+      // Context — same as buildSystem
+      p += 'STORY SKELETON:\n';
+      p += JSON.stringify(gameState.skeleton, null, 2) + '\n\n';
+
+      p += 'CURRENT PLAYER STATE:\n';
+      p += JSON.stringify(gameState.player, null, 2) + '\n\n';
+
+      var igt = (gameState.current && gameState.current.in_game_time) || null;
+      p += 'IN-GAME TIME: ' + SQ.GameState.formatTime(igt) + '\n\n';
+
+      p += 'RELATIONSHIPS:\n';
+      p += JSON.stringify(gameState.relationships, null, 2) + '\n\n';
+
+      p += 'NPC OVERRIDES:\n';
+      if (gameState.npc_overrides && Object.keys(gameState.npc_overrides).length > 0) {
+        p += JSON.stringify(gameState.npc_overrides, null, 2) + '\n\n';
+      } else {
+        p += '(none)\n\n';
+      }
+
+      p += 'CURRENT POSITION:\n';
+      p += JSON.stringify(gameState.current, null, 2) + '\n\n';
+
+      p += 'PENDING CONSEQUENCES:\n';
+      p += JSON.stringify(gameState.pending_consequences, null, 2) + '\n\n';
+
+      p += 'EVENT LOG (last 20):\n';
+      p += JSON.stringify(gameState.event_log.slice(-20), null, 2) + '\n\n';
+
+      p += 'WORLD STATE FLAGS:\n';
+      p += JSON.stringify(gameState.world_flags, null, 2) + '\n\n';
+
+      p += 'DIFFICULTY: ' + diffConfig.label + '\n\n';
+
+      // Response schema — state_updates only, NO choice_metadata
+      p += 'Respond with this exact JSON structure:\n';
+      p += '{\n';
+      p += '  "state_updates": {\n';
+      p += '    "player_changes": {\n';
+      p += '      "inventory": ["full current inventory list"],\n';
+      p += '      "status_effects": [...],\n';
+      p += '      "skills": ["full current skills list"]\n';
+      p += '    },\n';
+      p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
+      p += '    "resolved_consequences": [ "ids of consequences resolved by this ending" ],\n';
+      p += '    "event_log_entry": "string — one-line summary of the terminal outcome",\n';
+      p += '    "world_flag_changes": { "flag_name": true/false },\n';
+      p += '    "relationship_changes": { "npc_or_faction_name": number_delta },\n';
+      p += '    "location": "string — current location",\n';
+      p += '    "time_of_day": "string — dawn|morning|midday|afternoon|evening|night|midnight"\n';
+      p += '  }\n';
+      p += '}\n\n';
+
+      p += 'RULES:\n';
+      p += '- Respond with ONLY the JSON object.\n';
+      p += '- Do NOT include choice_metadata — there are no choices after a terminal passage.\n';
+      p += '- event_log_entry is REQUIRED — summarize what happened.\n';
+
+      // Terminal-type specific instructions
+      if (terminalType === 'game_over') {
+        p += '- This is a GAME OVER. The character has failed irreversibly.\n';
+        p += '- Apply the consequences of the failure. The event_log_entry should describe the failure clearly — it will be displayed as the game over reason.\n';
+      } else if (terminalType === 'advances_act') {
+        p += '- This COMPLETES the current act. The act\'s end_condition has been triggered.\n';
+        p += '- Apply any consequences of completing this act. Resolve any relevant pending consequences.\n';
+        p += '- The event_log_entry should summarize the act\'s resolution.\n';
+      } else if (terminalType === 'conclusion') {
+        p += '- This CONCLUDES the entire story. The Act 3 end_condition has been met.\n';
+        p += '- Apply final consequences. Resolve all remaining pending consequences.\n';
+        p += '- The event_log_entry should summarize the story\'s conclusion.\n';
+      }
+
+      return p;
+    },
+
+    /**
+     * Build the user prompt for a finale GM call.
+     * @param {object} gameState - Full game state
+     * @param {string} choiceId - Which choice was selected (A/B/C/D)
+     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @returns {string} User prompt
+     */
+    buildFinaleUser: function (gameState, choiceId, terminalType) {
+      var choice = gameState.current_choices && gameState.current_choices[choiceId];
+      var p = 'TERMINAL CHOICE SELECTED:\n';
+      p += 'The player chose option ' + choiceId;
+      if (choice) {
+        if (choice.text) p += ': "' + choice.text + '"';
+        p += '\n';
+        if (choice.outcome) p += 'Pre-classified outcome: ' + choice.outcome + '\n';
+        if (choice.consequence) p += 'Pre-determined consequence: "' + choice.consequence + '"\n';
+      }
+      p += '\nTerminal type: ' + terminalType.toUpperCase() + '\n';
+      p += '\nProvide final state_updates. No choice_metadata needed. Respond with ONLY the JSON object.';
       return p;
     }
   };
