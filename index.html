@@ -26,15 +26,57 @@
       </div>
 
       <div class="card">
-        <h2>Text Model</h2>
-        <p>Used for skeleton &amp; passage generation.</p>
-        <select id="model-select">
-          <option value="anthropic/claude-sonnet-4">Claude Sonnet (default)</option>
-          <option value="google/gemini-2.5-flash-preview">Gemini Flash</option>
+        <h2>Passage Writer Model</h2>
+        <p>The creative LLM that writes story passages and dialogue.</p>
+        <select id="writer-model-select">
+          <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+          <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+          <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
+          <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
+          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
+          <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
           <option value="openai/gpt-4o">GPT-4o</option>
+          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+          <option value="openai/gpt-4.1">GPT-4.1</option>
+          <option value="openai/o3-mini">o3-mini</option>
+          <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+          <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+          <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+          <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+          <option value="mistralai/mistral-large-2411">Mistral Large</option>
+          <option value="mistralai/mistral-small-2503">Mistral Small</option>
+          <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
+          <option value="cohere/command-r-plus">Command R+</option>
           <option value="custom">Custom model...</option>
         </select>
-        <input type="text" id="model-custom-input" class="hidden" placeholder="org/model-name">
+        <input type="text" id="writer-model-custom-input" class="hidden" placeholder="org/model-name">
+      </div>
+
+      <div class="card">
+        <h2>Game Master Model</h2>
+        <p>The analytical LLM that manages game state, rules, and story structure.</p>
+        <select id="gm-model-select">
+          <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+          <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+          <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
+          <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
+          <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
+          <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+          <option value="openai/gpt-4o">GPT-4o</option>
+          <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+          <option value="openai/gpt-4.1">GPT-4.1</option>
+          <option value="openai/o3-mini">o3-mini</option>
+          <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+          <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+          <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+          <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+          <option value="mistralai/mistral-large-2411">Mistral Large</option>
+          <option value="mistralai/mistral-small-2503">Mistral Small</option>
+          <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
+          <option value="cohere/command-r-plus">Command R+</option>
+          <option value="custom">Custom model...</option>
+        </select>
+        <input type="text" id="gm-model-custom-input" class="hidden" placeholder="org/model-name">
       </div>
 
       <!-- Illustrations temporarily disabled — will be revisited in a later phase -->
@@ -89,9 +131,24 @@
         <div id="playtester-model-section" class="hidden">
           <label class="card-label">Playtester Model</label>
           <select id="playtester-model-select">
-            <option value="anthropic/claude-sonnet-4">Claude Sonnet (default)</option>
-            <option value="google/gemini-2.5-flash-preview">Gemini Flash</option>
+            <option value="anthropic/claude-sonnet-4">Claude Sonnet 4 (default)</option>
+            <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+            <option value="anthropic/claude-haiku-4">Claude Haiku 4</option>
+            <option value="google/gemini-2.5-pro-preview">Gemini 2.5 Pro</option>
+            <option value="google/gemini-2.5-flash-preview">Gemini 2.5 Flash</option>
+            <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
             <option value="openai/gpt-4o">GPT-4o</option>
+            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+            <option value="openai/gpt-4.1">GPT-4.1</option>
+            <option value="openai/o3-mini">o3-mini</option>
+            <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+            <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+            <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+            <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+            <option value="mistralai/mistral-large-2411">Mistral Large</option>
+            <option value="mistralai/mistral-small-2503">Mistral Small</option>
+            <option value="qwen/qwen-2.5-72b-instruct">Qwen 2.5 72B</option>
+            <option value="cohere/command-r-plus">Command R+</option>
             <option value="custom">Custom model...</option>
           </select>
           <input type="text" id="playtester-model-custom-input" class="hidden" placeholder="org/model-name">
@@ -122,7 +179,7 @@
     <div class="screen-header">
       <div class="screen-header-row">
         <h1>SlopQuest</h1>
-        <button class="btn-icon btn-settings-gear" title="Settings">&#9881;</button>
+        <button class="btn-icon btn-settings-gear" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
     <div class="screen-content mainmenu-content">
@@ -139,7 +196,7 @@
       <div class="screen-header-row">
         <button class="btn-back" data-target="mainmenu">&larr; Back</button>
         <h1>New Game</h1>
-        <button class="btn-icon btn-settings-gear" title="Settings">&#9881;</button>
+        <button class="btn-icon btn-settings-gear" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
     <div class="screen-content">
@@ -330,7 +387,7 @@
       <div class="screen-header-row">
         <button class="btn-back" data-target="game">&larr; Back</button>
         <h1>Timeline</h1>
-        <button class="btn-icon btn-settings-gear" title="Settings">&#9881;</button>
+        <button class="btn-icon btn-settings-gear" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
     <div class="screen-content">
@@ -354,7 +411,7 @@
     <div class="screen-header">
       <div class="screen-header-row">
         <h1 id="gameover-title">Game Over</h1>
-        <button class="btn-icon btn-settings-gear" title="Settings">&#9881;</button>
+        <button class="btn-icon btn-settings-gear" title="Settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
     <div class="screen-content">

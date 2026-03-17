@@ -12,23 +12,41 @@
         self.validateKey();
       });
 
-      // Model selection — show/hide custom input
-      document.getElementById('model-select').addEventListener('change', function () {
-        var customInput = document.getElementById('model-custom-input');
+      // Writer model selection
+      document.getElementById('writer-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('writer-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('passage', this.value);
+        }
+      });
+
+      document.getElementById('writer-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('passage', this.value.trim());
+        }
+      });
+
+      // Game Master model selection
+      document.getElementById('gm-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('gm-model-custom-input');
         if (this.value === 'custom') {
           customInput.classList.remove('hidden');
           customInput.focus();
         } else {
           customInput.classList.add('hidden');
           SQ.PlayerConfig.setModel('skeleton', this.value);
-          SQ.PlayerConfig.setModel('passage', this.value);
+          SQ.PlayerConfig.setModel('gamemaster', this.value);
         }
       });
 
-      document.getElementById('model-custom-input').addEventListener('change', function () {
+      document.getElementById('gm-model-custom-input').addEventListener('change', function () {
         if (this.value.trim()) {
           SQ.PlayerConfig.setModel('skeleton', this.value.trim());
-          SQ.PlayerConfig.setModel('passage', this.value.trim());
+          SQ.PlayerConfig.setModel('gamemaster', this.value.trim());
         }
       });
 
@@ -137,23 +155,11 @@
         keyInput.value = apiKey;
       }
 
-      // Set model selector to current value
-      var currentModel = SQ.PlayerConfig.getModel('skeleton');
-      var select = document.getElementById('model-select');
-      var found = false;
-      for (var i = 0; i < select.options.length; i++) {
-        if (select.options[i].value === currentModel) {
-          select.selectedIndex = i;
-          found = true;
-          break;
-        }
-      }
-      if (!found && currentModel) {
-        select.value = 'custom';
-        var customInput = document.getElementById('model-custom-input');
-        customInput.classList.remove('hidden');
-        customInput.value = currentModel;
-      }
+      // Set writer model selector to current value
+      this._syncModelSelect('writer-model-select', 'writer-model-custom-input', SQ.PlayerConfig.getModel('passage'));
+
+      // Set GM model selector to current value
+      this._syncModelSelect('gm-model-select', 'gm-model-custom-input', SQ.PlayerConfig.getModel('gamemaster'));
 
       // Hide back button if no API key yet and no previous screen (first-time user)
       var backBtn = document.getElementById('btn-settings-back');
@@ -170,22 +176,7 @@
         SQ.PlayerConfig.isIllustrationsEnabled();
 
       // Set image model selector to current value
-      var currentImageModel = SQ.PlayerConfig.getModel('image');
-      var imageSelect = document.getElementById('image-model-select');
-      var imageFound = false;
-      for (var j = 0; j < imageSelect.options.length; j++) {
-        if (imageSelect.options[j].value === currentImageModel) {
-          imageSelect.selectedIndex = j;
-          imageFound = true;
-          break;
-        }
-      }
-      if (!imageFound && currentImageModel) {
-        imageSelect.value = 'custom';
-        var imageCustomInput = document.getElementById('image-model-custom-input');
-        imageCustomInput.classList.remove('hidden');
-        imageCustomInput.value = currentImageModel;
-      }
+      this._syncModelSelect('image-model-select', 'image-model-custom-input', SQ.PlayerConfig.getModel('image'));
 
       // Set narration toggle state
       document.getElementById('settings-narration-toggle').checked =
@@ -216,22 +207,7 @@
         playtesterModelSection.classList.add('hidden');
       }
 
-      var currentPlaytesterModel = SQ.PlayerConfig.getModel('playtester');
-      var playtesterSelect = document.getElementById('playtester-model-select');
-      var playtesterFound = false;
-      for (var k = 0; k < playtesterSelect.options.length; k++) {
-        if (playtesterSelect.options[k].value === currentPlaytesterModel) {
-          playtesterSelect.selectedIndex = k;
-          playtesterFound = true;
-          break;
-        }
-      }
-      if (!playtesterFound && currentPlaytesterModel) {
-        playtesterSelect.value = 'custom';
-        var playtesterCustomInput = document.getElementById('playtester-model-custom-input');
-        playtesterCustomInput.classList.remove('hidden');
-        playtesterCustomInput.value = currentPlaytesterModel;
-      }
+      this._syncModelSelect('playtester-model-select', 'playtester-model-custom-input', SQ.PlayerConfig.getModel('playtester'));
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
@@ -251,6 +227,30 @@
     },
 
     onHide: function () {},
+
+    /**
+     * Sync a model <select> + custom input to a stored model value.
+     * @private
+     */
+    _syncModelSelect: function (selectId, customInputId, currentModel) {
+      var select = document.getElementById(selectId);
+      var customInput = document.getElementById(customInputId);
+      var found = false;
+      for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === currentModel) {
+          select.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found && currentModel) {
+        select.value = 'custom';
+        customInput.classList.remove('hidden');
+        customInput.value = currentModel;
+      } else {
+        customInput.classList.add('hidden');
+      }
+    },
 
     validateElevenLabsKey: function () {
       var keyInput = document.getElementById('elevenlabs-key-input');
