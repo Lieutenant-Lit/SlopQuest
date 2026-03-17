@@ -10,9 +10,9 @@
     openrouter_api_key: '',
     elevenlabs_api_key: '',
     models: {
-      skeleton: 'anthropic/claude-haiku-4.5',
+      skeleton: 'anthropic/claude-sonnet-4',
       passage: 'anthropic/claude-sonnet-4',
-      gamemaster: 'anthropic/claude-haiku-4.5',
+      gamemaster: 'anthropic/claude-sonnet-4',
       image: 'google/gemini-3.1-flash-image-preview',
       playtester: 'anthropic/claude-sonnet-4'
     },

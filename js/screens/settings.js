@@ -4,29 +4,98 @@
  */
 (function () {
   var MODEL_INFO = {
-    'anthropic/claude-sonnet-4':      { desc: 'Strong creative writing and reliable structured output.', cost: '~$0.01–0.03' },
-    'anthropic/claude-sonnet-4.5':    { desc: 'Latest Sonnet with improved prose and reasoning.', cost: '~$0.02–0.05' },
-    'anthropic/claude-opus-4':        { desc: 'Top-tier intelligence and nuance. Premium pricing.', cost: '~$0.10–0.30' },
-    'anthropic/claude-opus-4.5':      { desc: 'Most capable Claude model. Exceptional prose quality.', cost: '~$0.15–0.45' },
-    'anthropic/claude-haiku-4.5':     { desc: 'Fast and cheap. Great for structured tasks and JSON.', cost: '~$0.002–0.005' },
-    'google/gemini-2.5-pro':          { desc: 'Google\'s flagship model. Strong reasoning and writing.', cost: '~$0.01–0.03' },
-    'google/gemini-2.5-flash':        { desc: 'Fast and affordable. Good general-purpose model.', cost: '~$0.001–0.004' },
-    'google/gemini-2.0-flash-001':    { desc: 'Previous-gen Flash. Very cheap but less capable.', cost: '~$0.001–0.003' },
-    'openai/gpt-4o':                  { desc: 'OpenAI\'s versatile flagship. Solid all-around.', cost: '~$0.01–0.03' },
-    'openai/gpt-4o-mini':             { desc: 'Lightweight GPT-4o. Good value for simpler tasks.', cost: '~$0.001–0.004' },
-    'openai/o3-mini':                 { desc: 'Reasoning-focused model. Methodical but slower.', cost: '~$0.01–0.04' },
-    'deepseek/deepseek-chat':         { desc: 'Strong open-weight model. Excellent value.', cost: '~$0.001–0.003' },
-    'deepseek/deepseek-r1':           { desc: 'Reasoning-focused DeepSeek. Thorough but verbose.', cost: '~$0.005–0.02' },
-    'meta-llama/llama-4-maverick':    { desc: 'Meta\'s large Llama 4. Creative and capable.', cost: '~$0.002–0.006' },
-    'meta-llama/llama-4-scout':       { desc: 'Smaller Llama 4. Fast and cost-effective.', cost: '~$0.001–0.003' },
-    'mistralai/mistral-large-2512':   { desc: 'Mistral\'s flagship. Strong multilingual support.', cost: '~$0.008–0.024' },
-    'mistralai/mistral-small-creative-20251216': { desc: 'Tuned for creative writing. Compact and fast.', cost: '~$0.001–0.003' },
-    'mistralai/mistral-small-3.1-24b-instruct-2503': { desc: 'Small instruction-tuned model. Quick and cheap.', cost: '~$0.001–0.003' },
-    'x-ai/grok-3':                    { desc: 'xAI\'s flagship. Witty tone, strong reasoning.', cost: '~$0.01–0.03' },
-    'x-ai/grok-3-mini':              { desc: 'Lightweight Grok. Affordable with decent quality.', cost: '~$0.003–0.01' },
-    'qwen/qwen3-235b-a22b-07-25':    { desc: 'Large Qwen model. Competitive open-weight option.', cost: '~$0.002–0.006' },
-    'qwen/qwen3-32b-04-28':          { desc: 'Smaller Qwen. Budget-friendly with good results.', cost: '~$0.001–0.002' },
-    'cohere/command-r-plus':          { desc: 'Cohere\'s top model. Good at following instructions.', cost: '~$0.01–0.03' }
+    'anthropic/claude-sonnet-4': {
+      desc: 'Anthropic\'s workhorse model. Excellent creative writing with strong instruction-following and reliable JSON output. The best balance of quality and cost for most players.',
+      cost: '~$0.01–0.03'
+    },
+    'anthropic/claude-sonnet-4.5': {
+      desc: 'Newest Sonnet with improved prose quality, deeper reasoning, and better character voice consistency. Slightly pricier than Sonnet 4 but noticeably better writing.',
+      cost: '~$0.02–0.05'
+    },
+    'anthropic/claude-opus-4': {
+      desc: 'Anthropic\'s premium model. Exceptional nuance, complex character development, and literary-quality prose. Best for players who want top-tier narrative quality and don\'t mind the cost.',
+      cost: '~$0.10–0.30'
+    },
+    'anthropic/claude-opus-4.5': {
+      desc: 'The most capable Claude model available. Produces the richest prose, most coherent long-form narratives, and most creative plot developments. Significantly more expensive.',
+      cost: '~$0.15–0.45'
+    },
+    'anthropic/claude-haiku-4.5': {
+      desc: 'Fast, cheap, and surprisingly capable. Great for the Game Master role where structured JSON output matters more than prose. Responds in under a second.',
+      cost: '~$0.002–0.005'
+    },
+    'google/gemini-2.5-pro': {
+      desc: 'Google\'s flagship model. Strong reasoning with good creative writing. Handles long context well, making it solid for complex story states. Competitive pricing.',
+      cost: '~$0.01–0.03'
+    },
+    'google/gemini-2.5-flash': {
+      desc: 'Google\'s fast and affordable model. Decent writing quality at a fraction of the cost. Good choice for budget-conscious players who still want reasonable quality.',
+      cost: '~$0.001–0.004'
+    },
+    'google/gemini-2.0-flash-001': {
+      desc: 'Previous-generation Flash model. Very cheap but noticeably less capable than 2.5 Flash. May produce simpler prose and occasionally miss story details.',
+      cost: '~$0.001–0.003'
+    },
+    'openai/gpt-4o': {
+      desc: 'OpenAI\'s versatile flagship. Solid creative writing with a distinctive voice. Good at following complex game state instructions. Reliable all-around choice.',
+      cost: '~$0.01–0.03'
+    },
+    'openai/gpt-4o-mini': {
+      desc: 'Lightweight GPT-4o variant. Decent quality at low cost, but may produce less varied prose and simpler narrative choices compared to the full model.',
+      cost: '~$0.001–0.004'
+    },
+    'openai/o3-mini': {
+      desc: 'OpenAI\'s reasoning model. Thinks through problems methodically, which helps with game mechanics but can make responses slower. Prose tends to be functional rather than literary.',
+      cost: '~$0.01–0.04'
+    },
+    'deepseek/deepseek-chat': {
+      desc: 'Powerful open-weight model at rock-bottom pricing. Surprisingly good creative writing for the cost. Occasional formatting quirks but excellent value overall.',
+      cost: '~$0.001–0.003'
+    },
+    'deepseek/deepseek-r1': {
+      desc: 'DeepSeek\'s reasoning model. Very thorough and analytical, great for the Game Master role. Can be verbose and slower, but catches state inconsistencies well.',
+      cost: '~$0.005–0.02'
+    },
+    'meta-llama/llama-4-maverick': {
+      desc: 'Meta\'s large Llama 4 model. Creative and expressive writing with a good sense of pacing. Open-weight model available at competitive pricing through OpenRouter.',
+      cost: '~$0.002–0.006'
+    },
+    'meta-llama/llama-4-scout': {
+      desc: 'Smaller Llama 4 model. Fast and cost-effective with decent creative output. Good budget option, though complex narratives may feel less polished than larger models.',
+      cost: '~$0.001–0.003'
+    },
+    'mistralai/mistral-large-2512': {
+      desc: 'Mistral\'s flagship model. Strong multilingual support and good instruction-following. Produces clean, readable prose with reliable structured output.',
+      cost: '~$0.008–0.024'
+    },
+    'mistralai/mistral-small-creative-20251216': {
+      desc: 'Specifically tuned for creative writing tasks. Compact and fast with a distinctive literary voice. Great budget Writer pick if you want stylistic flair.',
+      cost: '~$0.001–0.003'
+    },
+    'mistralai/mistral-small-3.1-24b-instruct-2503': {
+      desc: 'Small instruction-tuned model optimized for structured tasks. Quick and cheap — a solid Game Master pick. Less suited for creative prose writing.',
+      cost: '~$0.001–0.003'
+    },
+    'x-ai/grok-3': {
+      desc: 'xAI\'s flagship model. Known for a witty, slightly irreverent tone. Strong reasoning and good at complex game state management. Produces engaging, distinctive prose.',
+      cost: '~$0.01–0.03'
+    },
+    'x-ai/grok-3-mini': {
+      desc: 'Lighter Grok model. Retains some of the witty character at a lower price point. Good for Game Master duties, less reliable for extended creative passages.',
+      cost: '~$0.003–0.01'
+    },
+    'qwen/qwen3-235b-a22b-07-25': {
+      desc: 'Alibaba\'s large Qwen model. Competitive open-weight option with strong multilingual capabilities. Good creative writing and solid JSON output at reasonable cost.',
+      cost: '~$0.002–0.006'
+    },
+    'qwen/qwen3-32b-04-28': {
+      desc: 'Smaller Qwen model. Budget-friendly with surprisingly good results for its size. May struggle with very complex narrative branching but handles simple games well.',
+      cost: '~$0.001–0.002'
+    },
+    'cohere/command-r-plus': {
+      desc: 'Cohere\'s top model. Excellent at following structured instructions, which helps with game state management. Prose quality is solid but may feel less creative than Anthropic or OpenAI models.',
+      cost: '~$0.01–0.03'
+    }
   };
 
   function updateModelDesc(descId, modelId) {

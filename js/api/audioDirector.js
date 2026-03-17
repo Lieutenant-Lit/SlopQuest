@@ -841,6 +841,10 @@
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
+          // Track voice usage for playtester cost reporting
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester.trackVoiceUsage(text.length);
+          }
           var blob = new Blob([buffer], { type: 'audio/mpeg' });
           return URL.createObjectURL(blob);
         })
