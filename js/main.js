@@ -10,6 +10,15 @@
    * and calls onShow/onHide lifecycle hooks.
    */
   SQ.showScreen = function (screenId) {
+    // Track which screen we're leaving so settings can return to it
+    var currentActive = document.querySelector('.screen.active');
+    if (currentActive) {
+      var currentId = currentActive.id.replace('screen-', '');
+      if (currentId !== screenId) {
+        SQ._previousScreen = currentId;
+      }
+    }
+
     // Map screen IDs to their Screen objects
     var screenMap = {
       settings: SQ.Screens.Settings,
@@ -85,11 +94,18 @@
       SQ.LogViewer.init();
     }
 
-    // Wire up back buttons
-    document.querySelectorAll('.btn-back').forEach(function (btn) {
+    // Wire up back buttons (skip settings back — it has its own handler)
+    document.querySelectorAll('.btn-back[data-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var target = this.getAttribute('data-target');
         if (target) SQ.showScreen(target);
+      });
+    });
+
+    // Wire up all settings gear icons (class-based, present on every non-settings screen)
+    document.querySelectorAll('.btn-settings-gear').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        SQ.showScreen('settings');
       });
     });
 

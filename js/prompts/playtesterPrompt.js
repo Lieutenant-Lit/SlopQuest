@@ -171,6 +171,11 @@
         p += '- Detailed results related to the specific focus area: ' + focusPrimer + '\n\n';
       }
 
+      p += '## API Cost Summary\n';
+      p += '- Include the cost data provided in the user prompt exactly as given\n';
+      p += '- Format as a clear breakdown showing total cost, per-model costs, and average cost per turn\n';
+      p += '- If voice or image costs are included, list them as separate line items\n\n';
+
       p += '## Overall Assessment\n';
       p += '- Summary quality rating (Excellent / Good / Fair / Poor)\n';
       p += '- Top 3 most important issues to fix\n';
@@ -218,6 +223,12 @@
 
       p += 'YOUR ACCUMULATED MEMORY JOURNAL:\n';
       p += (memory || '(no observations recorded)') + '\n\n';
+
+      // Include cost data if available
+      if (SQ.Playtester && SQ.Playtester.getCostSummary) {
+        p += 'COST DATA:\n';
+        p += SQ.Playtester.getCostSummary() + '\n\n';
+      }
 
       p += 'Generate the structured playtest report. Respond with ONLY the JSON object.';
 

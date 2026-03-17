@@ -172,6 +172,9 @@
             );
           }
           SQ.Logger.info('API', 'Call OK', { model: model, usage: data.usage });
+          if (SQ.API.onUsage) {
+            SQ.API.onUsage(model, data.usage || {});
+          }
           var msg = data.choices[0].message;
 
           // Return the full message for image callers (they need msg.images).
@@ -228,6 +231,13 @@
      * @type {function|null}
      */
     onStatusUpdate: null,
+
+    /**
+     * Usage callback fired after each successful API call.
+     * Called with (modelId, usageObj) where usageObj has prompt_tokens, completion_tokens.
+     * @type {function|null}
+     */
+    onUsage: null,
 
     /**
      * Validate an API key with a lightweight test call.

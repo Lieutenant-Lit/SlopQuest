@@ -31,11 +31,6 @@
         });
       });
 
-      // Settings gear
-      document.getElementById('btn-settings-gear').addEventListener('click', function () {
-        SQ.showScreen('settings');
-      });
-
       // Rewind button
       document.getElementById('btn-rewind').addEventListener('click', function () {
         SQ.showScreen('rewind');

@@ -5,6 +5,45 @@
  * After the playtest ends, generates a structured quality report.
  */
 (function () {
+  // Pricing per million tokens (input/output) from OpenRouter
+  var MODEL_PRICING = {
+    'anthropic/claude-sonnet-4':      { input: 3, output: 15 },
+    'anthropic/claude-sonnet-4.5':    { input: 3, output: 15 },
+    'anthropic/claude-opus-4':        { input: 15, output: 75 },
+    'anthropic/claude-opus-4.5':      { input: 15, output: 75 },
+    'anthropic/claude-haiku-4.5':     { input: 0.80, output: 4 },
+    'google/gemini-2.5-pro':          { input: 1.25, output: 10 },
+    'google/gemini-2.5-flash':        { input: 0.15, output: 0.60 },
+    'google/gemini-2.0-flash-001':    { input: 0.10, output: 0.40 },
+    'openai/gpt-4o':                  { input: 2.50, output: 10 },
+    'openai/gpt-4o-mini':             { input: 0.15, output: 0.60 },
+    'openai/o3-mini':                 { input: 1.10, output: 4.40 },
+    'deepseek/deepseek-chat':         { input: 0.27, output: 1.10 },
+    'deepseek/deepseek-r1':           { input: 0.55, output: 2.19 },
+    'meta-llama/llama-4-maverick':    { input: 0.50, output: 1.50 },
+    'meta-llama/llama-4-scout':       { input: 0.15, output: 0.40 },
+    'mistralai/mistral-large-2512':   { input: 2, output: 6 },
+    'mistralai/mistral-small-creative-20251216': { input: 0.10, output: 0.30 },
+    'mistralai/mistral-small-3.1-24b-instruct-2503': { input: 0.10, output: 0.30 },
+    'x-ai/grok-3':                    { input: 3, output: 15 },
+    'x-ai/grok-3-mini':              { input: 0.30, output: 0.50 },
+    'qwen/qwen3-235b-a22b-07-25':    { input: 0.50, output: 1.50 },
+    'qwen/qwen3-32b-04-28':          { input: 0.10, output: 0.30 },
+    'cohere/command-r-plus':          { input: 2.50, output: 10 }
+  };
+  var DEFAULT_PRICING = { input: 3, output: 15 };
+  var ELEVENLABS_COST_PER_CHAR = 0.00030; // ~$0.30 per 1K characters
+
+  function calcCost(modelId, promptTokens, completionTokens) {
+    var pricing = MODEL_PRICING[modelId] || DEFAULT_PRICING;
+    return (promptTokens * pricing.input + completionTokens * pricing.output) / 1000000;
+  }
+
+  function formatCost(dollars) {
+    if (dollars < 0.001) return '<$0.001';
+    if (dollars < 0.01) return '$' + dollars.toFixed(4);
+    return '$' + dollars.toFixed(3);
+  }
   SQ.Playtester = {
     // --- State ---
     _active: false,
@@ -16,6 +55,7 @@
     _report: null,
     _reportPromise: null,
     _stopped: false,
+    _costTracker: null,
 
     // --- Lifecycle ---
 
@@ -33,6 +73,57 @@
       this._focusPrimer = config.focusPrimer || '';
       this._report = null;
       this._reportPromise = null;
+
+      // Initialize cost tracking
+      this._costTracker = {
+        writer:     { model: '', calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+        gamemaster: { model: '', calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+        skeleton:   { model: '', calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+        image:      { model: '', calls: 0, prompt_tokens: 0, completion_tokens: 0 },
+        voice:      { calls: 0, characters: 0 },
+        playtester: { model: '', calls: 0, prompt_tokens: 0, completion_tokens: 0 }
+      };
+
+      // Subscribe to API usage events
+      var self = this;
+      SQ.API.onUsage = function (modelId, usage) {
+        if (!self._costTracker) return;
+        var pt = usage.prompt_tokens || 0;
+        var ct = usage.completion_tokens || 0;
+
+        // Categorize by matching against current model config
+        var writerModel = SQ.PlayerConfig.getModel('passage');
+        var gmModel = SQ.PlayerConfig.getModel('gamemaster');
+        var skeletonModel = SQ.PlayerConfig.getModel('skeleton');
+        var imageModel = SQ.PlayerConfig.getModel('image');
+        var playtesterModel = SQ.PlayerConfig.getModel('playtester');
+
+        var bucket;
+        if (modelId === playtesterModel) {
+          bucket = self._costTracker.playtester;
+        } else if (modelId === imageModel) {
+          bucket = self._costTracker.image;
+        } else if (modelId === gmModel || modelId === skeletonModel) {
+          // Skeleton and GM often use the same model — distinguish by whether
+          // we have a skeleton yet (skeleton call happens before any turns)
+          var state = SQ.GameState.get();
+          if (!state || !state.skeleton) {
+            bucket = self._costTracker.skeleton;
+          } else {
+            bucket = self._costTracker.gamemaster;
+          }
+        } else if (modelId === writerModel) {
+          bucket = self._costTracker.writer;
+        } else {
+          // Unknown model — attribute to gamemaster as fallback
+          bucket = self._costTracker.gamemaster;
+        }
+
+        bucket.model = modelId;
+        bucket.calls++;
+        bucket.prompt_tokens += pt;
+        bucket.completion_tokens += ct;
+      };
 
       SQ.Logger.info('Playtester', 'Playtest started', {
         maxTurns: this._maxTurns,
@@ -59,6 +150,9 @@
       if (this._stopped) return;
       this._stopped = true;
       this._active = false;
+
+      // Unsubscribe from usage events (but keep tracker data for the report)
+      SQ.API.onUsage = null;
 
       var stopReason = reason || 'manual_stop';
       opts = opts || {};
@@ -231,6 +325,7 @@
       if (this._stopped) return;
       this._active = false;
       this._stopped = true;
+      SQ.API.onUsage = null;
 
       SQ.Logger.info('Playtester', 'Game ended naturally', {
         reason: reason,
@@ -333,6 +428,90 @@
           SQ.Screens.GameOver._renderReport();
         }
       }
+    },
+
+    /**
+     * Track voice (ElevenLabs TTS) character usage during a playtest.
+     * Called by audioDirector after each successful TTS segment.
+     * @param {number} charCount - Number of characters synthesized
+     */
+    trackVoiceUsage: function (charCount) {
+      if (!this._costTracker) return;
+      this._costTracker.voice.calls++;
+      this._costTracker.voice.characters += charCount;
+    },
+
+    /**
+     * Build a formatted cost summary string from accumulated usage data.
+     * @returns {string} Markdown-formatted cost breakdown
+     */
+    getCostSummary: function () {
+      if (!this._costTracker) return 'No cost data available.';
+
+      var t = this._costTracker;
+      var turns = this._turnCount || 1;
+      var lines = [];
+      var totalCost = 0;
+
+      // Writer
+      if (t.writer.calls > 0) {
+        var writerCost = calcCost(t.writer.model, t.writer.prompt_tokens, t.writer.completion_tokens);
+        totalCost += writerCost;
+        lines.push('- **Writer** (' + t.writer.model + '): ' + t.writer.calls + ' calls, ' +
+          t.writer.prompt_tokens + ' input / ' + t.writer.completion_tokens + ' output tokens, ' +
+          formatCost(writerCost) + ' total, ' + formatCost(writerCost / turns) + ' avg/turn');
+      }
+
+      // Game Master
+      if (t.gamemaster.calls > 0) {
+        var gmCost = calcCost(t.gamemaster.model, t.gamemaster.prompt_tokens, t.gamemaster.completion_tokens);
+        totalCost += gmCost;
+        lines.push('- **Game Master** (' + t.gamemaster.model + '): ' + t.gamemaster.calls + ' calls, ' +
+          t.gamemaster.prompt_tokens + ' input / ' + t.gamemaster.completion_tokens + ' output tokens, ' +
+          formatCost(gmCost) + ' total, ' + formatCost(gmCost / turns) + ' avg/turn');
+      }
+
+      // Skeleton
+      if (t.skeleton.calls > 0) {
+        var skelCost = calcCost(t.skeleton.model, t.skeleton.prompt_tokens, t.skeleton.completion_tokens);
+        totalCost += skelCost;
+        lines.push('- **Skeleton** (' + t.skeleton.model + '): ' + t.skeleton.calls + ' calls, ' +
+          t.skeleton.prompt_tokens + ' input / ' + t.skeleton.completion_tokens + ' output tokens, ' +
+          formatCost(skelCost));
+      }
+
+      // Playtester agent
+      if (t.playtester.calls > 0) {
+        var ptCost = calcCost(t.playtester.model, t.playtester.prompt_tokens, t.playtester.completion_tokens);
+        totalCost += ptCost;
+        lines.push('- **Playtester Agent** (' + t.playtester.model + '): ' + t.playtester.calls + ' calls, ' +
+          t.playtester.prompt_tokens + ' input / ' + t.playtester.completion_tokens + ' output tokens, ' +
+          formatCost(ptCost));
+      }
+
+      // Image
+      if (t.image.calls > 0) {
+        var imgCost = calcCost(t.image.model, t.image.prompt_tokens, t.image.completion_tokens);
+        totalCost += imgCost;
+        lines.push('- **Image** (' + t.image.model + '): ' + t.image.calls + ' calls, ' +
+          formatCost(imgCost));
+      }
+
+      // Voice
+      if (t.voice.calls > 0) {
+        var voiceCost = t.voice.characters * ELEVENLABS_COST_PER_CHAR;
+        totalCost += voiceCost;
+        lines.push('- **Voice (ElevenLabs)**: ' + t.voice.calls + ' segments, ' +
+          t.voice.characters.toLocaleString() + ' characters, ' + formatCost(voiceCost));
+      }
+
+      var summary = '**Total estimated cost: ' + formatCost(totalCost) + '** (' + turns + ' turns)\n';
+      if (turns > 0) {
+        summary += '**Average cost per turn: ' + formatCost(totalCost / turns) + '**\n\n';
+      }
+      summary += lines.join('\n');
+
+      return summary;
     },
 
     /**

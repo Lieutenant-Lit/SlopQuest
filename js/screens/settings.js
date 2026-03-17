@@ -3,6 +3,111 @@
  * First screen for new players. Accessible from main menu via Settings button.
  */
 (function () {
+  var MODEL_INFO = {
+    'anthropic/claude-sonnet-4': {
+      desc: 'Anthropic\'s workhorse model. Excellent creative writing with strong instruction-following and reliable JSON output. The best balance of quality and cost for most players.',
+      cost: '~$0.01–0.03'
+    },
+    'anthropic/claude-sonnet-4.5': {
+      desc: 'Newest Sonnet with improved prose quality, deeper reasoning, and better character voice consistency. Slightly pricier than Sonnet 4 but noticeably better writing.',
+      cost: '~$0.02–0.05'
+    },
+    'anthropic/claude-opus-4': {
+      desc: 'Anthropic\'s premium model. Exceptional nuance, complex character development, and literary-quality prose. Best for players who want top-tier narrative quality and don\'t mind the cost.',
+      cost: '~$0.10–0.30'
+    },
+    'anthropic/claude-opus-4.5': {
+      desc: 'The most capable Claude model available. Produces the richest prose, most coherent long-form narratives, and most creative plot developments. Significantly more expensive.',
+      cost: '~$0.15–0.45'
+    },
+    'anthropic/claude-haiku-4.5': {
+      desc: 'Fast, cheap, and surprisingly capable. Great for the Game Master role where structured JSON output matters more than prose. Responds in under a second.',
+      cost: '~$0.002–0.005'
+    },
+    'google/gemini-2.5-pro': {
+      desc: 'Google\'s flagship model. Strong reasoning with good creative writing. Handles long context well, making it solid for complex story states. Competitive pricing.',
+      cost: '~$0.01–0.03'
+    },
+    'google/gemini-2.5-flash': {
+      desc: 'Google\'s fast and affordable model. Decent writing quality at a fraction of the cost. Good choice for budget-conscious players who still want reasonable quality.',
+      cost: '~$0.001–0.004'
+    },
+    'google/gemini-2.0-flash-001': {
+      desc: 'Previous-generation Flash model. Very cheap but noticeably less capable than 2.5 Flash. May produce simpler prose and occasionally miss story details.',
+      cost: '~$0.001–0.003'
+    },
+    'openai/gpt-4o': {
+      desc: 'OpenAI\'s versatile flagship. Solid creative writing with a distinctive voice. Good at following complex game state instructions. Reliable all-around choice.',
+      cost: '~$0.01–0.03'
+    },
+    'openai/gpt-4o-mini': {
+      desc: 'Lightweight GPT-4o variant. Decent quality at low cost, but may produce less varied prose and simpler narrative choices compared to the full model.',
+      cost: '~$0.001–0.004'
+    },
+    'openai/o3-mini': {
+      desc: 'OpenAI\'s reasoning model. Thinks through problems methodically, which helps with game mechanics but can make responses slower. Prose tends to be functional rather than literary.',
+      cost: '~$0.01–0.04'
+    },
+    'deepseek/deepseek-chat': {
+      desc: 'Powerful open-weight model at rock-bottom pricing. Surprisingly good creative writing for the cost. Occasional formatting quirks but excellent value overall.',
+      cost: '~$0.001–0.003'
+    },
+    'deepseek/deepseek-r1': {
+      desc: 'DeepSeek\'s reasoning model. Very thorough and analytical, great for the Game Master role. Can be verbose and slower, but catches state inconsistencies well.',
+      cost: '~$0.005–0.02'
+    },
+    'meta-llama/llama-4-maverick': {
+      desc: 'Meta\'s large Llama 4 model. Creative and expressive writing with a good sense of pacing. Open-weight model available at competitive pricing through OpenRouter.',
+      cost: '~$0.002–0.006'
+    },
+    'meta-llama/llama-4-scout': {
+      desc: 'Smaller Llama 4 model. Fast and cost-effective with decent creative output. Good budget option, though complex narratives may feel less polished than larger models.',
+      cost: '~$0.001–0.003'
+    },
+    'mistralai/mistral-large-2512': {
+      desc: 'Mistral\'s flagship model. Strong multilingual support and good instruction-following. Produces clean, readable prose with reliable structured output.',
+      cost: '~$0.008–0.024'
+    },
+    'mistralai/mistral-small-creative-20251216': {
+      desc: 'Specifically tuned for creative writing tasks. Compact and fast with a distinctive literary voice. Great budget Writer pick if you want stylistic flair.',
+      cost: '~$0.001–0.003'
+    },
+    'mistralai/mistral-small-3.1-24b-instruct-2503': {
+      desc: 'Small instruction-tuned model optimized for structured tasks. Quick and cheap — a solid Game Master pick. Less suited for creative prose writing.',
+      cost: '~$0.001–0.003'
+    },
+    'x-ai/grok-3': {
+      desc: 'xAI\'s flagship model. Known for a witty, slightly irreverent tone. Strong reasoning and good at complex game state management. Produces engaging, distinctive prose.',
+      cost: '~$0.01–0.03'
+    },
+    'x-ai/grok-3-mini': {
+      desc: 'Lighter Grok model. Retains some of the witty character at a lower price point. Good for Game Master duties, less reliable for extended creative passages.',
+      cost: '~$0.003–0.01'
+    },
+    'qwen/qwen3-235b-a22b-07-25': {
+      desc: 'Alibaba\'s large Qwen model. Competitive open-weight option with strong multilingual capabilities. Good creative writing and solid JSON output at reasonable cost.',
+      cost: '~$0.002–0.006'
+    },
+    'qwen/qwen3-32b-04-28': {
+      desc: 'Smaller Qwen model. Budget-friendly with surprisingly good results for its size. May struggle with very complex narrative branching but handles simple games well.',
+      cost: '~$0.001–0.002'
+    },
+    'cohere/command-r-plus': {
+      desc: 'Cohere\'s top model. Excellent at following structured instructions, which helps with game state management. Prose quality is solid but may feel less creative than Anthropic or OpenAI models.',
+      cost: '~$0.01–0.03'
+    }
+  };
+
+  function updateModelDesc(descId, modelId) {
+    var el = document.getElementById(descId);
+    if (!el) return;
+    var info = MODEL_INFO[modelId];
+    if (info) {
+      el.textContent = info.desc + ' Est. ' + info.cost + '/turn.';
+    } else {
+      el.textContent = 'Custom model — no cost estimate available.';
+    }
+  }
   SQ.Screens.Settings = {
     init: function () {
       var self = this;
@@ -12,23 +117,45 @@
         self.validateKey();
       });
 
-      // Model selection — show/hide custom input
-      document.getElementById('model-select').addEventListener('change', function () {
-        var customInput = document.getElementById('model-custom-input');
+      // Writer model selection
+      document.getElementById('writer-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('writer-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('passage', this.value);
+        }
+        updateModelDesc('writer-model-desc', this.value);
+      });
+
+      document.getElementById('writer-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('passage', this.value.trim());
+          updateModelDesc('writer-model-desc', this.value.trim());
+        }
+      });
+
+      // Game Master model selection
+      document.getElementById('gm-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('gm-model-custom-input');
         if (this.value === 'custom') {
           customInput.classList.remove('hidden');
           customInput.focus();
         } else {
           customInput.classList.add('hidden');
           SQ.PlayerConfig.setModel('skeleton', this.value);
-          SQ.PlayerConfig.setModel('passage', this.value);
+          SQ.PlayerConfig.setModel('gamemaster', this.value);
         }
+        updateModelDesc('gm-model-desc', this.value);
       });
 
-      document.getElementById('model-custom-input').addEventListener('change', function () {
+      document.getElementById('gm-model-custom-input').addEventListener('change', function () {
         if (this.value.trim()) {
           SQ.PlayerConfig.setModel('skeleton', this.value.trim());
-          SQ.PlayerConfig.setModel('passage', this.value.trim());
+          SQ.PlayerConfig.setModel('gamemaster', this.value.trim());
+          updateModelDesc('gm-model-desc', this.value.trim());
         }
       });
 
@@ -120,9 +247,12 @@
         self.validateElevenLabsKey();
       });
 
-      // Save & continue to main menu
-      document.getElementById('btn-save-settings').addEventListener('click', function () {
-        SQ.showScreen('mainmenu');
+      // Back button — return to previous screen (or mainmenu as fallback)
+      document.getElementById('btn-settings-back').addEventListener('click', function () {
+        var target = SQ._previousScreen || 'mainmenu';
+        // Don't navigate back to settings itself
+        if (target === 'settings') target = 'mainmenu';
+        SQ.showScreen(target);
       });
     },
 
@@ -134,28 +264,20 @@
         keyInput.value = apiKey;
       }
 
-      // Set model selector to current value
-      var currentModel = SQ.PlayerConfig.getModel('skeleton');
-      var select = document.getElementById('model-select');
-      var found = false;
-      for (var i = 0; i < select.options.length; i++) {
-        if (select.options[i].value === currentModel) {
-          select.selectedIndex = i;
-          found = true;
-          break;
-        }
-      }
-      if (!found && currentModel) {
-        select.value = 'custom';
-        var customInput = document.getElementById('model-custom-input');
-        customInput.classList.remove('hidden');
-        customInput.value = currentModel;
-      }
+      // Set writer model selector to current value
+      var writerModel = SQ.PlayerConfig.getModel('passage');
+      this._syncModelSelect('writer-model-select', 'writer-model-custom-input', writerModel);
+      updateModelDesc('writer-model-desc', writerModel);
 
-      // Hide back button if no API key yet (first-time user)
-      var backBtn = document.querySelector('#screen-settings .btn-back');
+      // Set GM model selector to current value
+      var gmModel = SQ.PlayerConfig.getModel('gamemaster');
+      this._syncModelSelect('gm-model-select', 'gm-model-custom-input', gmModel);
+      updateModelDesc('gm-model-desc', gmModel);
+
+      // Hide back button if no API key yet and no previous screen (first-time user)
+      var backBtn = document.getElementById('btn-settings-back');
       if (backBtn) {
-        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData) {
+        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData || SQ._previousScreen) {
           backBtn.classList.remove('hidden');
         } else {
           backBtn.classList.add('hidden');
@@ -167,22 +289,7 @@
         SQ.PlayerConfig.isIllustrationsEnabled();
 
       // Set image model selector to current value
-      var currentImageModel = SQ.PlayerConfig.getModel('image');
-      var imageSelect = document.getElementById('image-model-select');
-      var imageFound = false;
-      for (var j = 0; j < imageSelect.options.length; j++) {
-        if (imageSelect.options[j].value === currentImageModel) {
-          imageSelect.selectedIndex = j;
-          imageFound = true;
-          break;
-        }
-      }
-      if (!imageFound && currentImageModel) {
-        imageSelect.value = 'custom';
-        var imageCustomInput = document.getElementById('image-model-custom-input');
-        imageCustomInput.classList.remove('hidden');
-        imageCustomInput.value = currentImageModel;
-      }
+      this._syncModelSelect('image-model-select', 'image-model-custom-input', SQ.PlayerConfig.getModel('image'));
 
       // Set narration toggle state
       document.getElementById('settings-narration-toggle').checked =
@@ -213,22 +320,7 @@
         playtesterModelSection.classList.add('hidden');
       }
 
-      var currentPlaytesterModel = SQ.PlayerConfig.getModel('playtester');
-      var playtesterSelect = document.getElementById('playtester-model-select');
-      var playtesterFound = false;
-      for (var k = 0; k < playtesterSelect.options.length; k++) {
-        if (playtesterSelect.options[k].value === currentPlaytesterModel) {
-          playtesterSelect.selectedIndex = k;
-          playtesterFound = true;
-          break;
-        }
-      }
-      if (!playtesterFound && currentPlaytesterModel) {
-        playtesterSelect.value = 'custom';
-        var playtesterCustomInput = document.getElementById('playtester-model-custom-input');
-        playtesterCustomInput.classList.remove('hidden');
-        playtesterCustomInput.value = currentPlaytesterModel;
-      }
+      this._syncModelSelect('playtester-model-select', 'playtester-model-custom-input', SQ.PlayerConfig.getModel('playtester'));
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
@@ -248,6 +340,30 @@
     },
 
     onHide: function () {},
+
+    /**
+     * Sync a model <select> + custom input to a stored model value.
+     * @private
+     */
+    _syncModelSelect: function (selectId, customInputId, currentModel) {
+      var select = document.getElementById(selectId);
+      var customInput = document.getElementById(customInputId);
+      var found = false;
+      for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === currentModel) {
+          select.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found && currentModel) {
+        select.value = 'custom';
+        customInput.classList.remove('hidden');
+        customInput.value = currentModel;
+      } else {
+        customInput.classList.add('hidden');
+      }
+    },
 
     validateElevenLabsKey: function () {
       var keyInput = document.getElementById('elevenlabs-key-input');

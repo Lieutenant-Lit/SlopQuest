@@ -131,6 +131,14 @@ a {
   margin: 0 0 var(--spacing-xs) 0;
 }
 
+.model-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: var(--spacing-xs) 0 0 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
 /* ===== FORMS ===== */
 input[type="text"],
 input[type="password"],
@@ -249,6 +257,21 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+/* ===== SCREEN HEADER ROW (gear icon positioning) ===== */
+.screen-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.screen-header-row h1 {
+  flex: 1;
+}
+
+.screen-header-row .btn-back {
+  margin-bottom: 0;
 }
 
 /* ===== GAME SCREEN ===== */
