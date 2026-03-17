@@ -11,13 +11,24 @@
     init: function () {
       var self = this;
 
-      // Wire up all single-select option groups (perspective, tense, difficulty, storyLength)
+      // Wire up all single-select option groups (perspective, tense, difficulty, storyLength, playtesterMaxTurns)
       document.querySelectorAll('#screen-setup .setup-options').forEach(function (group) {
         var groupName = group.getAttribute('data-group');
         group.addEventListener('click', function (e) {
           var btn = e.target.closest('.setup-option');
           if (!btn) return;
           self.selectOption(group, groupName, btn);
+
+          // Show/hide custom max turns input
+          if (groupName === 'playtesterMaxTurns') {
+            var customInput = document.getElementById('setup-playtester-max-turns-custom');
+            if (btn.getAttribute('data-value') === 'custom') {
+              customInput.classList.remove('hidden');
+              customInput.focus();
+            } else {
+              customInput.classList.add('hidden');
+            }
+          }
         });
       });
 
@@ -66,7 +77,8 @@
         perspective: (prefs && prefs.perspective) || 'second person',
         tense: (prefs && prefs.tense) || 'present',
         difficulty: (prefs && prefs.difficulty) || 'normal',
-        storyLength: (prefs && prefs.storyLength) || 'medium'
+        storyLength: (prefs && prefs.storyLength) || 'medium',
+        playtesterMaxTurns: (prefs && prefs.playtesterMaxTurns) || '20'
       };
 
       // Activate matching option buttons
@@ -101,6 +113,29 @@
           }
         });
       });
+
+      // Show/hide playtester setup card
+      var playtesterCard = document.getElementById('playtester-setup-card');
+      if (SQ.PlayerConfig.isPlaytesterEnabled()) {
+        playtesterCard.classList.remove('hidden');
+      } else {
+        playtesterCard.classList.add('hidden');
+      }
+
+      // Restore playtester fields from saved prefs
+      document.getElementById('setup-playtester-playstyle').value =
+        (prefs && prefs.playtesterPlaystyle) || '';
+      document.getElementById('setup-playtester-focus').value =
+        (prefs && prefs.playtesterFocus) || '';
+
+      // Show custom max turns input if 'custom' was selected
+      var customMaxInput = document.getElementById('setup-playtester-max-turns-custom');
+      if (this._selected.playtesterMaxTurns === 'custom') {
+        customMaxInput.classList.remove('hidden');
+        customMaxInput.value = (prefs && prefs.playtesterMaxTurnsCustom) || '';
+      } else {
+        customMaxInput.classList.add('hidden');
+      }
 
       // Reset generate button
       var btn = document.getElementById('btn-start-game');
@@ -143,6 +178,24 @@
         storyLength: this._selected.storyLength || 'medium'
       };
 
+      // Add playtester config if enabled
+      var playtesterPlaystyle = document.getElementById('setup-playtester-playstyle').value.trim();
+      var playtesterFocus = document.getElementById('setup-playtester-focus').value.trim();
+      var playtesterMaxTurnsSelection = this._selected.playtesterMaxTurns || '20';
+      var playtesterMaxTurnsCustom = document.getElementById('setup-playtester-max-turns-custom').value.trim();
+
+      if (SQ.PlayerConfig.isPlaytesterEnabled()) {
+        var maxTurns = 20;
+        if (playtesterMaxTurnsSelection === 'custom') {
+          maxTurns = parseInt(playtesterMaxTurnsCustom, 10) || 20;
+        } else {
+          maxTurns = parseInt(playtesterMaxTurnsSelection, 10) || 20;
+        }
+        config.playtesterMaxTurns = maxTurns;
+        config.playtesterPlaystyle = playtesterPlaystyle;
+        config.playtesterFocusPrimer = playtesterFocus;
+      }
+
       // Persist raw form values so onShow() can restore them next time
       try {
         localStorage.setItem('slopquest_setup_prefs', JSON.stringify({
@@ -152,7 +205,11 @@
           perspective: this._selected.perspective,
           tense: this._selected.tense,
           difficulty: this._selected.difficulty,
-          storyLength: this._selected.storyLength
+          storyLength: this._selected.storyLength,
+          playtesterMaxTurns: playtesterMaxTurnsSelection,
+          playtesterMaxTurnsCustom: playtesterMaxTurnsCustom,
+          playtesterPlaystyle: playtesterPlaystyle,
+          playtesterFocus: playtesterFocus
         }));
       } catch (e) { /* localStorage full or unavailable */ }
 
@@ -216,10 +273,11 @@
         SQ.HistoryStack.push(SQ.GameState.snapshot(), '', null);
 
         // Apply Writer response (passage + choices)
+        // Note: scene_number already starts at 1 from GameState.create(),
+        // so we don't increment here — the opening IS scene 1.
         var writerResponse = result.writerResponse;
         state.last_passage = writerResponse.passage;
         state.current_choices = writerResponse.choices;
-        state.current.scene_number = (state.current.scene_number || 0) + 1;
 
         // Queue TTS narration for the opening passage (on-demand: user clicks play)
         if (SQ.PlayerConfig.isNarrationEnabled() && state.last_passage) {
@@ -228,15 +286,45 @@
 
         SQ.GameState.save();
 
-        // Wait for Game Master to apply state updates before showing the game
-        return result.gameMasterPromise.then(function (gmResponse) {
-          SQ.Screens.Game.applyGameMasterResponse(state, gmResponse);
-          SQ.GameState.save();
-        });
-      }).then(function () {
+        // Show game screen immediately — don't wait for GM (mirrors makeChoice flow)
         loadingOverlay.classList.add('hidden');
         self._resetButton();
         SQ.showScreen('game');
+
+        // Disable choices while GM processes (same as makeChoice does)
+        SQ.Screens.Game._disableChoicesWithStatus('Updating game state...');
+
+        // Let GM resolve in background
+        result.gameMasterPromise.then(function (gmResponse) {
+          SQ.Screens.Game.applyGameMasterResponse(state, gmResponse);
+          SQ.Screens.Game._renderStatusBar(state);
+          SQ.Screens.Game._renderGameStateDebug(state);
+          SQ.GameState.save();
+
+          // Check for immediate game over (unlikely on opening but be safe)
+          if (state.game_over || state.story_complete) return;
+
+          // Enable choices — GM is done
+          SQ.Screens.Game._enableChoices();
+          SQ.Screens.Game._hideChoiceStatus();
+
+          // Start playtester AFTER GM finishes so scene 1 is fully visible
+          if (SQ.PlayerConfig.isPlaytesterEnabled() && SQ.Playtester) {
+            SQ.Playtester.start({
+              maxTurns: setupConfig.playtesterMaxTurns || 20,
+              playstyle: setupConfig.playtesterPlaystyle || '',
+              focusPrimer: setupConfig.playtesterFocusPrimer || ''
+            });
+            SQ.Playtester.onTurnComplete();
+          }
+        }).catch(function (gmErr) {
+          SQ.Logger.error('GameMaster', 'Opening GM failed', { error: gmErr.message });
+          SQ.ErrorOverlay.show(gmErr, {
+            onRetry: function () {
+              self.startGeneration();
+            }
+          });
+        });
       }).catch(function (err) {
         SQ.Logger.error('Setup', 'Generation failed', { error: err.message });
         loadingOverlay.classList.add('hidden');
