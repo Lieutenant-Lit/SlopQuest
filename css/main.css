@@ -336,6 +336,7 @@ textarea {
 .status-effect.effect-severe { color: var(--color-danger); }
 .status-effect.effect-moderate { color: var(--color-warning); }
 .status-effect.effect-mild { color: var(--color-text-muted); }
+.status-effect.status-threat { border-style: dashed; }
 
 /* --- Illustration --- */
 .illustration-container {

@@ -280,12 +280,14 @@
       try {
         return JSON.parse(cleaned);
       } catch (_e) {
-        // Attempt repair: fix unescaped newlines inside JSON string values.
-        // LLMs at high temperature often produce multi-paragraph passages with
-        // literal newlines that aren't escaped, breaking JSON.parse().
-        var repaired = cleaned.replace(/("(?:[^"\\]|\\.)*")|(\n)/g, function (match, quoted, newline) {
-          if (quoted) return quoted;  // Already inside a properly quoted string
-          return '\\n';  // Bare newline outside quotes — escape it
+        // Attempt repair: escape literal newlines/carriage-returns inside JSON
+        // string values.  LLMs at high temperature often produce multi-paragraph
+        // passages with literal newlines that aren't escaped, breaking JSON.parse().
+        // The regex [^"\\] matches any char except " and \, including \n, so
+        // quoted strings with embedded newlines are captured whole.  The inner
+        // replace then escapes only those in-string newlines.
+        var repaired = cleaned.replace(/"(?:[^"\\]|\\.)*"/g, function (match) {
+          return match.replace(/\n/g, '\\n').replace(/\r/g, '\\r');
         });
         return JSON.parse(repaired);
       }

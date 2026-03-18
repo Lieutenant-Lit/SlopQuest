@@ -189,9 +189,9 @@
             if (effect.severity > 0.7) sevClass = 'effect-severe';
             else if (effect.severity > 0.3) sevClass = 'effect-moderate';
           }
-          eChip.className = 'status-chip status-effect ' + sevClass;
+          eChip.className = 'status-chip status-effect ' + sevClass + (effect.type === 'threat' ? ' status-threat' : '');
           eChip.title = effect.description || effect.name;
-          eChip.textContent = effect.name;
+          eChip.textContent = (effect.type === 'threat' ? '\u26a0 ' : '') + effect.name;
           effectsContainer.appendChild(eChip);
         }
       }
@@ -531,12 +531,6 @@
         }
         if (_rc.length) _gmLog.relationships = _rc.join(', ');
       }
-      if (updates.new_pending_consequences && updates.new_pending_consequences.length) {
-        _gmLog.newConsequences = updates.new_pending_consequences.length;
-      }
-      if (updates.resolved_consequences && updates.resolved_consequences.length) {
-        _gmLog.resolvedConsequences = updates.resolved_consequences.length;
-      }
       if (updates.game_over) _gmLog.gameOver = true;
       if (updates.story_complete) _gmLog.storyComplete = true;
       if (typeof updates.proximity_to_climax === 'number') _gmLog.proximity = updates.proximity_to_climax;
@@ -689,37 +683,13 @@
           var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
           effect.time_remaining = result.time;
           if (result.expired) {
-            return !!effect.lethal;
+            return !!effect.lethal || effect.type === 'threat';
           }
           return true;
         });
       }
 
-      // 4. New pending consequences
-      if (Array.isArray(updates.new_pending_consequences)) {
-        updates.new_pending_consequences.forEach(function (c) {
-          state.pending_consequences.push(c);
-        });
-      }
-
-      // 5. Resolved consequences — remove by id
-      if (Array.isArray(updates.resolved_consequences)) {
-        state.pending_consequences = state.pending_consequences.filter(function (c) {
-          return updates.resolved_consequences.indexOf(c.id) === -1;
-        });
-      }
-
-      // 6. Tick down pending consequence timers
-      if (timeElapsed) {
-        state.pending_consequences.forEach(function (c) {
-          if (c.time_remaining) {
-            var result = SQ.GameState.subtractTime(c.time_remaining, timeElapsed);
-            c.time_remaining = result.time;
-          }
-        });
-      }
-
-      // 7. Event log entry
+      // 4. Event log entry
       if (updates.event_log_entry) {
         state.event_log.push(updates.event_log_entry);
       }
@@ -1089,8 +1059,9 @@
             var timeLabel = effect.time_remaining ? ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ']' : '';
             var condLabel = effect.removal_condition ? ' — needs: ' + self._esc(effect.removal_condition) : '';
             var lethalLabel = effect.lethal ? ' ' + self._gsdTag('LETHAL', 'danger') : '';
+            var threatLabel = effect.type === 'threat' ? ' ' + self._gsdTag('THREAT', 'risky') : '';
             seHtml += '<div style="margin-bottom:2px">';
-            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel;
+            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel + threatLabel;
             if (effect.description) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + self._esc(effect.description) + '</span>';
             if (condLabel) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + condLabel + '</span>';
             seHtml += '</div>';
@@ -1170,25 +1141,7 @@
       if (!choiceBody) choiceBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
       html += self._gsdSection('Choices', choiceBody, false);
 
-      // 8. Pending Consequences
-      var pcs = state.pending_consequences || [];
-      var pcBody = '';
-      if (pcs.length) {
-        pcs.forEach(function (c) {
-          pcBody += '<div class="gsd-row" style="flex-wrap:wrap">';
-          pcBody += '<span class="gsd-label">' + self._esc(c.id || '?') + '</span>';
-          pcBody += '<span class="gsd-value">' + self._esc(c.description || '');
-          if (c.severity) pcBody += ' ' + self._gsdTag(c.severity, c.severity === 'lethal' ? 'danger' : c.severity === 'severe' ? 'risky' : 'muted');
-          if (c.time_remaining) pcBody += ' <span style="opacity:0.6">(' + SQ.GameState.formatDuration(c.time_remaining) + ')</span>';
-          else if (typeof c.scenes_remaining === 'number') pcBody += ' <span style="opacity:0.6">(' + c.scenes_remaining + ' scenes)</span>';
-          pcBody += '</span></div>';
-        });
-      } else {
-        pcBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
-      }
-      html += self._gsdSection('Pending Consequences', pcBody, false);
-
-      // 9. World Flags
+      // 8. World Flags
       var flags = state.world_flags || {};
       var flagKeys = Object.keys(flags);
       var flagBody = '';
