@@ -36,7 +36,8 @@
 
       // Full player state — GM needs all mechanical details
       p += 'CURRENT PLAYER STATE:\n';
-      p += JSON.stringify(gameState.player, null, 2) + '\n\n';
+      p += JSON.stringify(gameState.player, null, 2) + '\n';
+      p += 'NOTE: status_effects above are READ-ONLY reference. Use status_effect_updates (add/modify/remove) to make changes. Do NOT return the full array.\n\n';
 
       // In-game time
       var igt = (gameState.current && gameState.current.in_game_time) || null;
@@ -89,19 +90,35 @@
       p += '  "state_updates": {\n';
       p += '    "player_changes": {\n';
       p += '      "inventory": ["full current inventory list"],\n';
-      p += '      "status_effects": [\n';
+      p += '      "skills": ["full current skills list"]\n';
+      p += '    },\n';
+      p += '    "status_effect_updates": {\n';
+      p += '      "add": [\n';
       p += '        {\n';
       p += '          "id": "string — unique identifier (e.g. broken_arm_001)",\n';
       p += '          "name": "string — display name (e.g. Broken Arm)",\n';
       p += '          "description": "string — current narrative description of the condition",\n';
       p += '          "severity": "number 0.0-1.0 — how debilitating (1.0 = completely debilitating, 0.5 = significant, 0.1 = minor)",\n';
       p += '          "time_remaining": "{ days, hours, minutes, seconds } OR null if no auto-expiry",\n';
-      p += '          "type": "string — \'condition\' (default: injuries, buffs, states) or \'threat\' (approaching dangers that fire when timer expires)",\n';
+      p += '          "type": "string — \'condition\' (default) or \'threat\' (approaching dangers that fire when timer expires)",\n';
       p += '          "removal_condition": "string describing what removes this effect, OR null if timer-only",\n';
+      p += '          "on_expiry": "string — REQUIRED when time_remaining is non-null. Narrative directive for what happens when timer reaches zero. Be specific and actionable.",\n';
       p += '          "lethal": "boolean — if true, character dies when timer expires unresolved"\n';
       p += '        }\n';
       p += '      ],\n';
-      p += '      "skills": ["full current skills list"]\n';
+      p += '      "modify": [\n';
+      p += '        {\n';
+      p += '          "id": "string — id of existing effect to modify",\n';
+      p += '          "changes": { "severity": 0.5, "description": "updated text" },\n';
+      p += '          "update_justification": "string — REQUIRED. Why this change is happening (e.g. \'Player rested, wound healing\' or \'Ship accelerated, pursuit takes longer\')"\n';
+      p += '        }\n';
+      p += '      ],\n';
+      p += '      "remove": [\n';
+      p += '        {\n';
+      p += '          "id": "string — id of existing effect to remove",\n';
+      p += '          "update_justification": "string — REQUIRED. Why removing (e.g. \'Virus deployed successfully\' or \'Wound fully healed after rest\')"\n';
+      p += '        }\n';
+      p += '      ]\n';
       p += '    },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
       p += '    "event_log_entry": "string — one-line summary of what happened",\n';
@@ -170,19 +187,24 @@
       // Status effects rules
       p += 'STATUS EFFECTS — CRITICAL:\n';
       p += '- Status effects are the PRIMARY way to track injuries, conditions, and afflictions. Do NOT use health_delta.\n';
-      p += '- status_effects is the FULL current list every turn (replace semantics). Include ALL active effects, adjusting severity and descriptions as appropriate.\n';
-      p += '- When the character is injured, add a status effect instead of reducing health. Example: a stab wound becomes { id: "stab_wound_001", name: "Stab Wound", description: "A deep cut in your side that bleeds freely", severity: 0.8, time_remaining: { days: 5, hours: 0, minutes: 0, seconds: 0 }, lethal: false }.\n';
-      p += '- Adjust severity each turn based on context: resting lowers severity, aggravation raises it, medicine/magic accelerates healing.\n';
+      p += '- status_effect_updates uses DELTA semantics. Only describe what CHANGED this turn. Do NOT return the full list of effects.\n';
+      p += '- add: For brand new effects only. All fields required. When the character is injured, add a status effect. Example: { id: "stab_wound_001", name: "Stab Wound", description: "A deep cut in your side that bleeds freely", severity: 0.8, time_remaining: { days: 5, hours: 0, minutes: 0, seconds: 0 }, on_expiry: "The wound closes and the pain fades to a dull ache", lethal: false }.\n';
+      p += '- on_expiry is REQUIRED for any effect with non-null time_remaining. It describes what happens narratively when the timer reaches zero. The Writer uses this to narrate the resolution. Be specific and actionable (e.g. "The virus deploys successfully, disabling Alliance tracking. River announces completion with relief.").\n';
+      p += '- modify: Target existing effects by id. Put changed fields inside "changes". update_justification is REQUIRED — explain why the change is happening.\n';
+      p += '- remove: Target effects to remove by id. update_justification is REQUIRED. Use this to resolve expired effects after the Writer has narrated their resolution.\n';
+      p += '- TIMER OWNERSHIP: The client handles countdown automatically — it subtracts time_elapsed from all timers each turn. Do NOT adjust time_remaining in a modify unless a specific narrative event changes the timeline (e.g. player found a shortcut, magic healing, enemy slowed down). If you adjust a timer, explain why in update_justification.\n';
+      p += '- EXPIRED EFFECTS: Effects with expired: true (visible in CURRENT PLAYER STATE) have had their timer reach zero. The Writer has been instructed to narrate their resolution using the on_expiry text. Review the Writer\'s passage — if the resolution was narrated adequately, issue a remove. If it wasn\'t, leave the effect (it will escalate to the Writer next turn).\n';
+      p += '- Use modify to adjust severity based on context: resting lowers severity, aggravation raises it, medicine/magic accelerates healing. update_justification is required.\n';
       p += '- Severity scale: 1.0 = completely debilitating, 0.7 = severely impaired, 0.5 = significant but manageable, 0.3 = noticeable nuisance, 0.1 = almost healed.\n';
-      p += '- time_remaining can be null for effects with no natural expiry (e.g. a curse that requires a specific action to remove).\n';
+      p += '- time_remaining can be null for effects with no natural expiry (e.g. a curse that requires a specific action to remove). on_expiry should be null in this case.\n';
       p += '- removal_condition can be set for effects that need specific actions (e.g. "Find the Witch of the Moor to break this curse"). Can be combined with time_remaining.\n';
-      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above. Realistic settings = realistic healing (broken bone: weeks, minor cut: days). Fantasy/sci-fi = faster if the setting provides healing methods.\n';
+      p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above.\n';
       p += '- TYPE FIELD: Every status effect has a type — "condition" (default) or "threat".\n';
-      p += '  - "condition": Physical/mental states — injuries, poisons, buffs, curses. Non-lethal conditions auto-expire when their timer runs out. Lethal conditions persist past expiry.\n';
-      p += '  - "threat": Approaching dangers, looming consequences, ticking time-bombs. Examples: { id: "hunted_by_guards_001", name: "Hunted by Guards", type: "threat", description: "The city watch is searching for you after the tavern brawl", severity: 0.6, time_remaining: { hours: 2 } }. Threats ALWAYS persist past timer expiry — they never go away on their own. When a threat\'s timer expires, it has TRIGGERED. You MUST resolve it next turn: remove it from the list and reflect its impact (new conditions, relationship changes, world flag changes, etc.).\n';
+      p += '  - "condition": Physical/mental states — injuries, poisons, buffs, curses, tasks in progress.\n';
+      p += '  - "threat": Approaching dangers, looming consequences, ticking time-bombs. Examples: pursuing enemies, structural collapse, incoming storms, spreading fires, political deadlines.\n';
       p += '  - If you omit type, it defaults to "condition".\n';
-      p += '- Use threats to represent any approaching danger or ticking time-bomb: pursuing enemies, structural collapse, incoming storms, spreading fires, political deadlines, etc.\n';
-      p += '- The client ticks down all status effect timers (conditions AND threats) by time_elapsed each turn.\n\n';
+      p += '- All effects persist when their timer reaches zero until you explicitly remove them. The client never auto-removes effects.\n';
+      p += '- If nothing changed about status effects this turn, omit status_effect_updates entirely.\n\n';
 
       // Difficulty-specific rules
       if (difficulty === 'chill') {
@@ -190,7 +212,7 @@
         p += '- NEVER use game_over outcome on choices. The player cannot fail/die on Chill.\n';
         p += '- NEVER create lethal status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Effects are inconveniences, not threats.\n';
-        p += '- Effects heal quickly — reduce severity generously each turn. Minor injuries resolve within a few in-game hours.\n';
+        p += '- Effects heal quickly — use modify to reduce severity generously each turn. Minor injuries resolve within a few in-game hours.\n';
         p += '- Threat-type effects should represent mild narrative tension (e.g. "Shopkeeper is suspicious"), not real danger.\n';
         p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
         p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
@@ -209,8 +231,8 @@
         p += 'HARD MODE RULES (MANDATORY):\n';
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
-        p += '- Lethal status effects are allowed but MUST be foreshadowed. If an effect will kill the player, there should have been clues in earlier passages.\n';
-        p += '- Lethal effects must give the player at least one turn to address them (set time_remaining to allow at least one more scene).\n';
+        p += '- Lethal status effects are allowed but MUST be foreshadowed. Use add with lethal: true. There should have been clues in earlier passages.\n';
+        p += '- Lethal effects must give the player at least one turn to address them (set time_remaining in the add to allow at least one more scene).\n';
         p += '- Full severity range (0.0-1.0). Injuries are serious and heal realistically.\n';
         p += '- Threat-type effects should have short time windows before triggering.\n';
         p += '- NPCs have low forgiveness. Burning a relationship has lasting consequences.\n';
@@ -222,8 +244,8 @@
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
         p += '- At most 1 clearly safe choice per turn. At least 1 choice should be lethal or severely punishing.\n';
-        p += '- Lethal status effects are common. Unattended wounds can worsen and become lethal.\n';
-        p += '- Injuries stack — multiple status effects compound the character\'s impairment.\n';
+        p += '- Lethal status effects are common. Unattended wounds can worsen — use modify to increase severity or set lethal: true.\n';
+        p += '- Injuries stack — use add to create multiple status effects that compound the character\'s impairment.\n';
         p += '- Healing is slow without supplies. Rest alone barely reduces severity. Medicine, magic, or proper treatment is required for meaningful recovery.\n';
         p += '- Threat timers are extremely short — no grace period. Dangers escalate fast.\n';
         p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
@@ -353,9 +375,9 @@
       p += '  "state_updates": {\n';
       p += '    "player_changes": {\n';
       p += '      "inventory": ["full current inventory list"],\n';
-      p += '      "status_effects": [...],\n';
       p += '      "skills": ["full current skills list"]\n';
       p += '    },\n';
+      p += '    "status_effect_updates": { "add": [...], "modify": [...], "remove": [{ "id": "...", "update_justification": "..." }] },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
       p += '    "event_log_entry": "string — one-line summary of the terminal outcome",\n';
       p += '    "world_flag_changes": { "flag_name": true/false },\n';
@@ -369,6 +391,7 @@
       p += '- Respond with ONLY the JSON object.\n';
       p += '- Do NOT include choice_metadata — there are no choices after a terminal passage.\n';
       p += '- event_log_entry is REQUIRED — summarize what happened.\n';
+      p += '- Use status_effect_updates with delta operations (add/modify/remove) — same format as normal turns.\n';
 
       // Terminal-type specific instructions
       if (terminalType === 'game_over') {
@@ -376,11 +399,11 @@
         p += '- Apply the consequences of the failure. The event_log_entry should describe the failure clearly — it will be displayed as the game over reason.\n';
       } else if (terminalType === 'advances_act') {
         p += '- This COMPLETES the current act. The act\'s end_condition has been triggered.\n';
-        p += '- Apply any consequences of completing this act. Resolve active threats by removing them from status_effects.\n';
+        p += '- Resolve active threats and expired effects using remove operations in status_effect_updates with update_justification for each.\n';
         p += '- The event_log_entry should summarize the act\'s resolution.\n';
       } else if (terminalType === 'conclusion') {
         p += '- This CONCLUDES the entire story. The Act 3 end_condition has been met.\n';
-        p += '- Apply final consequences. Clear all remaining threats from status_effects.\n';
+        p += '- Clear all remaining effects using remove operations in status_effect_updates with update_justification for each.\n';
         p += '- The event_log_entry should summarize the story\'s conclusion.\n';
       }
 

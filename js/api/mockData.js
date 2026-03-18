@@ -246,6 +246,23 @@
         },
         relationships: {
           'Captain Aldren Voss': -15
+        },
+        status_effect_updates: {
+          add: [
+            {
+              id: 'bruised_shoulder_001',
+              name: 'Bruised Shoulder',
+              description: 'Voss grabbed you hard — your shoulder aches where his gauntlet dug in',
+              severity: 0.2,
+              time_remaining: { days: 0, hours: 4, minutes: 0, seconds: 0 },
+              type: 'condition',
+              removal_condition: null,
+              lethal: false,
+              on_expiry: 'The bruise fades to a dull ache, barely noticeable.'
+            }
+          ],
+          modify: [],
+          remove: []
         }
       },
       choices: {

@@ -189,9 +189,13 @@
             if (effect.severity > 0.7) sevClass = 'effect-severe';
             else if (effect.severity > 0.3) sevClass = 'effect-moderate';
           }
-          eChip.className = 'status-chip status-effect ' + sevClass + (effect.type === 'threat' ? ' status-threat' : '');
+          eChip.className = 'status-chip status-effect ' + sevClass + (effect.type === 'threat' ? ' status-threat' : '') + (effect.expired ? ' status-expired' : '');
           eChip.title = effect.description || effect.name;
-          eChip.textContent = (effect.type === 'threat' ? '\u26a0 ' : '') + effect.name;
+          if (effect.expired) {
+            eChip.textContent = '\u23f0 ' + effect.name;
+          } else {
+            eChip.textContent = (effect.type === 'threat' ? '\u26a0 ' : '') + effect.name;
+          }
           effectsContainer.appendChild(eChip);
         }
       }
@@ -518,7 +522,12 @@
       var _efx = (state.player.status_effects || []);
       if (_efx.length) {
         _gmLog.effects = _efx.map(function (e) {
-          return e.name + ' (sev:' + (e.severity || 0) + (e.lethal ? ', LETHAL' : '') + ')';
+          var label = e.name + ' (sev:' + (e.severity || 0);
+          if (e.lethal) label += ', LETHAL';
+          if (e.expired) label += ', EXPIRED[' + (e.expired_turns || 0) + ']';
+          if (e.on_expiry) label += ', has_on_expiry';
+          label += ')';
+          return label;
         }).join(', ');
       }
       if (updates.relationship_changes) {
@@ -663,12 +672,90 @@
     _applyStateUpdates: function (state, updates) {
       var timeElapsed = updates.time_elapsed || null;
 
-      // 1. Player changes (inventory, status_effects, skills)
+      // 1. Player changes (inventory, skills — still replace semantics)
       if (updates.player_changes) {
         var pc = updates.player_changes;
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
-        if (Array.isArray(pc.status_effects)) state.player.status_effects = pc.status_effects;
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
+      }
+
+      // 1b. Status effect delta operations
+      var seu = updates.status_effect_updates;
+      if (seu) {
+        var effects = state.player.status_effects || [];
+
+        // REMOVE first (don't modify something about to be removed)
+        if (Array.isArray(seu.remove)) {
+          var removeIds = {};
+          seu.remove.forEach(function (rm) {
+            if (!rm.id) return;
+            removeIds[rm.id] = true;
+            SQ.Logger.info('StatusEffect', 'Removed: ' + rm.id, {
+              justification: rm.update_justification || '(none)'
+            });
+          });
+          effects = effects.filter(function (e) { return !removeIds[e.id]; });
+        }
+
+        // MODIFY existing effects
+        if (Array.isArray(seu.modify)) {
+          seu.modify.forEach(function (mod) {
+            if (!mod.id) return;
+            var target = null;
+            for (var mi = 0; mi < effects.length; mi++) {
+              if (effects[mi].id === mod.id) { target = effects[mi]; break; }
+            }
+            if (!target) {
+              SQ.Logger.warn('StatusEffect', 'Modify target not found: ' + mod.id);
+              return;
+            }
+            if (mod.changes && typeof mod.changes === 'object') {
+              var allowed = ['name', 'description', 'severity', 'time_remaining',
+                             'type', 'removal_condition', 'lethal', 'on_expiry'];
+              for (var key in mod.changes) {
+                if (mod.changes.hasOwnProperty(key) && allowed.indexOf(key) !== -1) {
+                  target[key] = mod.changes[key];
+                }
+              }
+            }
+            SQ.Logger.info('StatusEffect', 'Modified: ' + mod.id, {
+              changes: mod.changes,
+              justification: mod.update_justification || '(none)'
+            });
+          });
+        }
+
+        // ADD new effects last
+        if (Array.isArray(seu.add)) {
+          seu.add.forEach(function (newEffect) {
+            if (!newEffect.id) return;
+            var exists = false;
+            for (var ai = 0; ai < effects.length; ai++) {
+              if (effects[ai].id === newEffect.id) { exists = true; break; }
+            }
+            if (exists) {
+              SQ.Logger.warn('StatusEffect', 'Duplicate add ID, skipping: ' + newEffect.id);
+              return;
+            }
+            newEffect.expired = false;
+            // Enforce on_expiry for timed effects
+            if (newEffect.time_remaining && !newEffect.on_expiry) {
+              SQ.Logger.warn('StatusEffect', 'Added effect missing on_expiry, synthesizing default', { id: newEffect.id });
+              newEffect.on_expiry = 'Timer expired for: ' + newEffect.name;
+            }
+            effects.push(newEffect);
+            SQ.Logger.info('StatusEffect', 'Added: ' + newEffect.id + ' (' + newEffect.name + ')');
+          });
+        }
+
+        state.player.status_effects = effects;
+      }
+
+      // 1c. Fallback: legacy replace semantics (if GM returns old format)
+      if (updates.player_changes && Array.isArray(updates.player_changes.status_effects)
+          && !updates.status_effect_updates) {
+        SQ.Logger.warn('StatusEffect', 'GM used legacy replace semantics — applying as fallback');
+        state.player.status_effects = updates.player_changes.status_effects;
       }
 
       // 2. Advance in-game clock
@@ -676,16 +763,36 @@
         SQ.GameState.advanceTime(timeElapsed);
       }
 
-      // 3. Tick down status effect timers and auto-remove expired non-lethal effects
+      // 3. Tick down status effect timers and flag expired effects
       if (timeElapsed && Array.isArray(state.player.status_effects)) {
-        state.player.status_effects = state.player.status_effects.filter(function (effect) {
-          if (!effect.time_remaining) return true;
+        state.player.status_effects.forEach(function (effect) {
+          // Already expired — increment turns counter for escalation
+          if (effect.expired) {
+            if (typeof effect.expired_turns === 'number') {
+              effect.expired_turns++;
+            }
+            return;
+          }
+          // Permanent effect — skip
+          if (!effect.time_remaining) return;
+          // Tick down
           var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
           effect.time_remaining = result.time;
           if (result.expired) {
-            return !!effect.lethal || effect.type === 'threat';
+            effect.expired = true;
+            effect.expired_turns = -1;
           }
-          return true;
+        });
+      }
+
+      // 3b. Warn on unresolved expired effects
+      if (Array.isArray(state.player.status_effects)) {
+        state.player.status_effects.forEach(function (effect) {
+          if (effect.expired && effect.expired_turns > 1) {
+            SQ.Logger.warn('StatusEffect', 'Unresolved expired effect', {
+              id: effect.id, name: effect.name, expired_turns: effect.expired_turns
+            });
+          }
         });
       }
 
@@ -1060,10 +1167,14 @@
             var condLabel = effect.removal_condition ? ' — needs: ' + self._esc(effect.removal_condition) : '';
             var lethalLabel = effect.lethal ? ' ' + self._gsdTag('LETHAL', 'danger') : '';
             var threatLabel = effect.type === 'threat' ? ' ' + self._gsdTag('THREAT', 'risky') : '';
+            var expiredLabel = effect.expired ? ' ' + self._gsdTag('EXPIRED', 'danger') : '';
+            var expTurnsLabel = (typeof effect.expired_turns === 'number' && effect.expired_turns >= 0)
+              ? ' ' + self._gsdTag('unresolved:' + effect.expired_turns, 'risky') : '';
             seHtml += '<div style="margin-bottom:2px">';
-            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel + threatLabel;
+            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel + threatLabel + expiredLabel + expTurnsLabel;
             if (effect.description) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + self._esc(effect.description) + '</span>';
             if (condLabel) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + condLabel + '</span>';
+            if (effect.on_expiry) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">on_expiry: ' + self._esc(effect.on_expiry) + '</span>';
             seHtml += '</div>';
           } else {
             seHtml += '<div>' + self._esc(String(effect)) + '</div>';

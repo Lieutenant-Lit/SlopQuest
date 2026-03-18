@@ -178,9 +178,17 @@
 
       // Status effects — Writer needs to know what the character is dealing with
       if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        p += 'ACTIVE STATUS EFFECTS (weave these into the narrative naturally):\n';
+        var activeEffects = [];
+        var expiredEffects = [];
         gameState.player.status_effects.forEach(function (effect) {
-          if (typeof effect === 'object' && effect.name) {
+          if (typeof effect !== 'object' || !effect.name) return;
+          if (effect.expired) expiredEffects.push(effect);
+          else activeEffects.push(effect);
+        });
+
+        if (activeEffects.length > 0) {
+          p += 'ACTIVE STATUS EFFECTS (weave into narrative naturally):\n';
+          activeEffects.forEach(function (effect) {
             p += '- ' + effect.name;
             if (effect.type === 'threat') p += ' [THREAT]';
             if (typeof effect.severity === 'number') {
@@ -191,11 +199,23 @@
             if (effect.description) p += ': ' + effect.description;
             if (effect.time_remaining) p += ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ' remaining]';
             p += '\n';
-          } else if (typeof effect === 'string') {
-            p += '- ' + effect + '\n';
-          }
-        });
-        p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
+          });
+          p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
+        }
+
+        if (expiredEffects.length > 0) {
+          p += 'EXPIRED STATUS EFFECTS — NARRATE THEIR RESOLUTION:\n';
+          expiredEffects.forEach(function (effect) {
+            p += '- ' + effect.name;
+            if (effect.type === 'threat') p += ' [THREAT TRIGGERED]';
+            if (effect.on_expiry) p += '\n  WHAT HAPPENS: ' + effect.on_expiry;
+            if (typeof effect.expired_turns === 'number' && effect.expired_turns >= 1) {
+              p += '\n  WARNING: Unresolved for ' + effect.expired_turns + ' turn(s) — you MUST address this NOW.';
+            }
+            p += '\n';
+          });
+          p += 'You MUST narrate each expired effect\'s resolution in your passage using the WHAT HAPPENS directive above. This is not optional. Do NOT include mechanical numbers.\n\n';
+        }
       }
 
       // In-game time awareness
@@ -345,17 +365,31 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
-      // Status effects
+      // Status effects — split active/expired for finale
       if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        p += 'ACTIVE STATUS EFFECTS:\n';
-        gameState.player.status_effects.forEach(function (effect) {
-          if (typeof effect === 'object' && effect.name) {
+        var active = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && !e.expired; });
+        var expired = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && e.expired; });
+
+        if (active.length > 0) {
+          p += 'ACTIVE STATUS EFFECTS:\n';
+          active.forEach(function (effect) {
             p += '- ' + effect.name;
             if (effect.description) p += ': ' + effect.description;
             p += '\n';
-          }
-        });
-        p += '\n';
+          });
+          p += '\n';
+        }
+
+        if (expired.length > 0) {
+          p += 'EXPIRED STATUS EFFECTS (resolve in your finale passage):\n';
+          expired.forEach(function (effect) {
+            p += '- ' + effect.name;
+            if (effect.on_expiry) p += ' — ' + effect.on_expiry;
+            else if (effect.description) p += ': ' + effect.description;
+            p += '\n';
+          });
+          p += '\n';
+        }
       }
 
       // Response schema — passage ONLY, NO choices
