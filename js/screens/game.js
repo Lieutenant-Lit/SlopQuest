@@ -710,6 +710,14 @@
               return;
             }
             if (mod.changes && typeof mod.changes === 'object') {
+              if ('time_remaining' in mod.changes) {
+                SQ.Logger.warn('StatusEffect', 'GM overrode timer via modify — verify justification', {
+                  id: mod.id,
+                  justification: mod.update_justification || '(none)',
+                  old_time: target.time_remaining,
+                  new_time: mod.changes.time_remaining
+                });
+              }
               var allowed = ['name', 'description', 'severity', 'time_remaining',
                              'type', 'removal_condition', 'lethal', 'on_expiry'];
               for (var key in mod.changes) {
@@ -738,6 +746,17 @@
               return;
             }
             newEffect.expired = false;
+            // Warn if timer will expire immediately (dead-on-arrival)
+            if (newEffect.time_remaining && timeElapsed) {
+              var _tr = newEffect.time_remaining, _te = timeElapsed;
+              var trSec = ((_tr.days||0)*86400) + ((_tr.hours||0)*3600) + ((_tr.minutes||0)*60) + (_tr.seconds||0);
+              var teSec = ((_te.days||0)*86400) + ((_te.hours||0)*3600) + ((_te.minutes||0)*60) + (_te.seconds||0);
+              if (trSec > 0 && trSec <= teSec) {
+                SQ.Logger.warn('StatusEffect', 'New effect timer <= time_elapsed — will expire immediately', {
+                  id: newEffect.id, timer_seconds: trSec, elapsed_seconds: teSec
+                });
+              }
+            }
             // Enforce on_expiry for timed effects
             if (newEffect.time_remaining && !newEffect.on_expiry) {
               SQ.Logger.warn('StatusEffect', 'Added effect missing on_expiry, synthesizing default', { id: newEffect.id });
