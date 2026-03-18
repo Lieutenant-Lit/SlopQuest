@@ -20,9 +20,10 @@
       // Role and style
       p += 'You are The Writer for an interactive gamebook. You write vivid, engaging prose in ';
       p += (meta.perspective || 'second person') + ' perspective, ';
-      p += (meta.tense || 'present') + ' tense, with a ';
-      p += (meta.writing_style || 'literary') + ' style and ';
-      p += (meta.tone || 'dark and atmospheric') + ' tone.\n\n';
+      p += (meta.tense || 'present') + ' tense.\n\n';
+
+      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      p += 'STYLE & TONE: ' + style + '\n\n';
 
       p += 'Your ONLY job is to write the narrative passage and four player choices. ';
       p += 'You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\n';
@@ -286,9 +287,10 @@
       // Role and style (same as normal)
       p += 'You are The Writer for an interactive gamebook. You write vivid, engaging prose in ';
       p += (meta.perspective || 'second person') + ' perspective, ';
-      p += (meta.tense || 'present') + ' tense, with a ';
-      p += (meta.writing_style || 'literary') + ' style and ';
-      p += (meta.tone || 'dark and atmospheric') + ' tone.\n\n';
+      p += (meta.tense || 'present') + ' tense.\n\n';
+
+      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      p += 'STYLE & TONE: ' + style + '\n\n';
 
       // Terminal-type specific role
       if (terminalType === 'game_over') {

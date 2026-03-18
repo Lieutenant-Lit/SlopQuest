@@ -170,8 +170,8 @@
       var config = {
         setting: settingText || 'dark fantasy',
         archetype: document.getElementById('setup-archetype').value.trim() || 'wanderer',
-        writingStyle: styleToneText || 'literary',
-        tone: styleToneText || 'dark and gritty',
+        writingStyle: styleToneText || 'literary, dark and atmospheric',
+        tone: '',
         perspective: this._selected.perspective || 'second person',
         tense: this._selected.tense || 'present',
         difficulty: this._selected.difficulty || 'normal',
