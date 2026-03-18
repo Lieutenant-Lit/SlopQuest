@@ -746,22 +746,12 @@
               return;
             }
             newEffect.expired = false;
-            // Warn if timer will expire immediately (dead-on-arrival)
-            if (newEffect.time_remaining && timeElapsed) {
-              var _tr = newEffect.time_remaining, _te = timeElapsed;
-              var trSec = ((_tr.days||0)*86400) + ((_tr.hours||0)*3600) + ((_tr.minutes||0)*60) + (_tr.seconds||0);
-              var teSec = ((_te.days||0)*86400) + ((_te.hours||0)*3600) + ((_te.minutes||0)*60) + (_te.seconds||0);
-              if (trSec > 0 && trSec <= teSec) {
-                SQ.Logger.warn('StatusEffect', 'New effect timer <= time_elapsed — will expire immediately', {
-                  id: newEffect.id, timer_seconds: trSec, elapsed_seconds: teSec
-                });
-              }
-            }
             // Enforce on_expiry for timed effects
             if (newEffect.time_remaining && !newEffect.on_expiry) {
               SQ.Logger.warn('StatusEffect', 'Added effect missing on_expiry, synthesizing default', { id: newEffect.id });
               newEffect.on_expiry = 'Timer expired for: ' + newEffect.name;
             }
+            newEffect._justCreated = true;
             effects.push(newEffect);
             SQ.Logger.info('StatusEffect', 'Added: ' + newEffect.id + ' (' + newEffect.name + ')');
           });
@@ -794,6 +784,11 @@
           }
           // Permanent effect — skip
           if (!effect.time_remaining) return;
+          // Skip effects created this turn — time_elapsed predates their existence
+          if (effect._justCreated) {
+            delete effect._justCreated;
+            return;
+          }
           // Tick down
           var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
           effect.time_remaining = result.time;
