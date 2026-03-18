@@ -37,7 +37,12 @@
       // Full player state — GM needs all mechanical details
       p += 'CURRENT PLAYER STATE:\n';
       p += JSON.stringify(gameState.player, null, 2) + '\n';
-      p += 'NOTE: status_effects above are READ-ONLY reference. Use status_effect_updates (add/modify/remove) to make changes. Do NOT return the full array.\n\n';
+      p += 'NOTE: status_effects above are READ-ONLY reference. Use status_effect_updates (add/modify/remove) to make changes. Do NOT return the full array.\n';
+      var effectCount = (gameState.player && Array.isArray(gameState.player.status_effects)) ? gameState.player.status_effects.length : 0;
+      if (effectCount > 10) {
+        p += 'WARNING: There are currently ' + effectCount + ' active status effects (soft cap: 10). Before adding new effects, review the list and remove any that are no longer actively affecting the player — stale context, resolved situations, or effects that have been superseded by newer ones. Use remove with update_justification for each.\n';
+      }
+      p += '\n';
 
       // In-game time
       var igt = (gameState.current && gameState.current.in_game_time) || null;
@@ -200,11 +205,19 @@
       p += '- removal_condition can be set for effects that need specific actions (e.g. "Find the Witch of the Moor to break this curse"). Can be combined with time_remaining.\n';
       p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above.\n';
       p += '- TYPE FIELD: Every status effect has a type — "condition" (default) or "threat".\n';
-      p += '  - "condition": Physical/mental states — injuries, poisons, buffs, curses, tasks in progress.\n';
-      p += '  - "threat": Approaching dangers, looming consequences, ticking time-bombs. Examples: pursuing enemies, structural collapse, incoming storms, spreading fires, political deadlines.\n';
+      p += '  - "condition": Ongoing physical/mental states that impair or buff the player — injuries, poisons, diseases, curses, enchantments. Must have a severity that affects what the player can do.\n';
+      p += '  - "threat": Approaching dangers with a timer — pursuing enemies, structural collapse, incoming reinforcements, spreading fires. Threats MUST have a non-null time_remaining and on_expiry describing what happens when they arrive.\n';
       p += '  - If you omit type, it defaults to "condition".\n';
       p += '- All effects persist when their timer reaches zero until you explicitly remove them. The client never auto-removes effects.\n';
-      p += '- If nothing changed about status effects this turn, omit status_effect_updates entirely.\n\n';
+      p += '- If nothing changed about status effects this turn, omit status_effect_updates entirely.\n';
+      p += 'WHAT IS NOT A STATUS EFFECT:\n';
+      p += '- Information learned or revealed (use event_log_entry instead)\n';
+      p += '- Plot developments or narrative beats (use event_log_entry instead)\n';
+      p += '- Things that happened in the past (use event_log_entry instead)\n';
+      p += '- Static facts about the world ("Alliance knows about us") — if it doesn\'t change turn-to-turn and has no timer or removal condition, it\'s not a status effect\n';
+      p += '- Emotional reactions to events — unless they mechanically impair the character (e.g. "Paralyzed by Fear" at severity 0.7 is valid; "Feels Sad About Revelation" is not)\n';
+      p += '- Duplicate/overlapping effects — do not create a new effect when an existing one covers the same concept. Use modify to update the existing effect instead.\n';
+      p += 'A status effect MUST be something that actively constrains, endangers, impairs, or buffs the player RIGHT NOW and could plausibly change or resolve. Ask: "Would removing this effect change what the player can do?" If no, it\'s not a status effect.\n\n';
 
       // Difficulty-specific rules
       if (difficulty === 'chill') {
