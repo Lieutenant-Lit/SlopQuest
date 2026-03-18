@@ -64,6 +64,8 @@
             p += '- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n';
           } else if (scenesInAct <= 2 && actIndex === 0) {
             p += '- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n';
+          } else if (scenesInAct <= 1 && actIndex > 0) {
+            p += '- PACING DIRECTIVE: This is the start of a NEW ACT. The previous act just concluded. Establish the new dramatic situation quickly — show the aftermath of the previous act\'s climax, then move into the first conflict or event of this act. Do NOT recap extensively.\n';
           }
           p += '\n';
         }
@@ -263,6 +265,10 @@
      */
     buildUser: function (gameState, choiceId) {
       if (!choiceId) {
+        var act = (gameState.current && gameState.current.act) || 1;
+        if (act > 1) {
+          return 'This is the OPENING PASSAGE of Act ' + act + '. The previous act has just concluded. Write a passage that transitions into the new act — acknowledge what happened, then establish the new situation and dramatic direction. Present four new choices. Respond with ONLY the JSON object.';
+        }
         return 'Generate the opening passage for this story. Set the scene, establish the protagonist\'s situation, and present the first four choices. Respond with ONLY the JSON object.';
       }
 

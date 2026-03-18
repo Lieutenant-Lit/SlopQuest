@@ -267,9 +267,14 @@
     buildUser: function (gameState, writerResponse, choiceId) {
       var p = '';
 
-      // Opening passage — no choice was made, no penalties allowed
+      // Opening passage — no choice was made this turn
       if (!choiceId) {
-        p += 'This is the OPENING PASSAGE. No player choice was made yet. Do not apply any negative status effects or penalties — the player has not made any choices yet. time_elapsed should reflect the scene\'s timeframe.\n\n';
+        var act = (gameState.current && gameState.current.act) || 1;
+        if (act > 1) {
+          p += 'This is the OPENING PASSAGE of Act ' + act + '. The previous act just concluded — the player has existing status effects, relationships, and history. You may apply status effects or modifications that follow from the act transition (e.g. time passing between acts, wounds worsening or healing). time_elapsed should reflect any time gap between acts.\n\n';
+        } else {
+          p += 'This is the OPENING PASSAGE. No player choice was made yet. Do not apply any negative status effects or penalties — the player has not made any choices yet. time_elapsed should reflect the scene\'s timeframe.\n\n';
+        }
       }
 
       // If the player made a choice, include its pre-classified outcome so the GM honors it
