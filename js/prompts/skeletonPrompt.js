@@ -81,6 +81,12 @@
       p += '  "initial_world_flags": { "flag_name": true/false }\n';
       p += '}\n\n';
 
+      // Tone alignment — skeleton must serve the player's stated tone
+      p += 'CRITICAL — TONE ALIGNMENT:\n';
+      p += '- The tone_notes you generate MUST reinforce the player\'s Writing Style and Tone settings above, not subvert or contradict them.\n';
+      p += '- If the player asked for comedy, tone_notes must establish a comedic atmosphere — not inject grimdark undertones.\n';
+      p += '- Read what the player actually wrote and serve that vision.\n\n';
+
       // Story length rules
       p += 'STORY LENGTH RULES (' + storyLength.label + '):\n';
       p += '- Total turns: ' + storyLength.total_turns.min + '-' + storyLength.total_turns.max + '\n';
@@ -103,7 +109,7 @@
       // Tier-specific skeleton constraints
       if (setupConfig.difficulty === 'chill') {
         p += 'CHILL DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- The skeleton must NEVER include death states, lethal outcomes, or game_over triggers\n';
+        p += '- The skeleton must NEVER include critical/irreversible outcomes or game_over triggers\n';
         p += '- All choices should lead to interesting story developments, not punishments\n';
         p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never threatening\n';
         p += '- NPCs should be generally helpful or at worst inconvenient — no genuinely hostile NPCs that threaten the player\n';
@@ -118,8 +124,8 @@
         p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
       } else if (setupConfig.difficulty === 'hard') {
         p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- Death is possible but rare: include at most 1 lethal choice per act\n';
-        p += '- Lethal choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
+        p += '- Critical/irreversible consequences are possible but rare: include at most 1 critical choice per act\n';
+        p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
         p += '- Include severe consequences: serious status effects, permanent NPC hostility, lost items\n';
         p += '- Threat-type status effects should have short time windows and hit hard when they trigger\n';
         p += '- Recovery paths exist but require sacrifice — healing requires effort, alliances cost favors\n';
@@ -130,7 +136,7 @@
         p += '- At least one game_over state must exist per act\n';
         p += '- No scene may have more than two advance_safe options\n';
         p += '- At least one death per act must be non-obvious (requires interpreting earlier clues)\n';
-        p += '- Create genuine trap logic — choices that SOUND safe but are lethal based on earlier context the player may not have noticed\n';
+        p += '- Create genuine trap logic — choices that SOUND safe but have critical consequences based on earlier context the player may not have noticed\n';
         p += '- Consequences are immediate and severe. Threat timers should be extremely short\n';
         p += '- NPCs never forgive. A single wrong move with an NPC should permanently close that relationship\n';
         p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';

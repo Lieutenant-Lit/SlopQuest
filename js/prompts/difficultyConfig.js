@@ -17,9 +17,9 @@
       threat_timer_pressure: 'relaxed',
       recovery_paths: 'always available',
       npc_forgiveness: 'high',
-      allow_lethal_effects: false,
+      allow_critical_effects: false,
       max_effect_severity: 0.5,
-      healing_speed: 'fast'
+      recovery_speed: 'fast'
     },
     normal: {
       label: 'Normal',
@@ -33,13 +33,13 @@
       threat_timer_pressure: 'moderate',
       recovery_paths: 'usually available',
       npc_forgiveness: 'moderate',
-      allow_lethal_effects: false,
+      allow_critical_effects: false,
       max_effect_severity: 0.8,
-      healing_speed: 'normal'
+      recovery_speed: 'normal'
     },
     hard: {
       label: 'Hard',
-      description: 'A challenging experience. Death is possible. Consequences hit fast and hard.',
+      description: 'High stakes. Consequences are serious and sometimes irreversible.',
       safe_choice_ratio: 0.35,
       consequence_severity: 'severe',
       allow_game_over: true,
@@ -49,15 +49,15 @@
       threat_timer_pressure: 'urgent',
       recovery_paths: 'sometimes available',
       npc_forgiveness: 'low',
-      allow_lethal_effects: true,
+      allow_critical_effects: true,
       max_effect_severity: 1.0,
-      healing_speed: 'realistic'
+      recovery_speed: 'realistic'
     },
     brutal: {
       label: 'Brutal',
-      description: 'Lethal and unforgiving. Death is common, clues are cryptic, and NPCs hold grudges.',
+      description: 'Unforgiving. Critical consequences are common, recovery is rare.',
       safe_choice_ratio: 0.25,
-      consequence_severity: 'lethal',
+      consequence_severity: 'critical',
       allow_game_over: true,
       game_over_frequency: 'common',
       hint_transparency: 'cryptic',
@@ -65,9 +65,9 @@
       threat_timer_pressure: 'immediate',
       recovery_paths: 'rarely available',
       npc_forgiveness: 'none',
-      allow_lethal_effects: true,
+      allow_critical_effects: true,
       max_effect_severity: 1.0,
-      healing_speed: 'slow'
+      recovery_speed: 'slow'
     }
   };
 
