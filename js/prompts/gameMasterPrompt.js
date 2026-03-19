@@ -88,8 +88,7 @@
       p += '{\n';
       p += '  "state_updates": {\n';
       p += '    "player_changes": {\n';
-      p += '      "inventory": ["full current inventory list"],\n';
-      p += '      "skills": ["full current skills list"]\n';
+      p += '      "inventory": ["full current inventory list"]\n';
       p += '    },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
       p += '    "event_log_entry": "string — one-line summary of what happened",\n';
@@ -322,8 +321,7 @@
       p += '{\n';
       p += '  "state_updates": {\n';
       p += '    "player_changes": {\n';
-      p += '      "inventory": ["full current inventory list"],\n';
-      p += '      "skills": ["full current skills list"]\n';
+      p += '      "inventory": ["full current inventory list"]\n';
       p += '    },\n';
       p += '    "time_elapsed": { "days": 0, "hours": 0, "minutes": 0, "seconds": 0 },\n';
       p += '    "event_log_entry": "string — one-line summary of the terminal outcome",\n';

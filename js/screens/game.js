@@ -617,11 +617,10 @@
     _applyStateUpdates: function (state, updates) {
       var timeElapsed = updates.time_elapsed || null;
 
-      // 1. Player changes (inventory, skills — still replace semantics)
+      // 1. Player changes (inventory — replace semantics)
       if (updates.player_changes) {
         var pc = updates.player_changes;
         if (Array.isArray(pc.inventory)) state.player.inventory = pc.inventory;
-        if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
       }
 
       // 2. Advance in-game clock
@@ -990,11 +989,6 @@
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
       } else {
         playerBody += self._gsdRow('Inventory', '[]');
-      }
-      if (player.skills && player.skills.length) {
-        playerBody += self._gsdRow('Skills', self._gsdList(player.skills));
-      } else {
-        playerBody += self._gsdRow('Skills', '[]');
       }
       html += self._gsdSection('Player', playerBody, false);
 

@@ -52,8 +52,7 @@
         player: {
           name: 'The Wanderer',
           archetype: setupConfig.archetype || '',
-          inventory: [],
-          skills: []
+          inventory: []
         },
         narrator: {},
         relationships: {},

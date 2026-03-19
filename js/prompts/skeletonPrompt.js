@@ -84,6 +84,7 @@
       p += 'CRITICAL — TONE ALIGNMENT:\n';
       p += '- The tone_notes you generate MUST reinforce the player\'s Writing Style and Tone settings above, not subvert or contradict them.\n';
       p += '- If the player asked for comedy, tone_notes must establish a comedic atmosphere — not inject grimdark undertones.\n';
+      p += '- Difficulty controls the MECHANICAL severity and frequency of setbacks, NOT their narrative flavor. "Brutal + comedy" means relentless comedic disasters and social catastrophes, not grimdark undertones. "Brutal + horror" means genuine mortal danger. Match the tone the player asked for.\n';
       p += '- Read what the player actually wrote and serve that vision.\n\n';
 
       // Story length rules
@@ -110,33 +111,33 @@
         p += 'CHILL DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- The skeleton must NEVER include critical/irreversible outcomes or game_over triggers\n';
         p += '- All choices should lead to interesting story developments, not punishments\n';
-        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never threatening\n';
-        p += '- NPCs should be generally helpful or at worst inconvenient — no genuinely hostile NPCs that threaten the player\n';
-        p += '- Locked constraints should protect the player from accidentally entering dangerous situations\n';
+        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never punishing\n';
+        p += '- NPCs should be generally helpful or at worst inconvenient\n';
+        p += '- Locked constraints should protect the player from accidentally entering punishing situations\n';
         p += '- The key_beats should focus on discovery, relationships, and narrative progression — not survival\n\n';
       } else if (setupConfig.difficulty === 'normal') {
         p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- The skeleton must NOT include death states or game_over triggers\n';
-        p += '- Consequences should be meaningful but recoverable — relationship damage, lost items\n';
+        p += '- The skeleton must NOT include game_over triggers\n';
+        p += '- Consequences should be meaningful but recoverable — relationship damage, lost items, setbacks appropriate to the tone\n';
         p += '- Include both safe and risky choices. Risky choices should have bigger rewards but real mechanical costs\n';
-        p += '- NPCs can be hostile but should offer paths to resolution or avoidance\n';
+        p += '- NPCs can be antagonistic but should offer paths to resolution or avoidance\n';
         p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
       } else if (setupConfig.difficulty === 'hard') {
         p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- Critical/irreversible consequences are possible but rare: include at most 1 critical choice per act\n';
         p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
-        p += '- Include severe consequences: permanent NPC hostility, lost items, narrative setbacks\n';
-        p += '- Recovery paths exist but require sacrifice — healing requires effort, alliances cost favors\n';
+        p += '- Include severe consequences appropriate to the tone — what counts as "severe" depends on the genre (social ruin in comedy, mortal danger in horror, career destruction in drama)\n';
+        p += '- Recovery paths exist but require sacrifice — fixing mistakes requires effort, alliances cost favors\n';
         p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
       } else if (setupConfig.difficulty === 'brutal') {
         p += 'BRUTAL DIFFICULTY REQUIREMENTS:\n';
-        p += '- At least 40% of choices across each act must have outcome DEATH or SEVERE_PENALTY\n';
+        p += '- At least 40% of choices across each act must carry severe or catastrophic consequences appropriate to the tone\n';
         p += '- At least one game_over state must exist per act\n';
         p += '- No scene may have more than two advance_safe options\n';
-        p += '- At least one death per act must be non-obvious (requires interpreting earlier clues)\n';
+        p += '- At least one catastrophic failure per act must be non-obvious — what "catastrophic" means depends on the tone (total social ruin in comedy, actual death in horror, permanent exposure in a spy thriller)\n';
         p += '- Create genuine trap logic — choices that SOUND safe but have critical consequences based on earlier context the player may not have noticed\n';
-        p += '- Consequences are immediate and severe. Threat timers should be extremely short\n';
-        p += '- NPCs never forgive. A single wrong move with an NPC should permanently close that relationship\n';
+        p += '- Consequences are immediate and severe for the setting and tone\n';
+        p += '- NPCs do not forgive easily. A single wrong move with an NPC should permanently close that relationship\n';
         p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';
       }
 
@@ -144,7 +145,7 @@
       p += 'LENGTH × DIFFICULTY INTERACTION (' + storyLength.label + ' + ' + difficulty.label + '):\n';
       if (setupConfig.storyLength === 'short') {
         if (setupConfig.difficulty === 'brutal') {
-          p += '- Short + Brutal = a deadly sprint. Nearly every choice matters. Pack maximum danger into few turns.\n';
+          p += '- Short + Brutal = a relentless sprint. Nearly every choice matters. Pack maximum consequences into few turns.\n';
         } else {
           p += '- Short story: keep the plot focused and tight. Every scene should advance the central question.\n';
         }
