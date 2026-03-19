@@ -178,6 +178,15 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
+      // Current location and time — anchors the Writer to where the player actually is
+      if (gameState.current && gameState.current.location) {
+        p += 'CURRENT LOCATION: ' + gameState.current.location + '\n';
+      }
+      if (gameState.current && gameState.current.time_of_day) {
+        p += 'TIME OF DAY: ' + gameState.current.time_of_day + '\n';
+      }
+      p += '\n';
+
       // Status effects — Writer needs to know what the character is dealing with
       if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
         var activeEffects = [];
@@ -267,7 +276,7 @@
       if (!choiceId) {
         var act = (gameState.current && gameState.current.act) || 1;
         if (act > 1) {
-          return 'This is the OPENING PASSAGE of Act ' + act + '. The previous act has just concluded. Write a passage that transitions into the new act — acknowledge what happened, then establish the new situation and dramatic direction. Present four new choices. Respond with ONLY the JSON object.';
+          return 'This is the OPENING PASSAGE of Act ' + act + '. The previous act has just concluded. Write a passage that continues from the CURRENT LOCATION — do not revisit or reset to locations the player already left. Acknowledge what happened, then establish the new situation and dramatic direction. Present four new choices. Respond with ONLY the JSON object.';
         }
         return 'Generate the opening passage for this story. Set the scene, establish the protagonist\'s situation, and present the first four choices. Respond with ONLY the JSON object.';
       }

@@ -81,6 +81,12 @@
       p += '  "initial_world_flags": { "flag_name": true/false }\n';
       p += '}\n\n';
 
+      // Tone alignment — skeleton must serve the player's stated tone
+      p += 'CRITICAL — TONE ALIGNMENT:\n';
+      p += '- The tone_notes you generate MUST reinforce the player\'s Writing Style and Tone settings above, not subvert or contradict them.\n';
+      p += '- If the player asked for comedy, tone_notes must establish a comedic atmosphere — not inject grimdark undertones.\n';
+      p += '- Read what the player actually wrote and serve that vision.\n\n';
+
       // Story length rules
       p += 'STORY LENGTH RULES (' + storyLength.label + '):\n';
       p += '- Total turns: ' + storyLength.total_turns.min + '-' + storyLength.total_turns.max + '\n';
