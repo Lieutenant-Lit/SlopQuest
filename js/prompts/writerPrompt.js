@@ -64,6 +64,8 @@
             p += '- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n';
           } else if (scenesInAct <= 2 && actIndex === 0) {
             p += '- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n';
+          } else if (scenesInAct <= 1 && actIndex > 0) {
+            p += '- PACING DIRECTIVE: This is the start of a NEW ACT. The previous act just concluded. Establish the new dramatic situation quickly — show the aftermath of the previous act\'s climax, then move into the first conflict or event of this act. Do NOT recap extensively.\n';
           }
           p += '\n';
         }
@@ -178,9 +180,17 @@
 
       // Status effects — Writer needs to know what the character is dealing with
       if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        p += 'ACTIVE STATUS EFFECTS (weave these into the narrative naturally):\n';
+        var activeEffects = [];
+        var expiredEffects = [];
         gameState.player.status_effects.forEach(function (effect) {
-          if (typeof effect === 'object' && effect.name) {
+          if (typeof effect !== 'object' || !effect.name) return;
+          if (effect.expired) expiredEffects.push(effect);
+          else activeEffects.push(effect);
+        });
+
+        if (activeEffects.length > 0) {
+          p += 'ACTIVE STATUS EFFECTS (weave into narrative naturally):\n';
+          activeEffects.forEach(function (effect) {
             p += '- ' + effect.name;
             if (effect.type === 'threat') p += ' [THREAT]';
             if (typeof effect.severity === 'number') {
@@ -191,11 +201,23 @@
             if (effect.description) p += ': ' + effect.description;
             if (effect.time_remaining) p += ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ' remaining]';
             p += '\n';
-          } else if (typeof effect === 'string') {
-            p += '- ' + effect + '\n';
-          }
-        });
-        p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
+          });
+          p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
+        }
+
+        if (expiredEffects.length > 0) {
+          p += 'EXPIRED STATUS EFFECTS — NARRATE THEIR RESOLUTION:\n';
+          expiredEffects.forEach(function (effect) {
+            p += '- ' + effect.name;
+            if (effect.type === 'threat') p += ' [THREAT TRIGGERED]';
+            if (effect.on_expiry) p += '\n  WHAT HAPPENS: ' + effect.on_expiry;
+            if (typeof effect.expired_turns === 'number' && effect.expired_turns >= 1) {
+              p += '\n  WARNING: Unresolved for ' + effect.expired_turns + ' turn(s) — you MUST address this NOW.';
+            }
+            p += '\n';
+          });
+          p += 'You MUST narrate each expired effect\'s resolution in your passage using the WHAT HAPPENS directive above. This is not optional. Do NOT include mechanical numbers.\n\n';
+        }
       }
 
       // In-game time awareness
@@ -243,6 +265,10 @@
      */
     buildUser: function (gameState, choiceId) {
       if (!choiceId) {
+        var act = (gameState.current && gameState.current.act) || 1;
+        if (act > 1) {
+          return 'This is the OPENING PASSAGE of Act ' + act + '. The previous act has just concluded. Write a passage that transitions into the new act — acknowledge what happened, then establish the new situation and dramatic direction. Present four new choices. Respond with ONLY the JSON object.';
+        }
         return 'Generate the opening passage for this story. Set the scene, establish the protagonist\'s situation, and present the first four choices. Respond with ONLY the JSON object.';
       }
 
@@ -345,17 +371,31 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
-      // Status effects
+      // Status effects — split active/expired for finale
       if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        p += 'ACTIVE STATUS EFFECTS:\n';
-        gameState.player.status_effects.forEach(function (effect) {
-          if (typeof effect === 'object' && effect.name) {
+        var active = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && !e.expired; });
+        var expired = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && e.expired; });
+
+        if (active.length > 0) {
+          p += 'ACTIVE STATUS EFFECTS:\n';
+          active.forEach(function (effect) {
             p += '- ' + effect.name;
             if (effect.description) p += ': ' + effect.description;
             p += '\n';
-          }
-        });
-        p += '\n';
+          });
+          p += '\n';
+        }
+
+        if (expired.length > 0) {
+          p += 'EXPIRED STATUS EFFECTS (resolve in your finale passage):\n';
+          expired.forEach(function (effect) {
+            p += '- ' + effect.name;
+            if (effect.on_expiry) p += ' — ' + effect.on_expiry;
+            else if (effect.description) p += ': ' + effect.description;
+            p += '\n';
+          });
+          p += '\n';
+        }
       }
 
       // Response schema — passage ONLY, NO choices

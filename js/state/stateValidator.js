@@ -231,6 +231,46 @@
         }
       }
 
+      // status_effect_updates — optional, validate structure
+      if (response.state_updates && response.state_updates.status_effect_updates) {
+        var seu = response.state_updates.status_effect_updates;
+        if (typeof seu !== 'object' || Array.isArray(seu)) {
+          SQ.Logger.warn('Validator', 'status_effect_updates should be a plain object, ignoring');
+        } else {
+          if (seu.add && Array.isArray(seu.add)) {
+            for (var ai = 0; ai < seu.add.length; ai++) {
+              if (!seu.add[ai].id) errors.push('status_effect_updates.add[' + ai + '] missing id');
+              if (!seu.add[ai].name) errors.push('status_effect_updates.add[' + ai + '] missing name');
+              if (seu.add[ai].time_remaining && !seu.add[ai].on_expiry) {
+                SQ.Logger.warn('Validator', 'status_effect_updates.add[' + ai + '] has time_remaining but missing on_expiry');
+              }
+            }
+          }
+          if (seu.modify && Array.isArray(seu.modify)) {
+            for (var mi = 0; mi < seu.modify.length; mi++) {
+              if (!seu.modify[mi].id) errors.push('status_effect_updates.modify[' + mi + '] missing id');
+              if (!seu.modify[mi].update_justification) {
+                SQ.Logger.warn('Validator', 'status_effect_updates.modify[' + mi + '] missing update_justification');
+              }
+            }
+          }
+          if (seu.remove && Array.isArray(seu.remove)) {
+            for (var ri = 0; ri < seu.remove.length; ri++) {
+              if (!seu.remove[ri].id) errors.push('status_effect_updates.remove[' + ri + '] missing id');
+              if (!seu.remove[ri].update_justification) {
+                SQ.Logger.warn('Validator', 'status_effect_updates.remove[' + ri + '] missing update_justification');
+              }
+            }
+          }
+        }
+      }
+
+      // Warn on legacy status_effects in player_changes
+      if (response.state_updates && response.state_updates.player_changes &&
+          Array.isArray(response.state_updates.player_changes.status_effects)) {
+        SQ.Logger.warn('Validator', 'GM returned legacy status_effects array in player_changes — should use status_effect_updates');
+      }
+
       // choice_metadata is required
       if (!response.choice_metadata || typeof response.choice_metadata !== 'object') {
         errors.push('Missing choice_metadata object');
@@ -278,6 +318,26 @@
       } else {
         if (typeof response.state_updates.event_log_entry !== 'string' || !response.state_updates.event_log_entry) {
           errors.push('Missing or empty event_log_entry');
+        }
+
+        // Validate status_effect_updates in finale responses
+        if (response.state_updates.status_effect_updates) {
+          var fSeu = response.state_updates.status_effect_updates;
+          if (typeof fSeu !== 'object' || Array.isArray(fSeu)) {
+            SQ.Logger.warn('Validator', 'Finale status_effect_updates should be a plain object');
+          } else {
+            if (fSeu.remove && Array.isArray(fSeu.remove)) {
+              for (var fri = 0; fri < fSeu.remove.length; fri++) {
+                if (!fSeu.remove[fri].id) errors.push('Finale status_effect_updates.remove[' + fri + '] missing id');
+              }
+            }
+          }
+        }
+
+        // Warn on legacy format
+        if (response.state_updates.player_changes &&
+            Array.isArray(response.state_updates.player_changes.status_effects)) {
+          SQ.Logger.warn('Validator', 'Finale GM returned legacy status_effects array — should use status_effect_updates');
         }
       }
 

@@ -337,6 +337,14 @@ textarea {
 .status-effect.effect-moderate { color: var(--color-warning); }
 .status-effect.effect-mild { color: var(--color-text-muted); }
 .status-effect.status-threat { border-style: dashed; }
+.status-effect.status-expired {
+  border-color: var(--color-danger);
+  animation: expired-pulse 2s ease-in-out infinite;
+}
+@keyframes expired-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
 
 /* --- Illustration --- */
 .illustration-container {
