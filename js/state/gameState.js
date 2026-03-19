@@ -223,6 +223,21 @@
           if (this._current && !this._current.npc_overrides) {
             this._current.npc_overrides = {};
           }
+          // Migration: flag status effects with zero timers as expired
+          if (this._current && this._current.player && Array.isArray(this._current.player.status_effects)) {
+            this._current.player.status_effects.forEach(function (effect) {
+              if (effect.time_remaining && !effect.expired) {
+                var total = ((effect.time_remaining.days || 0) * 86400) +
+                            ((effect.time_remaining.hours || 0) * 3600) +
+                            ((effect.time_remaining.minutes || 0) * 60) +
+                            (effect.time_remaining.seconds || 0);
+                if (total <= 0) {
+                  effect.expired = true;
+                  effect.expired_turns = 0;
+                }
+              }
+            });
+          }
           return this._current;
         }
       } catch (e) {
