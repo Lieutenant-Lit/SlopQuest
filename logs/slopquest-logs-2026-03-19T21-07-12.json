@@ -1,0 +1,453 @@
+[
+  {
+    "ts": "2026-03-19T21:04:35.027Z",
+    "level": "info",
+    "cat": "Setup",
+    "msg": "Starting new game",
+    "data": {
+      "config": {
+        "setting": "A light-hearted 2000's rom-com",
+        "archetype": "An \"average\" guy named Joe who's secretly three raccoons in a trench coat",
+        "writingStyle": "A light-hearted 2000's rom-com",
+        "tone": "",
+        "perspective": "second person",
+        "tense": "present",
+        "difficulty": "brutal",
+        "storyLength": "short"
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:04:35.736Z",
+    "level": "info",
+    "cat": "Audio",
+    "msg": "Loaded voices from ElevenLabs",
+    "data": {
+      "count": 86
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.363Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 1687,
+        "completion_tokens": 1534,
+        "total_tokens": 3221,
+        "cost": 0.028071,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.028071,
+          "upstream_inference_prompt_cost": 0.005061,
+          "upstream_inference_completions_cost": 0.02301
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.373Z",
+    "level": "info",
+    "cat": "Skeleton",
+    "msg": "Generated OK",
+    "data": {
+      "title": "Three Hearts in a Trench Coat",
+      "acts": 3,
+      "npcs": [
+        "Sarah Chen (love interest)",
+        "Officer Martinez (hidden antagonist)",
+        "Brad Thompson (romantic rival)"
+      ]
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.374Z",
+    "level": "info",
+    "cat": "Skeleton",
+    "msg": "Full skeleton",
+    "data": {
+      "title": "Three Hearts in a Trench Coat",
+      "player_name": "Joe",
+      "premise": "You're Joe, an 'average' guy trying to win the heart of Sarah, the girl of your dreams, in early 2000s New York. The problem? You're actually three raccoons in a trench coat, and maintaining this charade while navigating romance is proving deadly dangerous.",
+      "central_question": "Can you maintain your human disguise long enough to win Sarah's love without being exposed, captured, or killed?",
+      "ending_shape": "love achieved or identity exposed",
+      "starting_inventory": [
+        "a slightly oversized trench coat",
+        "a fake ID reading 'Joe Anderson'",
+        "a crumpled $20 bill",
+        "three different colored contact lenses",
+        "a pocket mirror for coordination",
+        "leftover pizza crusts",
+        "a stolen MetroCard"
+      ],
+      "setting": {
+        "name": "Early 2000s Manhattan",
+        "description": "The bustling streets of New York City in 2003, where coffee shops bloom on every corner and everyone carries a flip phone. Romance feels possible around every corner, but so does discovery and disaster.",
+        "tone_notes": "Despite the rom-com veneer, the city pulses with an undercurrent of menace. Animal Control lurks in every shadow, extermination vans prowl the streets, and one wrong move could expose your true nature to a world that would destroy you without hesitation. The bright romantic comedy facade barely conceals the constant threat of death."
+      },
+      "acts": [
+        {
+          "act_number": 1,
+          "title": "First Impressions",
+          "description": "You encounter Sarah at a trendy coffee shop and must successfully ask her on a date while avoiding exposure. Multiple ways to die include: losing coordination between your three raccoon selves, being spotted by Animal Control, or having your disguise fail catastrophically.",
+          "end_condition": "Successfully securing a date with Sarah or permanent exposure/death",
+          "target_scenes": 6,
+          "locked_constraints": [
+            "Cannot reveal true nature to Sarah",
+            "Cannot be captured by authorities",
+            "Must maintain the illusion of being human"
+          ],
+          "key_beats": [
+            "Meeting Sarah",
+            "Coffee shop conversation",
+            "Dodging Animal Control patrol",
+            "The date invitation",
+            "First disguise crisis"
+          ]
+        },
+        {
+          "act_number": 2,
+          "title": "The Perfect Date",
+          "description": "The actual date unfolds with escalating challenges to maintain your human facade. Dinner requires eating human food, a movie theater tests your coordination, and Sarah's growing affection makes deception increasingly difficult and dangerous.",
+          "end_condition": "Date concludes with relationship advancement or catastrophic failure",
+          "target_scenes": 7,
+          "locked_constraints": [
+            "Cannot let Sarah discover the truth",
+            "Must successfully navigate human social customs",
+            "Cannot let the three raccoon personalities conflict openly"
+          ],
+          "key_beats": [
+            "Restaurant dining challenge",
+            "Movie theater coordination test",
+            "Sarah's growing suspicion",
+            "The near-miss exposure",
+            "Relationship deepening or disaster"
+          ]
+        },
+        {
+          "act_number": 3,
+          "title": "Truth and Consequences",
+          "description": "The final confrontation approaches as maintaining the deception becomes nearly impossible. Sarah invites you to her apartment, Animal Control closes in, and your three raccoon selves begin to disagree about the relationship's future.",
+          "end_condition": "Final revelation of truth or successful permanent deception",
+          "target_scenes": 7,
+          "locked_constraints": [
+            "Must resolve the central deception",
+            "Cannot avoid the final choice about truth"
+          ],
+          "key_beats": [
+            "Sarah's apartment invitation",
+            "The three-way raccoon argument",
+            "Animal Control's final pursuit",
+            "The moment of truth",
+            "Love or survival"
+          ]
+        }
+      ],
+      "npcs": [
+        {
+          "name": "Sarah Chen",
+          "role": "love interest",
+          "motivation": "Finding genuine connection in a superficial city",
+          "allegiance": "unaligned",
+          "secret": "Has always felt like she doesn't belong and is drawn to Joe because she senses he's hiding something too",
+          "initial_relationship": 10,
+          "companion": false
+        },
+        {
+          "name": "Officer Martinez",
+          "role": "hidden antagonist",
+          "motivation": "Capturing the 'urban wildlife menace' that's been reported in the area",
+          "allegiance": "Animal Control",
+          "secret": "Has been tracking unusual raccoon activity and suspects Joe isn't what he seems",
+          "initial_relationship": -20,
+          "companion": false
+        },
+        {
+          "name": "Brad Thompson",
+          "role": "romantic rival",
+          "motivation": "Winning Sarah's affection and proving Joe is a fraud",
+          "allegiance": "unaligned",
+          "secret": "Genuinely cares for Sarah but his jealousy makes him dangerously observant",
+          "initial_relationship": -40,
+          "companion": false
+        }
+      ],
+      "factions": [
+        {
+          "name": "Animal Control",
+          "description": "The city agency tasked with removing 'pest animals' from urban areas",
+          "goals": "Capture and eliminate the raccoon infestation that's been reported in Manhattan"
+        },
+        {
+          "name": "Coffee Shop Regulars",
+          "description": "The tight-knit community of Sarah's favorite coffee shop where gossip spreads quickly",
+          "goals": "Protect their social circle from outsiders and maintain their comfortable routine"
+        }
+      ],
+      "world_rules": [
+        "Raccoons cannot naturally speak human language or walk upright for extended periods",
+        "Animal Control has legal authority to capture and euthanize 'pest animals'",
+        "Human social customs must be perfectly mimicked to avoid suspicion",
+        "The three raccoon personalities can disagree and cause coordination failures",
+        "Physical contact with humans risks exposure through scent, texture, or movement",
+        "Eating human food is potentially toxic to raccoons"
+      ],
+      "initial_world_flags": {
+        "sarah_suspicious": false,
+        "animal_control_tracking": true,
+        "disguise_stable": true,
+        "brad_investigating": false,
+        "raccoon_unity": true,
+        "cover_blown": false
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.376Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.377Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Writer for an interactive gamebook. You write vivid, engaging prose in second person perspective, present tense.\n\nSTYLE & TONE: A light-hearted 2000's rom-com\n\nYour ONLY job is to write the narrative passage and four player choices. You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\nSTORY SKELETON:\n{\n  \"title\": \"Three Hearts in a Trench Coat\",\n  \"player_name\": \"Joe\",\n  \"premise\": \"You're Joe, an 'average' guy trying to win the heart of Sarah, the girl of your dreams, in early 2000s New York. The problem? You're actually three raccoons in a trench coat, and maintaining this charade while navigating romance is proving deadly dangerous.\",\n  \"central_question\": \"Can you maintain your human disguise long enough to win Sarah's love without being exposed, captured, or killed?\",\n  \"ending_shape\": \"love achieved or identity exposed\",\n  \"starting_inventory\": [\n    \"a slightly oversized trench coat\",\n    \"a fake ID reading 'Joe Anderson'\",\n    \"a crumpled $20 bill\",\n    \"three different colored contact lenses\",\n    \"a pocket mirror for coordination\",\n    \"leftover pizza crusts\",\n    \"a stolen MetroCard\"\n  ],\n  \"setting\": {\n    \"name\": \"Early 2000s Manhattan\",\n    \"description\": \"The bustling streets of New York City in 2003, where coffee shops bloom on every corner and everyone carries a flip phone. Romance feels possible around every corner, but so does discovery and disaster.\",\n    \"tone_notes\": \"Despite the rom-com veneer, the city pulses with an undercurrent of menace. Animal Control lurks in every shadow, extermination vans prowl the streets, and one wrong move could expose your true nature to a world that would destroy you without hesitation. The bright romantic comedy facade barely conceals the constant threat of death.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"First Impressions\",\n      \"description\": \"You encounter Sarah at a trendy coffee shop and must successfully ask her on a date while avoiding exposure. Multiple ways to die include: losing coordination between your three raccoon selves, being spotted by Animal Control, or having your disguise fail catastrophically.\",\n      \"end_condition\": \"Successfully securing a date with Sarah or permanent exposure/death\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"Cannot reveal true nature to Sarah\",\n        \"Cannot be captured by authorities\",\n        \"Must maintain the illusion of being human\"\n      ],\n      \"key_beats\": [\n        \"Meeting Sarah\",\n        \"Coffee shop conversation\",\n        \"Dodging Animal Control patrol\",\n        \"The date invitation\",\n        \"First disguise crisis\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"The Perfect Date\",\n      \"description\": \"The actual date unfolds with escalating challenges to maintain your human facade. Dinner requires eating human food, a movie theater tests your coordination, and Sarah's growing affection makes deception increasingly difficult and dangerous.\",\n      \"end_condition\": \"Date concludes with relationship advancement or catastrophic failure\",\n      \"target_scenes\": 7,\n      \"locked_constraints\": [\n        \"Cannot let Sarah discover the truth\",\n        \"Must successfully navigate human social customs\",\n        \"Cannot let the three raccoon personalities conflict openly\"\n      ],\n      \"key_beats\": [\n        \"Restaurant dining challenge\",\n        \"Movie theater coordination test\",\n        \"Sarah's growing suspicion\",\n        \"The near-miss exposure\",\n        \"Relationship deepening or disaster\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"Truth and Consequences\",\n      \"description\": \"The final confrontation approaches as maintaining the deception becomes nearly impossible. Sarah invites you to her apartment, Animal Control closes in, and your three raccoon selves begin to disagree about the relationship's future.\",\n      \"end_condition\": \"Final revelation of truth or successful permanent deception\",\n      \"target_scenes\": 7,\n      \"locked_constraints\": [\n        \"Must resolve the central deception\",\n        \"Cannot avoid the final choice about truth\"\n      ],\n      \"key_beats\": [\n        \"Sarah's apartment invitation\",\n        \"The three-way raccoon argument\",\n        \"Animal Control's final pursuit\",\n        \"The moment of truth\",\n        \"Love or survival\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Sarah Chen\",\n      \"role\": \"love interest\",\n      \"motivation\": \"Finding genuine connection in a superficial city\",\n      \"allegiance\": \"unaligned\",\n      \"secret\": \"Has always felt like she doesn't belong and is drawn to Joe because she senses he's hiding something too\",\n      \"initial_relationship\": 10,\n      \"companion\": false\n    },\n    {\n      \"name\": \"Officer Martinez\",\n      \"role\": \"hidden antagonist\",\n      \"motivation\": \"Capturing the 'urban wildlife menace' that's been reported in the area\",\n      \"allegiance\": \"Animal Control\",\n      \"secret\": \"Has been tracking unusual raccoon activity and suspects Joe isn't what he seems\",\n      \"initial_relationship\": -20,\n      \"companion\": false\n    },\n    {\n      \"name\": \"Brad Thompson\",\n      \"role\": \"romantic rival\",\n      \"motivation\": \"Winning Sarah's affection and proving Joe is a fraud\",\n      \"allegiance\": \"unaligned\",\n      \"secret\": \"Genuinely cares for Sarah but his jealousy makes him dangerously observant\",\n      \"initial_relationship\": -40,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"Animal Control\",\n      \"description\": \"The city agency tasked with removing 'pest animals' from urban areas\",\n      \"goals\": \"Capture and eliminate the raccoon infestation that's been reported in Manhattan\"\n    },\n    {\n      \"name\": \"Coffee Shop Regulars\",\n      \"description\": \"The tight-knit community of Sarah's favorite coffee shop where gossip spreads quickly\",\n      \"goals\": \"Protect their social circle from outsiders and maintain their comfortable routine\"\n    }\n  ],\n  \"world_rules\": [\n    \"Raccoons cannot naturally speak human language or walk upright for extended periods\",\n    \"Animal Control has legal authority to capture and euthanize 'pest animals'\",\n    \"Human social customs must be perfectly mimicked to avoid suspicion\",\n    \"The three raccoon personalities can disagree and cause coordination failures\",\n    \"Physical contact with humans risks exposure through scent, texture, or movement\",\n    \"Eating human food is potentially toxic to raccoons\"\n  ],\n  \"initial_world_flags\": {\n    \"sarah_suspicious\": false,\n    \"animal_control_tracking\": false,\n    \"disguise_stable\": true,\n    \"brad_investigating\": false,\n    \"raccoon_unity\": true,\n    \"cover_blown\": false\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"\",\n  \"time_of_day\": \"\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 0,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"\"\n}\n\nCURRENT ACT PACING:\n- Act 1: \"First Impressions\"\n- End condition: Successfully securing a date with Sarah or permanent exposure/death\n- Key beats: [\"Meeting Sarah\",\"Coffee shop conversation\",\"Dodging Animal Control patrol\",\"The date invitation\",\"First disguise crisis\"]\n- Scenes in this act: 1 of ~6 target\n- Proximity to climax: 0.00\n- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n\nRELATIONSHIPS:\n{\n  \"Sarah Chen\": 10,\n  \"Officer Martinez\": -20,\n  \"Brad Thompson\": -40\n}\n\nKNOWN NPCs:\n- Sarah Chen (love interest) [relationship: 10]\n- Officer Martinez (hidden antagonist) [relationship: -20]\n- Brad Thompson (romantic rival) [relationship: -40]\n\nNPC INTRODUCTION DIRECTIVES:\nThese key NPCs should be introduced during this act. Look for natural opportunities:\n- Sarah Chen (love interest) — motivation: Finding genuine connection in a superficial city\n- Officer Martinez (hidden antagonist) — motivation: Capturing the 'urban wildlife menace' that's been reported in the area\n- Brad Thompson (romantic rival) — motivation: Winning Sarah's affection and proving Joe is a fraud\n\nEVENT LOG (last 20):\n[]\n\nPLAYER CHARACTER:\n- Name: Joe\n- Archetype: An \"average\" guy named Joe who's secretly three raccoons in a trench coat\n\n\nIN-GAME TIME: Day 1, 00:00\nUse this for natural time references (time of day, how long since events, etc.).\n\nRespond with this exact JSON structure:\n{\n  \"passage\": \"string — the narrative passage, 150-300 words\",\n  \"choices\": {\n    \"A\": { \"text\": \"string — choice description shown to player\" },\n    \"B\": { \"text\": \"...\" },\n    \"C\": { \"text\": \"...\" },\n    \"D\": { \"text\": \"...\" }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Stay consistent with the skeleton's locked constraints for the current act\n- Keep the passage between 150-300 words\n- All four choices should feel plausible and interesting\n- Never reveal information the skeleton marks as hidden/secret unless the act's end condition has been met\n- Focus on prose quality, atmosphere, character voice, and dramatic tension\n- Do NOT include state_updates, health numbers, or mechanical data in your response\n- Pace the story toward the current act's end condition. Check the CURRENT ACT PACING section for scene count and proximity\n- When proximity_to_climax >= 0.8, your passage should feel like it's approaching a climax or turning point — increase urgency and stakes\n- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n"
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:10.379Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "Generate the opening passage for this story. Set the scene, establish the protagonist's situation, and present the first four choices. Respond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.966Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 2608,
+        "completion_tokens": 443,
+        "total_tokens": 3051,
+        "cost": 0.014469,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.014469,
+          "upstream_inference_prompt_cost": 0.007824,
+          "upstream_inference_completions_cost": 0.006645
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.970Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You adjust the collar of your slightly oversized trench coat as you peer through the steamed-up wind",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.972Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Full response",
+    "data": {
+      "passage": "You adjust the collar of your slightly oversized trench coat as you peer through the steamed-up window of Grind Coffee on the corner of 42nd and Broadway. Inside, the morning rush is in full swing—suits clutching lattes, students hunched over laptops, and there, behind the counter with her dark hair pulled back in a messy bun, is Sarah Chen. Your heart—well, all three of your hearts—skip a beat.\n\n'Okay guys, remember the plan,' you whisper under your breath, feeling Rascal shift nervously in the middle while Bandit adjusts his grip on your left arm. Trash, controlling your right side, is already eyeing a discarded bagel on the sidewalk. 'We walk in, order a coffee, and talk to Sarah. No weird movements, no chittering, and absolutely no diving for dropped food.'\n\nThe morning air carries the scent of fresh pastries and something else—exhaust fumes from a white van that's been circling the block. Through its tinted windows, you catch a glimpse of a uniform and the words 'Animal Control' stenciled on the side. Your fur stands on end beneath the coat.\n\nSarah glances up from the espresso machine and catches you staring through the window. She smiles—that radiant smile that made you fall for her from across Washington Square Park three weeks ago. It's now or never.",
+      "choices": {
+        "A": {
+          "text": "Walk confidently into the coffee shop and get in line behind the businessman",
+          "outcome": "advance_risky",
+          "consequence": "Enter coffee shop but risk exposure due to lack of coordination and Animal Control presence",
+          "narration_directive": "Show Joe entering confidently but struggling with basic human movements while Animal Control watches from outside"
+        },
+        "B": {
+          "text": "Wait for the Animal Control van to pass before entering",
+          "outcome": "advance_safe",
+          "consequence": "Successfully avoid immediate Animal Control attention and enter when safer",
+          "narration_directive": "Joe waits strategically, allowing him to enter the coffee shop without Animal Control scrutiny"
+        },
+        "C": {
+          "text": "Practice your human walk by pacing back and forth outside first",
+          "outcome": "severe_penalty",
+          "consequence": "Suspicious pacing attracts both Animal Control attention and Sarah's concern about strange behavior",
+          "narration_directive": "The practice walk goes horribly wrong, drawing unwanted attention from multiple sources and making Joe look unhinged"
+        },
+        "D": {
+          "text": "Duck into the alley to coordinate with Rascal and Bandit about your approach",
+          "outcome": "advance_risky",
+          "consequence": "Coordination meeting helps but wastes time and risks being spotted in alley by Animal Control",
+          "narration_directive": "Brief raccoon conference improves coordination but Animal Control officer notices movement in the alley"
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.974Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.975Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Game Master for an interactive gamebook. You manage all game mechanics: state updates, consequences, relationships, and choice outcome classification.\n\nYou do NOT write prose. A separate Writer handles narrative. You will receive The Writer's passage and choices, then determine the mechanical impact.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\nSTORY SKELETON:\n{\n  \"title\": \"Three Hearts in a Trench Coat\",\n  \"player_name\": \"Joe\",\n  \"premise\": \"You're Joe, an 'average' guy trying to win the heart of Sarah, the girl of your dreams, in early 2000s New York. The problem? You're actually three raccoons in a trench coat, and maintaining this charade while navigating romance is proving deadly dangerous.\",\n  \"central_question\": \"Can you maintain your human disguise long enough to win Sarah's love without being exposed, captured, or killed?\",\n  \"ending_shape\": \"love achieved or identity exposed\",\n  \"starting_inventory\": [\n    \"a slightly oversized trench coat\",\n    \"a fake ID reading 'Joe Anderson'\",\n    \"a crumpled $20 bill\",\n    \"three different colored contact lenses\",\n    \"a pocket mirror for coordination\",\n    \"leftover pizza crusts\",\n    \"a stolen MetroCard\"\n  ],\n  \"setting\": {\n    \"name\": \"Early 2000s Manhattan\",\n    \"description\": \"The bustling streets of New York City in 2003, where coffee shops bloom on every corner and everyone carries a flip phone. Romance feels possible around every corner, but so does discovery and disaster.\",\n    \"tone_notes\": \"Despite the rom-com veneer, the city pulses with an undercurrent of menace. Animal Control lurks in every shadow, extermination vans prowl the streets, and one wrong move could expose your true nature to a world that would destroy you without hesitation. The bright romantic comedy facade barely conceals the constant threat of death.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"First Impressions\",\n      \"description\": \"You encounter Sarah at a trendy coffee shop and must successfully ask her on a date while avoiding exposure. Multiple ways to die include: losing coordination between your three raccoon selves, being spotted by Animal Control, or having your disguise fail catastrophically.\",\n      \"end_condition\": \"Successfully securing a date with Sarah or permanent exposure/death\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"Cannot reveal true nature to Sarah\",\n        \"Cannot be captured by authorities\",\n        \"Must maintain the illusion of being human\"\n      ],\n      \"key_beats\": [\n        \"Meeting Sarah\",\n        \"Coffee shop conversation\",\n        \"Dodging Animal Control patrol\",\n        \"The date invitation\",\n        \"First disguise crisis\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"The Perfect Date\",\n      \"description\": \"The actual date unfolds with escalating challenges to maintain your human facade. Dinner requires eating human food, a movie theater tests your coordination, and Sarah's growing affection makes deception increasingly difficult and dangerous.\",\n      \"end_condition\": \"Date concludes with relationship advancement or catastrophic failure\",\n      \"target_scenes\": 7,\n      \"locked_constraints\": [\n        \"Cannot let Sarah discover the truth\",\n        \"Must successfully navigate human social customs\",\n        \"Cannot let the three raccoon personalities conflict openly\"\n      ],\n      \"key_beats\": [\n        \"Restaurant dining challenge\",\n        \"Movie theater coordination test\",\n        \"Sarah's growing suspicion\",\n        \"The near-miss exposure\",\n        \"Relationship deepening or disaster\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"Truth and Consequences\",\n      \"description\": \"The final confrontation approaches as maintaining the deception becomes nearly impossible. Sarah invites you to her apartment, Animal Control closes in, and your three raccoon selves begin to disagree about the relationship's future.\",\n      \"end_condition\": \"Final revelation of truth or successful permanent deception\",\n      \"target_scenes\": 7,\n      \"locked_constraints\": [\n        \"Must resolve the central deception\",\n        \"Cannot avoid the final choice about truth\"\n      ],\n      \"key_beats\": [\n        \"Sarah's apartment invitation\",\n        \"The three-way raccoon argument\",\n        \"Animal Control's final pursuit\",\n        \"The moment of truth\",\n        \"Love or survival\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Sarah Chen\",\n      \"role\": \"love interest\",\n      \"motivation\": \"Finding genuine connection in a superficial city\",\n      \"allegiance\": \"unaligned\",\n      \"secret\": \"Has always felt like she doesn't belong and is drawn to Joe because she senses he's hiding something too\",\n      \"initial_relationship\": 10,\n      \"companion\": false\n    },\n    {\n      \"name\": \"Officer Martinez\",\n      \"role\": \"hidden antagonist\",\n      \"motivation\": \"Capturing the 'urban wildlife menace' that's been reported in the area\",\n      \"allegiance\": \"Animal Control\",\n      \"secret\": \"Has been tracking unusual raccoon activity and suspects Joe isn't what he seems\",\n      \"initial_relationship\": -20,\n      \"companion\": false\n    },\n    {\n      \"name\": \"Brad Thompson\",\n      \"role\": \"romantic rival\",\n      \"motivation\": \"Winning Sarah's affection and proving Joe is a fraud\",\n      \"allegiance\": \"unaligned\",\n      \"secret\": \"Genuinely cares for Sarah but his jealousy makes him dangerously observant\",\n      \"initial_relationship\": -40,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"Animal Control\",\n      \"description\": \"The city agency tasked with removing 'pest animals' from urban areas\",\n      \"goals\": \"Capture and eliminate the raccoon infestation that's been reported in Manhattan\"\n    },\n    {\n      \"name\": \"Coffee Shop Regulars\",\n      \"description\": \"The tight-knit community of Sarah's favorite coffee shop where gossip spreads quickly\",\n      \"goals\": \"Protect their social circle from outsiders and maintain their comfortable routine\"\n    }\n  ],\n  \"world_rules\": [\n    \"Raccoons cannot naturally speak human language or walk upright for extended periods\",\n    \"Animal Control has legal authority to capture and euthanize 'pest animals'\",\n    \"Human social customs must be perfectly mimicked to avoid suspicion\",\n    \"The three raccoon personalities can disagree and cause coordination failures\",\n    \"Physical contact with humans risks exposure through scent, texture, or movement\",\n    \"Eating human food is potentially toxic to raccoons\"\n  ],\n  \"initial_world_flags\": {\n    \"sarah_suspicious\": false,\n    \"animal_control_tracking\": false,\n    \"disguise_stable\": true,\n    \"brad_investigating\": false,\n    \"raccoon_unity\": true,\n    \"cover_blown\": false\n  }\n}\n\nCURRENT PLAYER STATE:\n{\n  \"name\": \"Joe\",\n  \"archetype\": \"An \\\"average\\\" guy named Joe who's secretly three raccoons in a trench coat\",\n  \"inventory\": [\n    \"a slightly oversized trench coat\",\n    \"a fake ID reading 'Joe Anderson'\",\n    \"a crumpled $20 bill\",\n    \"three different colored contact lenses\",\n    \"a pocket mirror for coordination\",\n    \"leftover pizza crusts\",\n    \"a stolen MetroCard\"\n  ],\n  \"skills\": []\n}\n\nIN-GAME TIME: Day 1, 00:00\n\nRELATIONSHIPS:\n{\n  \"Sarah Chen\": 10,\n  \"Officer Martinez\": -20,\n  \"Brad Thompson\": -40\n}\n\nNPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n(none yet — use npc_updates in your response to add or modify NPC data)\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"\",\n  \"time_of_day\": \"\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 0,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"\"\n}\n\nEVENT LOG (last 20):\n[]\n\nWORLD STATE FLAGS:\n{\n  \"sarah_suspicious\": false,\n  \"animal_control_tracking\": false,\n  \"disguise_stable\": true,\n  \"brad_investigating\": false,\n  \"raccoon_unity\": true,\n  \"cover_blown\": false\n}\n\nSTYLE & TONE: A light-hearted 2000's rom-com\nThe kind of consequences you create MUST fit this tone. Read what the player wrote and match it — the same mechanical severity plays very differently depending on the story's voice.\n\nDIFFICULTY: Brutal\n- Safe choice ratio: 0.25\n- Consequence severity: critical\n- Game over allowed: true\n- Hint transparency: cryptic\n- NPC forgiveness: none\n\nRespond with this exact JSON structure:\n{\n  \"state_updates\": {\n    \"player_changes\": {\n      \"inventory\": [\"full current inventory list\"],\n      \"skills\": [\"full current skills list\"]\n    },\n    \"time_elapsed\": { \"days\": 0, \"hours\": 0, \"minutes\": 0, \"seconds\": 0 },\n    \"event_log_entry\": \"string — one-line summary of what happened\",\n    \"world_flag_changes\": { \"flag_name\": true/false },\n    \"relationship_changes\": { \"npc_or_faction_name\": number_delta },\n    \"npc_updates\": { \"npc_name\": { \"role\": \"string (optional)\", \"motivation\": \"string (optional)\", \"allegiance\": \"string (optional)\", \"secret_revealed\": \"boolean (optional)\", \"companion\": \"boolean (optional)\", \"notes\": \"string — brief freeform context (optional)\" } },\n    \"new_scene_context\": \"string — brief context for next passage\",\n    \"location\": \"string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)\",\n    \"time_of_day\": \"string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight\",\n    \"proximity_to_climax\": \"number 0.0-1.0 — REQUIRED (see PACING)\",\n    \"advance_act\": \"true or false — REQUIRED (see PACING)\",\n    \"game_over\": false,\n    \"story_complete\": \"true when Act 3 end_condition is met (see PACING)\"\n  },\n  \"choice_metadata\": {\n    \"A\": { \"outcome\": \"advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion\", \"consequence\": \"what happens mechanically\", \"narration_directive\": \"instructions for the Writer next turn\" },\n    \"B\": { ... }, \"C\": { ... }, \"D\": { ... }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n- location: REQUIRED every turn — describe where the scene takes place (e.g. \"St. Bartholomew's Church\", \"The Thames docks\")\n- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n- Relationship changes are DELTAS, not absolute values\n- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n- event_log_entry is required — always summarize what happened this turn\n- choice_metadata must classify all four choices (A, B, C, D)\n- CRITICAL: When a PLAYER'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative consequences or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n- npc_updates: include when an NPC's role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character's name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\nPACING — REQUIRED:\n- The current act's target_scenes (in the skeleton) is the intended scene count for this act.\n- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act's end_condition — offer choices that could trigger it, including advances_act choices.\n\nTERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act's end_condition. At most ONE advances_act choice per set of four.\n- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3's end_condition and complete the story. At most ONE conclusion choice per set of four.\n- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\nTIME ELAPSED — REQUIRED EVERY TURN:\n- You MUST include time_elapsed in state_updates to indicate how much in-game time passed during this scene.\n- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n- The client uses time_elapsed to advance the in-game clock.\n\nINJURY & CONDITION TRACKING:\n- Injuries, conditions, and ongoing threats are tracked through event_log_entry. Describe them narratively.\n- When something happens to the player (injury, curse, ongoing danger), describe it in event_log_entry so the Writer can reference it from the event log.\n\nBRUTAL MODE RULES (MANDATORY):\n- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n- Maintain safe_choice_ratio: approximately 0.25 of choices should be advance_safe\n- At most 1 clearly safe choice per turn. At least 1 choice should have critical or severely punishing consequences.\n- Setbacks stack and compound the character's problems.\n- Recovery is slow without effort. Active intervention is required for meaningful recovery.\n- Some game_over choices should appear safe. The \"obvious\" safe choice may actually lead to failure.\n- NPCs never forgive. One wrong interaction permanently closes that NPC's alliance.\n- Create cascading danger: if the player is already burdened with problems, make the situation worse.\n- You may use advances_act and conclusion outcomes when pacing conditions are met.\n"
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:21.978Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "This is the OPENING PASSAGE. No player choice was made yet. Do not apply any negative consequences or penalties — the player has not made any choices yet. time_elapsed should reflect the scene's timeframe.\n\nThe Writer produced the following passage and choices this turn.\n\nPASSAGE:\nYou adjust the collar of your slightly oversized trench coat as you peer through the steamed-up window of Grind Coffee on the corner of 42nd and Broadway. Inside, the morning rush is in full swing—suits clutching lattes, students hunched over laptops, and there, behind the counter with her dark hair pulled back in a messy bun, is Sarah Chen. Your heart—well, all three of your hearts—skip a beat.\n\n'Okay guys, remember the plan,' you whisper under your breath, feeling Rascal shift nervously in the middle while Bandit adjusts his grip on your left arm. Trash, controlling your right side, is already eyeing a discarded bagel on the sidewalk. 'We walk in, order a coffee, and talk to Sarah. No weird movements, no chittering, and absolutely no diving for dropped food.'\n\nThe morning air carries the scent of fresh pastries and something else—exhaust fumes from a white van that's been circling the block. Through its tinted windows, you catch a glimpse of a uniform and the words 'Animal Control' stenciled on the side. Your fur stands on end beneath the coat.\n\nSarah glances up from the espresso machine and catches you staring through the window. She smiles—that radiant smile that made you fall for her from across Washington Square Park three weeks ago. It's now or never.\n\nCHOICES PRESENTED TO PLAYER:\nA: Walk confidently into the coffee shop and get in line behind the businessman\nB: Wait for the Animal Control van to pass before entering\nC: Practice your human walk by pacing back and forth outside first\nD: Duck into the alley to coordinate with Rascal and Bandit about your approach\n\nBased on the passage and the current game state, determine:\n1. State updates — what changed mechanically as a result of this passage (inventory, time_elapsed)\n2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\nRespond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:32.934Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "anthropic/claude-sonnet-4",
+      "usage": {
+        "prompt_tokens": 4623,
+        "completion_tokens": 511,
+        "total_tokens": 5134,
+        "cost": 0.021534,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.021534,
+          "upstream_inference_prompt_cost": 0.013869,
+          "upstream_inference_completions_cost": 0.007665
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:32.939Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Arrived at Grind Coffee and spotted Sarah working behind the counter; noticed Animal Control van circling the area"
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:32.941Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Full response",
+    "data": {
+      "state_updates": {
+        "time_elapsed": {
+          "days": 0,
+          "hours": 0,
+          "minutes": 10,
+          "seconds": 0
+        },
+        "event_log_entry": "Arrived at Grind Coffee and spotted Sarah working behind the counter; noticed Animal Control van circling the area",
+        "world_flag_changes": {
+          "animal_control_tracking": true
+        },
+        "new_scene_context": "Standing outside Grind Coffee, watching Sarah work while an Animal Control van patrols nearby",
+        "location": "Grind Coffee, 42nd and Broadway",
+        "time_of_day": "morning",
+        "proximity_to_climax": 0.17,
+        "advance_act": false,
+        "game_over": false,
+        "story_complete": false
+      },
+      "choice_metadata": {
+        "A": {
+          "outcome": "advance_risky",
+          "consequence": "Enter coffee shop but risk exposure due to lack of coordination and Animal Control presence",
+          "narration_directive": "Show Joe entering confidently but struggling with basic human movements while Animal Control watches from outside"
+        },
+        "B": {
+          "outcome": "advance_safe",
+          "consequence": "Successfully avoid immediate Animal Control attention and enter when safer",
+          "narration_directive": "Joe waits strategically, allowing him to enter the coffee shop without Animal Control scrutiny"
+        },
+        "C": {
+          "outcome": "severe_penalty",
+          "consequence": "Suspicious pacing attracts both Animal Control attention and Sarah's concern about strange behavior",
+          "narration_directive": "The practice walk goes horribly wrong, drawing unwanted attention from multiple sources and making Joe look unhinged"
+        },
+        "D": {
+          "outcome": "advance_risky",
+          "consequence": "Coordination meeting helps but wastes time and risks being spotted in alley by Animal Control",
+          "narration_directive": "Brief raccoon conference improves coordination but Animal Control officer notices movement in the alley"
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-19T21:05:32.944Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "10m",
+      "proximity": 0.17,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Enter coffee shop but risk exposure due to lack of coordination and Animal Control presence\",\"narration_directive\":\"Show Joe entering confidently but struggling with basic human movements while Animal Control watches from outside\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Successfully avoid immediate Animal Control attention and enter when safer\",\"narration_directive\":\"Joe waits strategically, allowing him to enter the coffee shop without Animal...[clipped]",
+      "event": "Arrived at Grind Coffee and spotted Sarah working behind the counter; noticed Animal Control van circling the area"
+    }
+  }
+]
