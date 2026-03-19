@@ -34,7 +34,7 @@
       p += 'awkward prose, purple prose, lack of variety\n';
       p += '- Game mechanics: choices that don\'t match the narrative outcome, missing consequences, ';
       p += 'relationship scores that don\'t change\n';
-      p += '- Difficulty/balance: unfair deaths, too-easy encounters, consequences that feel arbitrary\n';
+      p += '- Difficulty/balance: unfair failures, too-easy encounters, consequences that feel arbitrary\n';
       p += '- Skeleton alignment: is the story following its planned act structure? Are key beats happening?\n\n';
 
       p += 'YOUR TASK EACH TURN:\n';
@@ -136,7 +136,7 @@
       p += 'REPORT STRUCTURE (use markdown headings and bullet points):\n\n';
 
       p += '## Playtest Summary\n';
-      p += '- Turns played, outcome (death/completion/manual stop/max turns), difficulty, story length\n';
+      p += '- Turns played, outcome (failure/completion/manual stop/max turns), difficulty, story length\n';
       p += '- Brief narrative arc summary (1-2 sentences)\n\n';
 
       p += '## Bugs & State Issues\n';

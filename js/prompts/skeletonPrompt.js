@@ -24,7 +24,7 @@
       p += '- Setting: ' + (setupConfig.setting || 'fantasy') + '\n';
       p += '- Character concept: ' + (setupConfig.archetype || 'wanderer') + '\n';
       p += '- Writing style: ' + (setupConfig.writingStyle || 'literary') + '\n';
-      p += '- Tone: ' + (setupConfig.tone || 'dark and atmospheric') + '\n';
+      p += '- Tone: ' + (setupConfig.tone || 'balanced') + '\n';
       p += '- Perspective: ' + (setupConfig.perspective || 'second person') + '\n';
       p += '- Tense: ' + (setupConfig.tense || 'present') + '\n';
       p += '- Difficulty: ' + difficulty.label + '\n';
@@ -37,7 +37,7 @@
       p += '  "player_name": "string — a fitting name for the player character, based on the setting and character concept",\n';
       p += '  "premise": "string — 2-3 sentence hook",\n';
       p += '  "central_question": "string — the dramatic question driving the story",\n';
-      p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'sacrifice or survival\', \'mystery solved\', \'escape achieved\'",\n';
+      p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'mystery solved\', \'love found or lost\', \'escape achieved\', \'truth revealed\'",\n';
       p += '  "starting_inventory": [\n';
       p += '    "string — item the character starts with, appropriate to setting and archetype"\n';
       p += '  ],\n';
@@ -114,7 +114,7 @@
         p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never punishing\n';
         p += '- NPCs should be generally helpful or at worst inconvenient\n';
         p += '- Locked constraints should protect the player from accidentally entering punishing situations\n';
-        p += '- The key_beats should focus on discovery, relationships, and narrative progression — not survival\n\n';
+        p += '- The key_beats should focus on discovery, relationships, and narrative progression — not overcoming threats\n\n';
       } else if (setupConfig.difficulty === 'normal') {
         p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- The skeleton must NOT include game_over triggers\n';
@@ -125,7 +125,7 @@
       } else if (setupConfig.difficulty === 'hard') {
         p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- Critical/irreversible consequences are possible but rare: include at most 1 critical choice per act\n';
-        p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
+        p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the stakes\n';
         p += '- Include severe consequences appropriate to the tone — what counts as "severe" depends on the genre (social ruin in comedy, mortal danger in horror, career destruction in drama)\n';
         p += '- Recovery paths exist but require sacrifice — fixing mistakes requires effort, alliances cost favors\n';
         p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
@@ -151,7 +151,7 @@
         }
       } else if (setupConfig.storyLength === 'long') {
         if (setupConfig.difficulty === 'brutal' || setupConfig.difficulty === 'hard') {
-          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns.\n';
+          p += '- Long + ' + difficulty.label + ' = a long grind. Consequences compound over dozens of turns.\n';
         } else {
           p += '- Long story: develop subplots, deepen NPC relationships, let consequences play out over many scenes.\n';
         }
@@ -183,7 +183,7 @@
       p += '- Factions with competing interests (count per story length setting above)\n';
       p += '- Target scenes per act matching the story length setting\n';
       p += '- World rules that create interesting constraints on player choices\n';
-      p += '- Enough world state flags to track major consequences (one per NPC alive status + key plot flags)\n';
+      p += '- Enough world state flags to track major consequences (one per major NPC state + key plot flags)\n';
 
       return p;
     }

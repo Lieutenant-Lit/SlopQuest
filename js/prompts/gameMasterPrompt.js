@@ -154,11 +154,6 @@
       p += '- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n';
       p += '- The client uses time_elapsed to advance the in-game clock.\n\n';
 
-      // Injury & condition tracking
-      p += 'INJURY & CONDITION TRACKING:\n';
-      p += '- Injuries, conditions, and ongoing threats are tracked through event_log_entry. Describe them narratively.\n';
-      p += '- When something happens to the player (injury, curse, ongoing danger), describe it in event_log_entry so the Writer can reference it from the event log.\n\n';
-
       // Difficulty-specific rules
       if (difficulty === 'chill') {
         p += 'CHILL MODE RULES (MANDATORY):\n';
@@ -192,7 +187,7 @@
         p += '- Recovery is slow without effort. Active intervention is required for meaningful recovery.\n';
         p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
-        p += '- Create cascading danger: if the player is already burdened with problems, make the situation worse.\n';
+        p += '- Create cascading problems: if the player is already burdened with setbacks, make the situation worse.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       }
 
@@ -235,7 +230,7 @@
           p += '\nYour state_updates MUST be consistent with this pre-classified outcome:\n';
           p += '- ADVANCE_SAFE: No new negative consequences. No penalties.\n';
           p += '- ADVANCE_RISKY: Moderate consequences are appropriate.\n';
-          p += '- SEVERE_PENALTY: Heavy consequences — serious injuries and setbacks as described.\n';
+          p += '- SEVERE_PENALTY: Heavy consequences — serious setbacks and losses as described.\n';
           p += '- GAME_OVER: set game_over to true — the character has failed irreversibly.\n';
           p += '- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\n';
         }

@@ -22,7 +22,7 @@
       p += (meta.perspective || 'second person') + ' perspective, ';
       p += (meta.tense || 'present') + ' tense.\n\n';
 
-      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      var style = meta.writing_style || meta.tone || 'literary';
       p += 'STYLE & TONE: ' + style + '\n\n';
 
       p += 'Your ONLY job is to write the narrative passage and four player choices. ';
@@ -281,7 +281,7 @@
       p += (meta.perspective || 'second person') + ' perspective, ';
       p += (meta.tense || 'present') + ' tense.\n\n';
 
-      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      var style = meta.writing_style || meta.tone || 'literary';
       p += 'STYLE & TONE: ' + style + '\n\n';
 
       // Terminal-type specific role
