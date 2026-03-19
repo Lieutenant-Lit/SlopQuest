@@ -9,7 +9,7 @@
     /**
      * Build the system prompt for The Game Master.
      * Contains difficulty rules, current player state, and response schema.
-     * Deliberately excludes: writing style, tone, prose instructions.
+     * Style & Tone is surfaced so the GM can create tone-appropriate consequences.
      * @param {object} gameState - Full game state
      * @returns {string} System prompt
      */
@@ -78,6 +78,14 @@
       p += 'WORLD STATE FLAGS:\n';
       p += JSON.stringify(gameState.world_flags, null, 2) + '\n\n';
 
+      // Style & Tone — the GM needs this to create tone-appropriate consequences
+      var style = (meta.writing_style || meta.tone || '').trim();
+      if (style) {
+        p += 'STYLE & TONE: ' + style + '\n';
+        p += 'The kind of consequences you create MUST fit this tone. Read what the player wrote and match it — ';
+        p += 'the same mechanical severity plays very differently depending on the story\'s voice.\n\n';
+      }
+
       // Difficulty parameters
       p += 'DIFFICULTY: ' + diffConfig.label + '\n';
       p += '- Safe choice ratio: ' + diffConfig.safe_choice_ratio + '\n';
@@ -85,9 +93,9 @@
       p += '- Game over allowed: ' + diffConfig.allow_game_over + '\n';
       p += '- Hint transparency: ' + diffConfig.hint_transparency + '\n';
       p += '- NPC forgiveness: ' + diffConfig.npc_forgiveness + '\n';
-      p += '- Allow lethal effects: ' + diffConfig.allow_lethal_effects + '\n';
+      p += '- Allow critical effects: ' + diffConfig.allow_critical_effects + '\n';
       p += '- Max effect severity: ' + diffConfig.max_effect_severity + '\n';
-      p += '- Healing speed: ' + diffConfig.healing_speed + '\n\n';
+      p += '- Recovery speed: ' + diffConfig.recovery_speed + '\n\n';
 
       // Response JSON schema
       p += 'Respond with this exact JSON structure:\n';
@@ -108,7 +116,7 @@
       p += '          "type": "string — \'condition\' (default) or \'threat\' (approaching dangers that fire when timer expires)",\n';
       p += '          "removal_condition": "string describing what removes this effect, OR null if timer-only",\n';
       p += '          "on_expiry": "string — REQUIRED when time_remaining is non-null. Narrative directive for what happens when timer reaches zero. Be specific and actionable.",\n';
-      p += '          "lethal": "boolean — if true, character dies when timer expires unresolved"\n';
+      p += '          "critical": "boolean — if true, this effect has irreversible consequences when it expires unresolved (what those consequences are depends on the story\'s tone and genre)"\n';
       p += '        }\n';
       p += '      ],\n';
       p += '      "modify": [\n';
@@ -178,7 +186,7 @@
       p += '- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act\'s end_condition. At most ONE advances_act choice per set of four.\n';
       p += '- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3\'s end_condition and complete the story. At most ONE conclusion choice per set of four.\n';
       if (diffConfig.allow_game_over) {
-        p += '- game_over: Use when the choice leads to an irreversible failure appropriate to the genre (death, permanent loss, catastrophic failure, etc.). At most ONE game_over choice per set of four.\n';
+        p += '- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n';
       }
       p += '- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n';
       p += '- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\n';
@@ -193,16 +201,16 @@
       p += 'STATUS EFFECTS — CRITICAL:\n';
       p += '- Status effects are the PRIMARY way to track injuries, conditions, and afflictions. Do NOT use health_delta.\n';
       p += '- status_effect_updates uses DELTA semantics. Only describe what CHANGED this turn. Do NOT return the full list of effects.\n';
-      p += '- add: For brand new effects only. All fields required. When the character is injured, add a status effect. Example: { id: "stab_wound_001", name: "Stab Wound", description: "A deep cut in your side that bleeds freely", severity: 0.8, time_remaining: { days: 5, hours: 0, minutes: 0, seconds: 0 }, on_expiry: "The wound closes and the pain fades to a dull ache", lethal: false }.\n';
+      p += '- add: For brand new effects only. All fields required. When the character is injured, add a status effect. Example: { id: "stab_wound_001", name: "Stab Wound", description: "A deep cut in your side that bleeds freely", severity: 0.8, time_remaining: { days: 5, hours: 0, minutes: 0, seconds: 0 }, on_expiry: "The wound closes and the pain fades to a dull ache", critical: false }.\n';
       p += '- on_expiry is REQUIRED for any effect with non-null time_remaining. It describes what happens narratively when the timer reaches zero. The Writer uses this to narrate the resolution. Be specific and actionable (e.g. "The virus deploys successfully, disabling Alliance tracking. River announces completion with relief.").\n';
       p += '- modify: Target existing effects by id. Put changed fields inside "changes". update_justification is REQUIRED — explain why the change is happening.\n';
       p += '- remove: Target effects to remove by id. update_justification is REQUIRED. Use this to resolve expired effects after the Writer has narrated their resolution.\n';
-      p += '- TIMER OWNERSHIP — HANDS OFF: The client subtracts time_elapsed from ALL timers automatically every turn. You MUST NOT use modify to adjust time_remaining unless an extraordinary, player-caused narrative event changes the timeline. Examples of VALID reasons: player cast a haste spell, player found a shortcut, player negotiated extra time. Examples of INVALID reasons: "the enemy is getting closer" (that IS the countdown), "adjusting pacing" (no — set the right duration when you create the effect), "updating threat level" (use severity, not timer). If you created an effect with a 15-minute timer, it WILL reach zero after ~15 minutes of in-game time. Trust this. Do not touch it. The system logs all timer modifications and flags unjustified overrides.\n';
+      p += '- TIMER OWNERSHIP — DO NOT TOUCH: The client subtracts time_elapsed from ALL timers automatically every turn. You MUST NOT include time_remaining in a modify operation. If a player action makes a threat less dangerous, change its severity. If the threat is resolved, remove it. If new circumstances create a different deadline, remove the old effect and add a new one with the appropriate timer. The ONLY exception is if the player acquired an explicit in-world time extension (e.g. negotiated a deadline extension, cast a time-stop spell) — and even then, explain the specific in-world mechanism in update_justification. The system logs all timer modifications and flags overrides.\n';
       p += '- EXPIRED EFFECTS: Effects with expired: true (visible in CURRENT PLAYER STATE) have had their timer reach zero. The Writer has been instructed to narrate their resolution using the on_expiry text. Review the Writer\'s passage — if the resolution was narrated adequately, issue a remove. If it wasn\'t, leave the effect (it will escalate to the Writer next turn).\n';
       p += '- Use modify to adjust severity based on context: resting lowers severity, aggravation raises it, medicine/magic accelerates healing. update_justification is required.\n';
       p += '- Severity scale: 1.0 = completely debilitating, 0.7 = severely impaired, 0.5 = significant but manageable, 0.3 = noticeable nuisance, 0.1 = almost healed.\n';
       p += '- time_remaining can be null for effects with no natural expiry (e.g. a curse that requires a specific action to remove). on_expiry should be null in this case.\n';
-      p += '- removal_condition can be set for effects that need specific actions (e.g. "Find the Witch of the Moor to break this curse"). Can be combined with time_remaining.\n';
+      p += '- removal_condition is a CONTRACT: When the narrative clearly satisfies an effect\'s removal_condition, you MUST issue a remove — not a modify. If the player did what the condition says, the effect is gone. If you want lingering consequences after removal, add a NEW effect with its own id and conditions. Do not keep an old effect alive by rewriting its description after its removal_condition was met. Can be combined with time_remaining.\n';
       p += '- Healing times should be genre/setting-appropriate. Consult the HEALING CONTEXT above.\n';
       p += '- TYPE FIELD: Every status effect has a type — "condition" (default) or "threat".\n';
       p += '  - "condition": Ongoing physical/mental states that impair or buff the player — injuries, poisons, diseases, curses, enchantments. Must have a severity that affects what the player can do.\n';
@@ -222,20 +230,20 @@
       // Difficulty-specific rules
       if (difficulty === 'chill') {
         p += 'CHILL MODE RULES (MANDATORY):\n';
-        p += '- NEVER use game_over outcome on choices. The player cannot fail/die on Chill.\n';
-        p += '- NEVER create lethal status effects.\n';
+        p += '- NEVER use game_over outcome on choices. The player cannot fail on Chill.\n';
+        p += '- NEVER create critical status effects.\n';
         p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Effects are inconveniences, not threats.\n';
-        p += '- Effects heal quickly — use modify to reduce severity generously each turn. Minor injuries resolve within a few in-game hours.\n';
+        p += '- Effects recover quickly — use modify to reduce severity generously each turn. Minor setbacks resolve within a few in-game hours.\n';
         p += '- Threat-type effects should represent mild narrative tension (e.g. "Shopkeeper is suspicious"), not real danger.\n';
         p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
         p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       } else if (difficulty === 'normal') {
         p += 'NORMAL MODE RULES (MANDATORY):\n';
-        p += '- NEVER use game_over outcome on choices. The player cannot fail/die on Normal.\n';
-        p += '- NEVER create lethal status effects.\n';
-        p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Injuries matter but are never fatal.\n';
-        p += '- Healing is realistic for the setting. A serious wound takes days to heal, but the player should have opportunities to find medicine or rest.\n';
+        p += '- NEVER use game_over outcome on choices. The player cannot fail on Normal.\n';
+        p += '- NEVER create critical status effects.\n';
+        p += '- Maximum status effect severity: ' + diffConfig.max_effect_severity + '. Setbacks matter but are never irreversible.\n';
+        p += '- Recovery is realistic for the setting. A serious setback takes time to recover from, but the player should have opportunities to address it.\n';
         p += '- Threat-type effects are meaningful but recoverable. When threats trigger, the consequences should be manageable.\n';
         p += '- Approximately 2 safe and 2 risky choices per turn.\n';
         p += '- NPCs can be upset but always have a path to reconciliation.\n';
@@ -244,26 +252,27 @@
         p += 'HARD MODE RULES (MANDATORY):\n';
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
-        p += '- Lethal status effects are allowed but MUST be foreshadowed. Use add with lethal: true. There should have been clues in earlier passages.\n';
-        p += '- Lethal effects must give the player at least one turn to address them (set time_remaining in the add to allow at least one more scene).\n';
-        p += '- Full severity range (0.0-1.0). Injuries are serious and heal realistically.\n';
+        p += '- Critical status effects are allowed but MUST be foreshadowed. Use add with critical: true. There should have been clues in earlier passages.\n';
+        p += '- What "critical" means depends on the STYLE & TONE — the irreversible consequence should fit the story the player asked for.\n';
+        p += '- Critical effects must give the player at least one turn to address them (set time_remaining in the add to allow at least one more scene).\n';
+        p += '- Full severity range (0.0-1.0). Consequences are serious and recovery is realistic for the setting.\n';
         p += '- Threat-type effects should have short time windows before triggering.\n';
         p += '- NPCs have low forgiveness. Burning a relationship has lasting consequences.\n';
         p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
-        p += '- game_over outcomes are available — use for genre-appropriate failures (death, permanent loss, catastrophic failure).\n';
+        p += '- game_over outcomes are available — use for tone-appropriate failures. Respect the STYLE & TONE setting when deciding what failure looks like.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       } else if (difficulty === 'brutal') {
         p += 'BRUTAL MODE RULES (MANDATORY):\n';
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
-        p += '- At most 1 clearly safe choice per turn. At least 1 choice should be lethal or severely punishing.\n';
-        p += '- Lethal status effects are common. Unattended wounds can worsen — use modify to increase severity or set lethal: true.\n';
-        p += '- Injuries stack — use add to create multiple status effects that compound the character\'s impairment.\n';
-        p += '- Healing is slow without supplies. Rest alone barely reduces severity. Medicine, magic, or proper treatment is required for meaningful recovery.\n';
+        p += '- At most 1 clearly safe choice per turn. At least 1 choice should have critical or severely punishing consequences.\n';
+        p += '- Critical status effects are common. Unresolved problems worsen — use modify to increase severity or set critical: true.\n';
+        p += '- Setbacks stack — use add to create multiple status effects that compound the character\'s problems.\n';
+        p += '- Recovery is slow without effort. Rest alone barely reduces severity. Active intervention is required for meaningful recovery.\n';
         p += '- Threat timers are extremely short — no grace period. Dangers escalate fast.\n';
         p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
         p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
-        p += '- Create cascading danger: if the player is already injured or burdened with status effects, make the situation worse.\n';
+        p += '- Create cascading danger: if the player is already burdened with status effects, make the situation worse.\n';
         p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
       }
 
