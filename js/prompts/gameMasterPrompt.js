@@ -82,10 +82,8 @@
       var style = (meta.writing_style || meta.tone || '').trim();
       if (style) {
         p += 'STYLE & TONE: ' + style + '\n';
-        p += 'Your consequences, status effects, and narrative escalation MUST be appropriate to this tone. ';
-        p += 'A comedic tone means setbacks are embarrassing, chaotic, or ironic — not gruesome. ';
-        p += 'A gritty tone allows brutality. A romantic tone means heartbreak, not dismemberment. ';
-        p += 'Match the kind of consequences to the story\'s voice.\n\n';
+        p += 'The kind of consequences you create MUST fit this tone. Read what the player wrote and match it — ';
+        p += 'the same mechanical severity plays very differently depending on the story\'s voice.\n\n';
       }
 
       // Difficulty parameters
@@ -255,7 +253,7 @@
         p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
         p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
         p += '- Critical status effects are allowed but MUST be foreshadowed. Use add with critical: true. There should have been clues in earlier passages.\n';
-        p += '- What "critical" means depends on the STYLE & TONE — in a thriller it could mean death, in a comedy it means total humiliation or catastrophic failure, in a romance it means heartbreak or permanent betrayal. Match the tone.\n';
+        p += '- What "critical" means depends on the STYLE & TONE — the irreversible consequence should fit the story the player asked for.\n';
         p += '- Critical effects must give the player at least one turn to address them (set time_remaining in the add to allow at least one more scene).\n';
         p += '- Full severity range (0.0-1.0). Consequences are serious and recovery is realistic for the setting.\n';
         p += '- Threat-type effects should have short time windows before triggering.\n';
