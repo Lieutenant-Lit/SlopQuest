@@ -329,23 +329,6 @@ textarea {
   font-variant-numeric: tabular-nums;
 }
 
-#status-effects { display: contents; }
-
-/* Status effect severity chips */
-.status-effect { font-size: 0.75rem; }
-.status-effect.effect-severe { color: var(--color-danger); }
-.status-effect.effect-moderate { color: var(--color-warning); }
-.status-effect.effect-mild { color: var(--color-text-muted); }
-.status-effect.status-threat { border-style: dashed; }
-.status-effect.status-expired {
-  border-color: var(--color-danger);
-  animation: expired-pulse 2s ease-in-out infinite;
-}
-@keyframes expired-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
 /* --- Illustration --- */
 .illustration-container {
   width: 100%;
@@ -800,13 +783,6 @@ textarea {
 .choice-enter {
   opacity: 0;
   transform: translateX(-8px);
-}
-
-/* --- Status effects indicator (optional future use) --- */
-#status-effects {
-  display: flex;
-  gap: var(--spacing-xs);
-  flex-wrap: wrap;
 }
 
 /* ===== LOADING OVERLAY ===== */

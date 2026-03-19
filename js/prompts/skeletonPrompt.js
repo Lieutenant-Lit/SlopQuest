@@ -38,7 +38,6 @@
       p += '  "premise": "string — 2-3 sentence hook",\n';
       p += '  "central_question": "string — the dramatic question driving the story",\n';
       p += '  "ending_shape": "string — the form of the ending (not content), e.g. \'sacrifice or survival\', \'mystery solved\', \'escape achieved\'",\n';
-      p += '  "healing_context": "string — how healing works in this setting (e.g. \'magic potions and healing spells can mend wounds in hours\', \'wounds heal naturally over days with rest and bandages\', \'nanobots repair tissue damage within minutes\')",\n';
       p += '  "starting_inventory": [\n';
       p += '    "string — item the character starts with, appropriate to setting and archetype"\n';
       p += '  ],\n';
@@ -118,7 +117,7 @@
       } else if (setupConfig.difficulty === 'normal') {
         p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- The skeleton must NOT include death states or game_over triggers\n';
-        p += '- Consequences should be meaningful but recoverable — status effects, relationship damage, lost items\n';
+        p += '- Consequences should be meaningful but recoverable — relationship damage, lost items\n';
         p += '- Include both safe and risky choices. Risky choices should have bigger rewards but real mechanical costs\n';
         p += '- NPCs can be hostile but should offer paths to resolution or avoidance\n';
         p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
@@ -126,8 +125,7 @@
         p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
         p += '- Critical/irreversible consequences are possible but rare: include at most 1 critical choice per act\n';
         p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the danger\n';
-        p += '- Include severe consequences: serious status effects, permanent NPC hostility, lost items\n';
-        p += '- Threat-type status effects should have short time windows and hit hard when they trigger\n';
+        p += '- Include severe consequences: permanent NPC hostility, lost items, narrative setbacks\n';
         p += '- Recovery paths exist but require sacrifice — healing requires effort, alliances cost favors\n';
         p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
       } else if (setupConfig.difficulty === 'brutal') {
@@ -152,7 +150,7 @@
         }
       } else if (setupConfig.storyLength === 'long') {
         if (setupConfig.difficulty === 'brutal' || setupConfig.difficulty === 'hard') {
-          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns. Status effects stack and healing is scarce.\n';
+          p += '- Long + ' + difficulty.label + ' = a war of attrition. Consequences compound over dozens of turns.\n';
         } else {
           p += '- Long story: develop subplots, deepen NPC relationships, let consequences play out over many scenes.\n';
         }
@@ -160,16 +158,6 @@
         p += '- Medium length: balance pacing with depth. Enough room for subplots but keep the main arc tight.\n';
       }
       p += '\n';
-
-      // Healing context guidance
-      p += 'HEALING CONTEXT — REQUIRED:\n';
-      p += 'Describe how healing works in THIS setting. This tells the Game Master how fast injuries should heal and what methods are available.\n';
-      p += 'Examples:\n';
-      p += '- Fantasy: "Healing potions can mend minor wounds instantly. Serious injuries require a healer or extended rest. Magic can accelerate bone-setting but leaves the patient exhausted."\n';
-      p += '- Sci-fi: "Medical nanobots repair tissue damage over hours. Severe trauma requires a medbay. Cybernetic replacements are available but expensive."\n';
-      p += '- Realistic/gritty: "Wounds heal naturally over days and weeks. Bandages stop bleeding, splints set bones. Without proper treatment, injuries can worsen or become infected."\n';
-      p += '- Superhero: "The character heals rapidly — minor injuries in minutes, major ones in hours. Only extraordinary damage poses lasting danger."\n';
-      p += 'Make it specific to your setting. If it\'s an established universe, match the lore.\n\n';
 
       // Starting inventory guidance
       p += 'STARTING INVENTORY — REQUIRED:\n';

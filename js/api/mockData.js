@@ -11,7 +11,6 @@
     premise: 'A disgraced knight returns to a kingdom on the brink of civil war, only to discover the throne itself is cursed — and they may be the only one who can break the cycle.',
     central_question: 'Will the protagonist restore the rightful ruler, seize power themselves, or destroy the crown forever?',
     ending_shape: 'The protagonist confronts the source of the curse in the throne room. Their choices throughout the story determine which of three endings plays out: restoration, usurpation, or destruction.',
-    healing_context: 'Magic is rare and feared. Wounds heal naturally over days with rest and bandages. Herbs from the moors can be brewed into poultices that speed healing. Court physicians are skilled but expensive and politically entangled.',
     starting_inventory: [
       'a worn longsword',
       'a faded knight\'s cloak bearing a disgraced sigil',
@@ -246,23 +245,6 @@
         },
         relationships: {
           'Captain Aldren Voss': -15
-        },
-        status_effect_updates: {
-          add: [
-            {
-              id: 'bruised_shoulder_001',
-              name: 'Bruised Shoulder',
-              description: 'Voss grabbed you hard — your shoulder aches where his gauntlet dug in',
-              severity: 0.2,
-              time_remaining: { days: 0, hours: 4, minutes: 0, seconds: 0 },
-              type: 'condition',
-              removal_condition: null,
-              critical: false,
-              on_expiry: 'The bruise fades to a dull ache, barely noticeable.'
-            }
-          ],
-          modify: [],
-          remove: []
         }
       },
       choices: {

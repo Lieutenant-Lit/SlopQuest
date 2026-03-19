@@ -175,31 +175,6 @@
       var current = state.current || {};
       var meta = state.meta || {};
 
-      // Status effect chips
-      var effectsContainer = document.getElementById('status-effects');
-      if (effectsContainer) {
-        effectsContainer.innerHTML = '';
-        var effects = player.status_effects || [];
-        for (var ei = 0; ei < effects.length; ei++) {
-          var effect = effects[ei];
-          if (!effect || typeof effect !== 'object' || !effect.name) continue;
-          var eChip = document.createElement('span');
-          var sevClass = 'effect-mild';
-          if (typeof effect.severity === 'number') {
-            if (effect.severity > 0.7) sevClass = 'effect-severe';
-            else if (effect.severity > 0.3) sevClass = 'effect-moderate';
-          }
-          eChip.className = 'status-chip status-effect ' + sevClass + (effect.type === 'threat' ? ' status-threat' : '') + (effect.expired ? ' status-expired' : '');
-          eChip.title = effect.description || effect.name;
-          if (effect.expired) {
-            eChip.textContent = '\u23f0 ' + effect.name;
-          } else {
-            eChip.textContent = (effect.type === 'threat' ? '\u26a0 ' : '') + effect.name;
-          }
-          effectsContainer.appendChild(eChip);
-        }
-      }
-
       // In-game time
       var timeEl = document.getElementById('status-time');
       if (timeEl) {
@@ -519,17 +494,6 @@
       var _gmLog = {};
       var timeElapsed = updates.time_elapsed || null;
       if (timeElapsed) _gmLog.time = SQ.GameState.formatDuration(timeElapsed);
-      var _efx = (state.player.status_effects || []);
-      if (_efx.length) {
-        _gmLog.effects = _efx.map(function (e) {
-          var label = e.name + ' (sev:' + (e.severity || 0);
-          if (e.critical) label += ', CRITICAL';
-          if (e.expired) label += ', EXPIRED[' + (e.expired_turns || 0) + ']';
-          if (e.on_expiry) label += ', has_on_expiry';
-          label += ')';
-          return label;
-        }).join(', ');
-      }
       if (updates.relationship_changes) {
         var _rc = [];
         for (var _rn in updates.relationship_changes) {
@@ -551,28 +515,9 @@
       _gmLog.event = updates.event_log_entry;
       SQ.Logger.info('GameMaster', 'Applied state updates', _gmLog);
 
-      // 13. Enforce critical effect restrictions on easier difficulties
+      // Prevent game_over on difficulties that don't allow it
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
-      if (!diffConfig.allow_critical_effects && Array.isArray(state.player.status_effects)) {
-        state.player.status_effects.forEach(function (effect) {
-          effect.critical = false;
-        });
-      }
-
-      // 15. Enforce max severity on easier difficulties
-      if (Array.isArray(state.player.status_effects)) {
-        var maxSev = diffConfig.max_effect_severity;
-        if (typeof maxSev === 'number') {
-          state.player.status_effects.forEach(function (effect) {
-            if (typeof effect.severity === 'number' && effect.severity > maxSev) {
-              effect.severity = maxSev;
-            }
-          });
-        }
-      }
-
-      // 16. Prevent game_over on difficulties that don't allow it
       if (!diffConfig.allow_game_over) {
         updates.game_over = false;
       }
@@ -663,7 +608,7 @@
     /**
      * Apply shared state_updates to game state.
      * Extracted from applyGameMasterResponse — used by both normal and finale flows.
-     * Handles steps 1-11b: player changes, time, effects, consequences, event log,
+     * Handles: player changes, time, event log,
      * world flags, relationships, NPCs, location, act advancement, proximity.
      * @param {object} state - Game state to mutate
      * @param {object} updates - The state_updates object from GM response
@@ -679,135 +624,9 @@
         if (Array.isArray(pc.skills)) state.player.skills = pc.skills;
       }
 
-      // 1b. Status effect delta operations
-      var seu = updates.status_effect_updates;
-      if (seu) {
-        var effects = state.player.status_effects || [];
-
-        // REMOVE first (don't modify something about to be removed)
-        if (Array.isArray(seu.remove)) {
-          var removeIds = {};
-          seu.remove.forEach(function (rm) {
-            if (!rm.id) return;
-            removeIds[rm.id] = true;
-            SQ.Logger.info('StatusEffect', 'Removed: ' + rm.id, {
-              justification: rm.update_justification || '(none)'
-            });
-          });
-          effects = effects.filter(function (e) { return !removeIds[e.id]; });
-        }
-
-        // MODIFY existing effects
-        if (Array.isArray(seu.modify)) {
-          seu.modify.forEach(function (mod) {
-            if (!mod.id) return;
-            var target = null;
-            for (var mi = 0; mi < effects.length; mi++) {
-              if (effects[mi].id === mod.id) { target = effects[mi]; break; }
-            }
-            if (!target) {
-              SQ.Logger.warn('StatusEffect', 'Modify target not found: ' + mod.id);
-              return;
-            }
-            if (mod.changes && typeof mod.changes === 'object') {
-              if ('time_remaining' in mod.changes) {
-                SQ.Logger.warn('StatusEffect', 'GM overrode timer via modify — verify justification', {
-                  id: mod.id,
-                  justification: mod.update_justification || '(none)',
-                  old_time: target.time_remaining,
-                  new_time: mod.changes.time_remaining
-                });
-              }
-              var allowed = ['name', 'description', 'severity', 'time_remaining',
-                             'type', 'removal_condition', 'critical', 'on_expiry'];
-              for (var key in mod.changes) {
-                if (mod.changes.hasOwnProperty(key) && allowed.indexOf(key) !== -1) {
-                  target[key] = mod.changes[key];
-                }
-              }
-            }
-            SQ.Logger.info('StatusEffect', 'Modified: ' + mod.id, {
-              changes: mod.changes,
-              justification: mod.update_justification || '(none)'
-            });
-          });
-        }
-
-        // ADD new effects last
-        if (Array.isArray(seu.add)) {
-          seu.add.forEach(function (newEffect) {
-            if (!newEffect.id) return;
-            var exists = false;
-            for (var ai = 0; ai < effects.length; ai++) {
-              if (effects[ai].id === newEffect.id) { exists = true; break; }
-            }
-            if (exists) {
-              SQ.Logger.warn('StatusEffect', 'Duplicate add ID, skipping: ' + newEffect.id);
-              return;
-            }
-            newEffect.expired = false;
-            // Enforce on_expiry for timed effects
-            if (newEffect.time_remaining && !newEffect.on_expiry) {
-              SQ.Logger.warn('StatusEffect', 'Added effect missing on_expiry, synthesizing default', { id: newEffect.id });
-              newEffect.on_expiry = 'Timer expired for: ' + newEffect.name;
-            }
-            newEffect._justCreated = true;
-            effects.push(newEffect);
-            SQ.Logger.info('StatusEffect', 'Added: ' + newEffect.id + ' (' + newEffect.name + ')');
-          });
-        }
-
-        state.player.status_effects = effects;
-      }
-
-      // 1c. Fallback: legacy replace semantics (if GM returns old format)
-      if (updates.player_changes && Array.isArray(updates.player_changes.status_effects)
-          && !updates.status_effect_updates) {
-        SQ.Logger.warn('StatusEffect', 'GM used legacy replace semantics — applying as fallback');
-        state.player.status_effects = updates.player_changes.status_effects;
-      }
-
       // 2. Advance in-game clock
       if (timeElapsed) {
         SQ.GameState.advanceTime(timeElapsed);
-      }
-
-      // 3. Tick down status effect timers and flag expired effects
-      if (timeElapsed && Array.isArray(state.player.status_effects)) {
-        state.player.status_effects.forEach(function (effect) {
-          // Already expired — increment turns counter for escalation
-          if (effect.expired) {
-            if (typeof effect.expired_turns === 'number') {
-              effect.expired_turns++;
-            }
-            return;
-          }
-          // Permanent effect — skip
-          if (!effect.time_remaining) return;
-          // Skip effects created this turn — time_elapsed predates their existence
-          if (effect._justCreated) {
-            delete effect._justCreated;
-            return;
-          }
-          // Tick down
-          var result = SQ.GameState.subtractTime(effect.time_remaining, timeElapsed);
-          effect.time_remaining = result.time;
-          if (result.expired) {
-            effect.expired = true;
-            effect.expired_turns = 0;
-          }
-        });
-      }
-
-      // 3b. Warn on unresolved expired effects
-      if (Array.isArray(state.player.status_effects)) {
-        state.player.status_effects.forEach(function (effect) {
-          if (effect.expired && effect.expired_turns > 1) {
-            SQ.Logger.warn('StatusEffect', 'Unresolved expired effect', {
-              id: effect.id, name: effect.name, expired_turns: effect.expired_turns
-            });
-          }
-        });
       }
 
       // 4. Event log entry
@@ -1171,33 +990,6 @@
         playerBody += self._gsdRow('Inventory', self._gsdList(player.inventory));
       } else {
         playerBody += self._gsdRow('Inventory', '[]');
-      }
-      if (player.status_effects && player.status_effects.length) {
-        var seHtml = '<div class="gsd-list">';
-        player.status_effects.forEach(function (effect) {
-          if (typeof effect === 'object' && effect.name) {
-            var sevLabel = typeof effect.severity === 'number' ? ' (sev: ' + effect.severity.toFixed(1) + ')' : '';
-            var timeLabel = effect.time_remaining ? ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ']' : '';
-            var condLabel = effect.removal_condition ? ' — needs: ' + self._esc(effect.removal_condition) : '';
-            var criticalLabel = effect.critical ? ' ' + self._gsdTag('CRITICAL', 'danger') : '';
-            var threatLabel = effect.type === 'threat' ? ' ' + self._gsdTag('THREAT', 'risky') : '';
-            var expiredLabel = effect.expired ? ' ' + self._gsdTag('EXPIRED', 'danger') : '';
-            var expTurnsLabel = (typeof effect.expired_turns === 'number' && effect.expired_turns >= 0)
-              ? ' ' + self._gsdTag('unresolved:' + effect.expired_turns, 'risky') : '';
-            seHtml += '<div style="margin-bottom:2px">';
-            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + criticalLabel + threatLabel + expiredLabel + expTurnsLabel;
-            if (effect.description) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + self._esc(effect.description) + '</span>';
-            if (condLabel) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + condLabel + '</span>';
-            if (effect.on_expiry) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">on_expiry: ' + self._esc(effect.on_expiry) + '</span>';
-            seHtml += '</div>';
-          } else {
-            seHtml += '<div>' + self._esc(String(effect)) + '</div>';
-          }
-        });
-        seHtml += '</div>';
-        playerBody += self._gsdRow('Status Effects', seHtml);
-      } else {
-        playerBody += self._gsdRow('Status Effects', '[]');
       }
       if (player.skills && player.skills.length) {
         playerBody += self._gsdRow('Skills', self._gsdList(player.skills));

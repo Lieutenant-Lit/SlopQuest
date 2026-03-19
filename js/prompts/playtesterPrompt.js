@@ -33,7 +33,7 @@
       p += '- Writing quality: repetitive phrases, tonal shifts, perspective/tense inconsistency, ';
       p += 'awkward prose, purple prose, lack of variety\n';
       p += '- Game mechanics: choices that don\'t match the narrative outcome, missing consequences, ';
-      p += 'status effects not reflected in prose, relationship scores that don\'t change\n';
+      p += 'relationship scores that don\'t change\n';
       p += '- Difficulty/balance: unfair deaths, too-easy encounters, consequences that feel arbitrary\n';
       p += '- Skeleton alignment: is the story following its planned act structure? Are key beats happening?\n\n';
 
@@ -162,7 +162,6 @@
       p += '## Game Mechanics\n';
       p += '- Choice meaningfulness (did choices have real consequences?)\n';
       p += '- Difficulty fairness\n';
-      p += '- Status effect handling\n';
       p += '- Consequence system behavior\n';
       p += '- Inventory and relationship system behavior\n\n';
 

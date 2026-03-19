@@ -16,10 +16,7 @@
       relationship_decay_rate: 'slow',
       threat_timer_pressure: 'relaxed',
       recovery_paths: 'always available',
-      npc_forgiveness: 'high',
-      allow_critical_effects: false,
-      max_effect_severity: 0.5,
-      recovery_speed: 'fast'
+      npc_forgiveness: 'high'
     },
     normal: {
       label: 'Normal',
@@ -32,10 +29,7 @@
       relationship_decay_rate: 'normal',
       threat_timer_pressure: 'moderate',
       recovery_paths: 'usually available',
-      npc_forgiveness: 'moderate',
-      allow_critical_effects: false,
-      max_effect_severity: 0.8,
-      recovery_speed: 'normal'
+      npc_forgiveness: 'moderate'
     },
     hard: {
       label: 'Hard',
@@ -48,10 +42,7 @@
       relationship_decay_rate: 'fast',
       threat_timer_pressure: 'urgent',
       recovery_paths: 'sometimes available',
-      npc_forgiveness: 'low',
-      allow_critical_effects: true,
-      max_effect_severity: 1.0,
-      recovery_speed: 'realistic'
+      npc_forgiveness: 'low'
     },
     brutal: {
       label: 'Brutal',
@@ -64,10 +55,7 @@
       relationship_decay_rate: 'aggressive',
       threat_timer_pressure: 'immediate',
       recovery_paths: 'rarely available',
-      npc_forgiveness: 'none',
-      allow_critical_effects: true,
-      max_effect_severity: 1.0,
-      recovery_speed: 'slow'
+      npc_forgiveness: 'none'
     }
   };
 
