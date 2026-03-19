@@ -146,7 +146,7 @@ The state object has these layers:
       "id": "string — unique identifier",
       "description": "string — what was set in motion",
       "trigger": "string — when this should surface, e.g. 'within 3 scenes', 'when player returns to city', 'act 2 climax'",
-      "severity": "string — 'minor' | 'moderate' | 'severe' | 'lethal'",
+      "severity": "string — 'minor' | 'moderate' | 'severe' | 'critical'",
       "scenes_remaining": "number | null — countdown, decremented each scene"
     }
   ]
@@ -222,7 +222,7 @@ Difficulty is **mechanical, not tonal**. The LLM doesn't "try to be harder" — 
 | Parameter | Chill | Normal | Hard | Brutal |
 |-----------|-------|--------|------|--------|
 | `safe_choice_ratio` | 0.75 | 0.50 | 0.35 | 0.25 |
-| `consequence_severity` | mild | moderate | severe | lethal |
+| `consequence_severity` | mild | moderate | severe | critical |
 | `resource_abundance` | generous | moderate | scarce | desperate |
 | `allow_game_over` | false | false | true | true |
 | `game_over_frequency` | never | never | rare (1 per act max) | common (multiple per act) |
@@ -232,11 +232,11 @@ Difficulty is **mechanical, not tonal**. The LLM doesn't "try to be harder" — 
 | `recovery_paths` | always available | usually available | sometimes available | rarely available |
 | `npc_forgiveness` | high | moderate | low | none |
 
-### 3.2 How Death Works (Hard & Brutal)
+### 3.2 How Critical Consequences Work (Hard & Brutal)
 
-The skeleton generator pre-determines which choices are lethal. The passage generator receives a `narration_directive` that explicitly instructs it to narrate death without softening the outcome.
+The skeleton generator pre-determines which choices have critical (irreversible) consequences. What "critical" means depends on the story's Style & Tone — death in a thriller, total humiliation in a comedy, heartbreak in a romance. The passage generator receives a `narration_directive` that explicitly instructs it to narrate the consequence without softening the outcome.
 
-**The LLM does not decide whether to kill the player. The skeleton decides. The LLM narrates.**
+**The LLM does not decide whether to trigger a critical consequence. The skeleton decides. The LLM narrates.**
 
 Example prompt fragment for a death outcome:
 ```
@@ -686,9 +686,10 @@ Prompt 10 — Difficulty Tuning:
 of SLOPQUEST_DESIGN_DOC.md. Play-test each difficulty tier by generating 
 skeletons and running through several passages. Verify: Chill mode never 
 kills the player and consequences are mild. Normal has moderate stakes. 
-Hard has real danger with some death states. Brutal has multiple lethal 
-choices per act, non-obvious traps, scarce resources, and the death 
-narration system works (LLM narrates death without softening). Test all 
+Hard has real danger with some critical consequences. Brutal has multiple
+critical choices per act, non-obvious traps, scarce resources, and the
+critical consequence narration system works (LLM narrates consequences
+without softening). Test all 
 three story lengths. Adjust system prompts and difficulty parameters based 
 on testing."
 ```
@@ -797,11 +798,11 @@ DIFFICULTY RULES ({difficulty}):
 
 {if brutal}
 BRUTAL DIFFICULTY REQUIREMENTS:
-- At least 40% of choices across each act must have outcome DEATH or SEVERE_PENALTY
+- At least 40% of choices across each act must have outcome CRITICAL or SEVERE_PENALTY
 - At least one game_over state must exist per act
 - No scene may have more than two advance_safe options
-- At least one death per act must be non-obvious (requires interpreting earlier clues)
-- Create genuine trap logic — choices that SOUND safe but are lethal based on 
+- At least one critical consequence per act must be non-obvious (requires interpreting earlier clues)
+- Create genuine trap logic — choices that SOUND safe but have critical consequences based on
   earlier context the player may not have noticed
 {/if}
 

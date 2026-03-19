@@ -523,7 +523,7 @@
       if (_efx.length) {
         _gmLog.effects = _efx.map(function (e) {
           var label = e.name + ' (sev:' + (e.severity || 0);
-          if (e.lethal) label += ', LETHAL';
+          if (e.critical) label += ', CRITICAL';
           if (e.expired) label += ', EXPIRED[' + (e.expired_turns || 0) + ']';
           if (e.on_expiry) label += ', has_on_expiry';
           label += ')';
@@ -551,12 +551,12 @@
       _gmLog.event = updates.event_log_entry;
       SQ.Logger.info('GameMaster', 'Applied state updates', _gmLog);
 
-      // 13. Enforce lethal effect restrictions on easier difficulties
+      // 13. Enforce critical effect restrictions on easier difficulties
       var diffKey = (state.meta && state.meta.difficulty) || 'normal';
       var diffConfig = SQ.DifficultyConfig[diffKey] || SQ.DifficultyConfig.normal;
-      if (!diffConfig.allow_lethal_effects && Array.isArray(state.player.status_effects)) {
+      if (!diffConfig.allow_critical_effects && Array.isArray(state.player.status_effects)) {
         state.player.status_effects.forEach(function (effect) {
-          effect.lethal = false;
+          effect.critical = false;
         });
       }
 
@@ -719,7 +719,7 @@
                 });
               }
               var allowed = ['name', 'description', 'severity', 'time_remaining',
-                             'type', 'removal_condition', 'lethal', 'on_expiry'];
+                             'type', 'removal_condition', 'critical', 'on_expiry'];
               for (var key in mod.changes) {
                 if (mod.changes.hasOwnProperty(key) && allowed.indexOf(key) !== -1) {
                   target[key] = mod.changes[key];
@@ -794,7 +794,7 @@
           effect.time_remaining = result.time;
           if (result.expired) {
             effect.expired = true;
-            effect.expired_turns = -1;
+            effect.expired_turns = 0;
           }
         });
       }
@@ -1179,13 +1179,13 @@
             var sevLabel = typeof effect.severity === 'number' ? ' (sev: ' + effect.severity.toFixed(1) + ')' : '';
             var timeLabel = effect.time_remaining ? ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ']' : '';
             var condLabel = effect.removal_condition ? ' — needs: ' + self._esc(effect.removal_condition) : '';
-            var lethalLabel = effect.lethal ? ' ' + self._gsdTag('LETHAL', 'danger') : '';
+            var criticalLabel = effect.critical ? ' ' + self._gsdTag('CRITICAL', 'danger') : '';
             var threatLabel = effect.type === 'threat' ? ' ' + self._gsdTag('THREAT', 'risky') : '';
             var expiredLabel = effect.expired ? ' ' + self._gsdTag('EXPIRED', 'danger') : '';
             var expTurnsLabel = (typeof effect.expired_turns === 'number' && effect.expired_turns >= 0)
               ? ' ' + self._gsdTag('unresolved:' + effect.expired_turns, 'risky') : '';
             seHtml += '<div style="margin-bottom:2px">';
-            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + lethalLabel + threatLabel + expiredLabel + expTurnsLabel;
+            seHtml += '<strong>' + self._esc(effect.name) + '</strong>' + sevLabel + timeLabel + criticalLabel + threatLabel + expiredLabel + expTurnsLabel;
             if (effect.description) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + self._esc(effect.description) + '</span>';
             if (condLabel) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">' + condLabel + '</span>';
             if (effect.on_expiry) seHtml += '<br><span style="opacity:0.7;font-size:0.8em">on_expiry: ' + self._esc(effect.on_expiry) + '</span>';

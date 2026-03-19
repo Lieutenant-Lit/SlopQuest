@@ -257,7 +257,7 @@
               time_remaining: { days: 0, hours: 4, minutes: 0, seconds: 0 },
               type: 'condition',
               removal_condition: null,
-              lethal: false,
+              critical: false,
               on_expiry: 'The bruise fades to a dull ache, barely noticeable.'
             }
           ],
