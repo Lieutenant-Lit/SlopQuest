@@ -106,9 +106,7 @@ The state object has these layers:
       "provisions": "number",
       "custom_resource": "number — genre-dependent, e.g. 'mana', 'ammo', 'reputation'"
     },
-    "inventory": ["array of strings"],
-    "status_effects": ["array — e.g. 'wounded', 'cursed', 'hunted'"],
-    "skills": ["array — things the player has learned or can do"]
+    "inventory": ["array of strings"]
   }
 }
 ```
