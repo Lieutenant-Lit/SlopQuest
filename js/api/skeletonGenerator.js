@@ -9,18 +9,13 @@
   SQ.SkeletonGenerator = {
     /**
      * Generate a story skeleton from setup configuration.
-     * In mock mode, returns hardcoded skeleton immediately.
-     * In live mode, calls OpenRouter and validates the response.
+     * Calls OpenRouter and validates the response.
      * Retries up to MAX_RETRIES times on malformed JSON or validation failure.
      *
      * @param {object} setupConfig - Player's game setup choices
      * @returns {Promise<object>} The skeleton JSON
      */
     generate: function (setupConfig) {
-      if (SQ.useMockData) {
-        return SQ.MockData.generateSkeleton(setupConfig);
-      }
-
       var model = SQ.PlayerConfig.getModel('skeleton');
       var systemPrompt = SQ.SkeletonPrompt.build(setupConfig);
       var userMsg = 'Generate the story skeleton now. Respond with ONLY the JSON object, no code fences.';

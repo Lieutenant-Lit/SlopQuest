@@ -277,7 +277,7 @@
       // Hide back button if no API key yet and no previous screen (first-time user)
       var backBtn = document.getElementById('btn-settings-back');
       if (backBtn) {
-        if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData || SQ._previousScreen) {
+        if (SQ.PlayerConfig.hasApiKey() || SQ._previousScreen) {
           backBtn.classList.remove('hidden');
         } else {
           backBtn.classList.add('hidden');
@@ -377,13 +377,6 @@
         return;
       }
 
-      if (SQ.useMockData) {
-        SQ.PlayerConfig.setElevenLabsApiKey(key);
-        status.textContent = 'Key saved (mock mode — no validation).';
-        status.className = 'status-message success';
-        return;
-      }
-
       btn.disabled = true;
       btn.textContent = 'Validating...';
       status.textContent = 'Checking key with ElevenLabs...';
@@ -438,14 +431,6 @@
       if (!key) {
         status.textContent = 'Please enter an API key.';
         status.className = 'status-message error';
-        return;
-      }
-
-      // In mock mode, accept any key
-      if (SQ.useMockData) {
-        SQ.PlayerConfig.setApiKey(key);
-        status.textContent = 'Key saved (mock mode — no validation).';
-        status.className = 'status-message success';
         return;
       }
 
