@@ -1388,38 +1388,6 @@ textarea {
   color: var(--color-text);
 }
 
-/* ===== DEV TOOLBAR ===== */
-#dev-toolbar {
-  position: fixed;
-  bottom: var(--spacing-md);
-  right: var(--spacing-md);
-  z-index: 200;
-}
-
-#btn-dev-toggle {
-  font-family: var(--font-ui);
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background: var(--color-success);
-  color: #000;
-  opacity: 0.7;
-  transition: opacity 0.15s ease;
-}
-
-#btn-dev-toggle:hover {
-  opacity: 1;
-}
-
-#btn-dev-toggle.live {
-  background: var(--color-danger);
-  color: #fff;
-}
-
 /* ===== UTILITY ===== */
 .hidden {
   display: none !important;

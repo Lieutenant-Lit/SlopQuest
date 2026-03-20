@@ -60,10 +60,6 @@
       // Stop any in-progress playback
       this.stop();
 
-      if (SQ.useMockData) {
-        return this._mockGenerate();
-      }
-
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
       if (!elevenLabsKey) {
         SQ.Logger.warn('Audio', 'No ElevenLabs API key configured');
@@ -1170,33 +1166,6 @@
       return this._ensureVoicesLoaded();
     },
 
-    // ========================================================
-    // MOCK MODE
-    // ========================================================
-
-    /**
-     * Mock audio generation for development.
-     * Returns immediately with a tiny silent WAV.
-     * @private
-     */
-    _mockGenerate: function () {
-      var self = this;
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          var header = 'UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==';
-          var audioUrl = 'data:audio/wav;base64,' + header;
-          _segments = [{
-            audioUrl: audioUrl,
-            text: '(mock audio)',
-            speaker: 'Narrator',
-            index: 0
-          }];
-          self.showControls();
-          self._playSegment(0);
-          resolve(true);
-        }, 500);
-      });
-    }
   };
 
   // Backward compatibility: alias AudioGenerator to AudioDirector

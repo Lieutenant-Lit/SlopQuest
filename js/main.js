@@ -1,5 +1,5 @@
 /**
- * SQ.main — Entry point, screen routing, dev toggle.
+ * SQ.main — Entry point, screen routing.
  * Must be loaded last (depends on all other modules).
  */
 (function () {
@@ -50,21 +50,6 @@
   };
 
   /**
-   * Update the dev toggle button appearance.
-   */
-  function updateDevToggle() {
-    var btn = document.getElementById('btn-dev-toggle');
-    if (!btn) return;
-    if (SQ.useMockData) {
-      btn.textContent = 'MOCK';
-      btn.classList.remove('live');
-    } else {
-      btn.textContent = 'LIVE';
-      btn.classList.add('live');
-    }
-  }
-
-  /**
    * Initialize the application.
    */
   SQ.init = function () {
@@ -109,20 +94,10 @@
       });
     });
 
-    // Wire up dev toggle
-    var devToggle = document.getElementById('btn-dev-toggle');
-    if (devToggle) {
-      devToggle.addEventListener('click', function () {
-        SQ.PlayerConfig.setMockMode(!SQ.useMockData);
-        updateDevToggle();
-      });
-      updateDevToggle();
-    }
-
     // Determine starting screen:
-    // If player has a valid API key (or mock mode is on), skip to main menu.
+    // If player has a valid API key, skip to main menu.
     // Otherwise show settings for first-time setup.
-    if (SQ.PlayerConfig.hasApiKey() || SQ.useMockData) {
+    if (SQ.PlayerConfig.hasApiKey()) {
       SQ.showScreen('mainmenu');
     } else {
       SQ.showScreen('settings');

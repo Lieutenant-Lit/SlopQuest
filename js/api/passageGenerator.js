@@ -13,18 +13,13 @@
     /**
      * Generate a turn by calling The Writer, then The Game Master.
      *
-     * In mock mode, returns mock data for both.
-     * In live mode, calls Writer first, then fires Game Master.
+     * Calls Writer first, then fires Game Master.
      *
      * @param {object} gameState - Full game state object
      * @param {string} [choiceId] - The choice the player made (null for opening passage)
      * @returns {Promise<{ writerResponse: object, gameMasterPromise: Promise<object> }>}
      */
     generate: function (gameState, choiceId) {
-      if (SQ.useMockData) {
-        return SQ.MockData.generatePassage(gameState);
-      }
-
       var self = this;
       var writerModel = SQ.PlayerConfig.getModel('passage');
       var writerSystem = SQ.WriterPrompt.buildSystem(gameState);
@@ -69,24 +64,6 @@
      * @returns {Promise<{ gmResponse: object, writerResponse: object, terminalType: string }>}
      */
     generateFinale: function (gameState, choiceId, terminalType) {
-      if (SQ.useMockData) {
-        // Mock: return a simple finale response
-        return Promise.resolve({
-          gmResponse: {
-            state_updates: {
-              event_log_entry: 'Terminal outcome: ' + terminalType,
-              time_elapsed: { days: 0, hours: 0, minutes: 5, seconds: 0 },
-              location: (gameState.current && gameState.current.location) || 'Unknown',
-              time_of_day: (gameState.current && gameState.current.time_of_day) || 'night'
-            }
-          },
-          writerResponse: {
-            passage: 'The story reaches its ' + terminalType.replace(/_/g, ' ') + '. [Mock finale passage]'
-          },
-          terminalType: terminalType
-        });
-      }
-
       var self = this;
 
       // Phase 1: Call GM-finale (resolve state first)
