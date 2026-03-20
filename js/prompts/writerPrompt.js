@@ -197,7 +197,7 @@
       // Response schema — passage + choices only
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
-      p += '  "passage": "string — the narrative passage, 150-300 words, written in 2-3 paragraphs",\n';
+      p += '  "passage": "string — the narrative passage, 150-300 words, split into paragraphs",\n';
       p += '  "choices": {\n';
       p += '    "A": { "text": "string — choice description shown to player" },\n';
       p += '    "B": { "text": "..." },\n';
@@ -340,7 +340,7 @@
       // Response schema — passage ONLY, NO choices
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
-      p += '  "passage": "string — the conclusive narrative passage, 200-400 words, written in 2-3 paragraphs"\n';
+      p += '  "passage": "string — the conclusive narrative passage, 200-400 words, split into paragraphs"\n';
       p += '}\n\n';
 
       p += 'RULES:\n';
