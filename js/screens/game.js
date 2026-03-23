@@ -1023,6 +1023,36 @@
       }
       html += self._gsdSection('Relationships', relBody, false);
 
+      // 6b. NPC Roster (live merged data from skeleton + overrides)
+      var roster = SQ.GameState.getNpcRoster();
+      var overrides = state.npc_overrides || {};
+      var rosterBody = '';
+      if (roster.length) {
+        roster.forEach(function (npc) {
+          rosterBody += '<div style="padding:3px 0;border-top:1px solid rgba(42,42,58,0.3)">';
+          rosterBody += '<strong>' + self._esc(npc.name || '?') + '</strong> — ' + self._esc(npc.role || '');
+          rosterBody += ' ' + self._gsdTag(npc.source, 'info');
+          if (npc.source === 'skeleton' && overrides[npc.name]) {
+            rosterBody += ' ' + self._gsdTag('modified', 'risky');
+          }
+          rosterBody += '<br>';
+          var compDot = npc.companion ? 'gsd-dot-on' : 'gsd-dot-off';
+          rosterBody += '<span class="gsd-label">Companion:</span> <span class="gsd-dot ' + compDot + '"></span>' + (npc.companion ? 'yes' : 'no') + '<br>';
+          if (npc.motivation) rosterBody += '<span class="gsd-label">Motivation:</span> ' + self._esc(npc.motivation) + '<br>';
+          if (npc.allegiance) rosterBody += '<span class="gsd-label">Allegiance:</span> ' + self._esc(npc.allegiance) + '<br>';
+          if (npc.secret) {
+            rosterBody += '<span class="gsd-label">Secret:</span> <em>' + self._esc(npc.secret) + '</em>';
+            if (npc.secret_revealed) rosterBody += ' ' + self._gsdTag('revealed', 'danger');
+            rosterBody += '<br>';
+          }
+          if (npc.notes) rosterBody += '<span class="gsd-label">Notes:</span> ' + self._esc(npc.notes) + '<br>';
+          rosterBody += '</div>';
+        });
+      } else {
+        rosterBody = '<div class="gsd-row"><span class="gsd-value" style="opacity:0.5">(none)</span></div>';
+      }
+      html += self._gsdSection('NPC Roster', rosterBody, false);
+
       // 7. Choices + metadata
       var choices = state.current_choices || {};
       var choiceKeys = ['A', 'B', 'C', 'D'];
