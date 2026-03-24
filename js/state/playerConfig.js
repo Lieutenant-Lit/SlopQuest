@@ -4,7 +4,6 @@
  */
 (function () {
   var STORAGE_KEY = 'slopquest_player_config';
-  var MOCK_KEY = 'slopquest_mock_mode';
 
   var DEFAULT_CONFIG = {
     openrouter_api_key: '',
@@ -25,9 +24,6 @@
     logging_enabled: false,
     playtester_enabled: false
   };
-
-  // Mock mode flag — default true for development
-  SQ.useMockData = localStorage.getItem(MOCK_KEY) !== 'false';
 
   SQ.PlayerConfig = {
     /**
@@ -108,14 +104,6 @@
       if (!config.models) config.models = {};
       config.models[type] = modelId;
       this.save(config);
-    },
-
-    /**
-     * Toggle mock data mode and persist the setting.
-     */
-    setMockMode: function (enabled) {
-      SQ.useMockData = enabled;
-      localStorage.setItem(MOCK_KEY, enabled ? 'true' : 'false');
     },
 
     /**

@@ -52,9 +52,7 @@
         player: {
           name: 'The Wanderer',
           archetype: setupConfig.archetype || '',
-          inventory: [],
-          status_effects: [],
-          skills: []
+          inventory: []
         },
         narrator: {},
         relationships: {},
@@ -102,21 +100,6 @@
       var cur = this._current.current.in_game_time || { days: 0, hours: 0, minutes: 0, seconds: 0 };
       var total = timeToSeconds(cur) + timeToSeconds(elapsed);
       this._current.current.in_game_time = secondsToTime(total);
-    },
-
-    /**
-     * Subtract elapsed time from a time-remaining object. Floors at zero.
-     * @param {{ days, hours, minutes, seconds }} target - the time remaining
-     * @param {{ days, hours, minutes, seconds }} elapsed - time to subtract
-     * @returns {{ time: { days, hours, minutes, seconds }, expired: boolean }}
-     */
-    subtractTime: function (target, elapsed) {
-      if (!target) return { time: { days: 0, hours: 0, minutes: 0, seconds: 0 }, expired: true };
-      var remaining = timeToSeconds(target) - timeToSeconds(elapsed);
-      return {
-        time: secondsToTime(Math.max(0, remaining)),
-        expired: remaining <= 0
-      };
     },
 
     /**
@@ -222,21 +205,6 @@
           // Migration: ensure npc_overrides exists for saves created before this feature
           if (this._current && !this._current.npc_overrides) {
             this._current.npc_overrides = {};
-          }
-          // Migration: flag status effects with zero timers as expired
-          if (this._current && this._current.player && Array.isArray(this._current.player.status_effects)) {
-            this._current.player.status_effects.forEach(function (effect) {
-              if (effect.time_remaining && !effect.expired) {
-                var total = ((effect.time_remaining.days || 0) * 86400) +
-                            ((effect.time_remaining.hours || 0) * 3600) +
-                            ((effect.time_remaining.minutes || 0) * 60) +
-                            (effect.time_remaining.seconds || 0);
-                if (total <= 0) {
-                  effect.expired = true;
-                  effect.expired_turns = 0;
-                }
-              }
-            });
           }
           return this._current;
         }

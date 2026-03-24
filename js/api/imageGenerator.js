@@ -20,10 +20,6 @@
       if (!scenePrompt) return Promise.resolve(null);
       if (!SQ.PlayerConfig.isIllustrationsEnabled()) return Promise.resolve(null);
 
-      if (SQ.useMockData) {
-        return this._mockGenerate();
-      }
-
       var model = SQ.PlayerConfig.getModel('image');
       var fullPrompt = this._buildPrompt(scenePrompt, gameState);
 
@@ -132,25 +128,5 @@
       return null;
     },
 
-    /**
-     * Mock image generation for development.
-     * Returns a small SVG placeholder after a simulated delay.
-     * @private
-     */
-    _mockGenerate: function () {
-      return new Promise(function (resolve) {
-        setTimeout(function () {
-          // Generate a simple dark SVG placeholder
-          var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">'
-            + '<rect width="512" height="384" fill="#14141f"/>'
-            + '<rect x="20" y="20" width="472" height="344" fill="none" stroke="#2a2a3a" stroke-width="2" rx="8"/>'
-            + '<text x="256" y="180" text-anchor="middle" fill="#8888a0" font-family="Georgia,serif" font-size="18">Illustration</text>'
-            + '<text x="256" y="210" text-anchor="middle" fill="#555" font-family="sans-serif" font-size="12">(mock mode)</text>'
-            + '</svg>';
-          var dataUrl = 'data:image/svg+xml;base64,' + btoa(svg);
-          resolve(dataUrl);
-        }, 1500); // simulate network delay
-      });
-    }
   };
 })();

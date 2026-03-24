@@ -22,7 +22,7 @@
       p += (meta.perspective || 'second person') + ' perspective, ';
       p += (meta.tense || 'present') + ' tense.\n\n';
 
-      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      var style = meta.writing_style || meta.tone || 'literary';
       p += 'STYLE & TONE: ' + style + '\n\n';
 
       p += 'Your ONLY job is to write the narrative passage and four player choices. ';
@@ -187,48 +187,6 @@
       }
       p += '\n';
 
-      // Status effects — Writer needs to know what the character is dealing with
-      if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        var activeEffects = [];
-        var expiredEffects = [];
-        gameState.player.status_effects.forEach(function (effect) {
-          if (typeof effect !== 'object' || !effect.name) return;
-          if (effect.expired) expiredEffects.push(effect);
-          else activeEffects.push(effect);
-        });
-
-        if (activeEffects.length > 0) {
-          p += 'ACTIVE STATUS EFFECTS (weave into narrative naturally):\n';
-          activeEffects.forEach(function (effect) {
-            p += '- ' + effect.name;
-            if (effect.type === 'threat') p += ' [THREAT]';
-            if (typeof effect.severity === 'number') {
-              if (effect.severity >= 0.7) p += ' (severe)';
-              else if (effect.severity >= 0.4) p += ' (moderate)';
-              else p += ' (minor)';
-            }
-            if (effect.description) p += ': ' + effect.description;
-            if (effect.time_remaining) p += ' [' + SQ.GameState.formatDuration(effect.time_remaining) + ' remaining]';
-            p += '\n';
-          });
-          p += 'Show these conditions affecting the character physically and emotionally. A broken arm should hurt when used. Poison should cause visible symptoms. Do NOT include mechanical numbers.\n\n';
-        }
-
-        if (expiredEffects.length > 0) {
-          p += 'EXPIRED STATUS EFFECTS — NARRATE THEIR RESOLUTION:\n';
-          expiredEffects.forEach(function (effect) {
-            p += '- ' + effect.name;
-            if (effect.type === 'threat') p += ' [THREAT TRIGGERED]';
-            if (effect.on_expiry) p += '\n  WHAT HAPPENS: ' + effect.on_expiry;
-            if (typeof effect.expired_turns === 'number' && effect.expired_turns >= 1) {
-              p += '\n  WARNING: Unresolved for ' + effect.expired_turns + ' turn(s) — you MUST address this NOW.';
-            }
-            p += '\n';
-          });
-          p += 'You MUST narrate each expired effect\'s resolution in your passage using the WHAT HAPPENS directive above. This is not optional. Do NOT include mechanical numbers.\n\n';
-        }
-      }
-
       // In-game time awareness
       var igt = (gameState.current && gameState.current.in_game_time) || null;
       if (igt) {
@@ -239,7 +197,7 @@
       // Response schema — passage + choices only
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
-      p += '  "passage": "string — the narrative passage, 150-300 words",\n';
+      p += '  "passage": "string — the narrative passage, 150-300 words, split into paragraphs",\n';
       p += '  "choices": {\n';
       p += '    "A": { "text": "string — choice description shown to player" },\n';
       p += '    "B": { "text": "..." },\n';
@@ -255,7 +213,6 @@
       p += '- Keep the passage between 150-300 words\n';
       p += '- All four choices should feel plausible and interesting\n';
       p += '- Never reveal information the skeleton marks as hidden/secret unless the act\'s end condition has been met\n';
-      p += '- Weave threat-type status effects into the narrative as approaching dangers — build tension as their timers count down\n';
       p += '- Focus on prose quality, atmosphere, character voice, and dramatic tension\n';
       p += '- Do NOT include state_updates, health numbers, or mechanical data in your response\n';
       p += '- Pace the story toward the current act\'s end condition. Check the CURRENT ACT PACING section for scene count and proximity\n';
@@ -324,7 +281,7 @@
       p += (meta.perspective || 'second person') + ' perspective, ';
       p += (meta.tense || 'present') + ' tense.\n\n';
 
-      var style = meta.writing_style || meta.tone || 'literary, dark and atmospheric';
+      var style = meta.writing_style || meta.tone || 'literary';
       p += 'STYLE & TONE: ' + style + '\n\n';
 
       // Terminal-type specific role
@@ -380,37 +337,10 @@
       p += '- Name: ' + (gameState.player.name || 'the protagonist') + '\n';
       p += '- Archetype: ' + (gameState.player.archetype || 'adventurer') + '\n\n';
 
-      // Status effects — split active/expired for finale
-      if (gameState.player.status_effects && gameState.player.status_effects.length > 0) {
-        var active = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && !e.expired; });
-        var expired = gameState.player.status_effects.filter(function (e) { return typeof e === 'object' && e.name && e.expired; });
-
-        if (active.length > 0) {
-          p += 'ACTIVE STATUS EFFECTS:\n';
-          active.forEach(function (effect) {
-            p += '- ' + effect.name;
-            if (effect.description) p += ': ' + effect.description;
-            p += '\n';
-          });
-          p += '\n';
-        }
-
-        if (expired.length > 0) {
-          p += 'EXPIRED STATUS EFFECTS (resolve in your finale passage):\n';
-          expired.forEach(function (effect) {
-            p += '- ' + effect.name;
-            if (effect.on_expiry) p += ' — ' + effect.on_expiry;
-            else if (effect.description) p += ': ' + effect.description;
-            p += '\n';
-          });
-          p += '\n';
-        }
-      }
-
       // Response schema — passage ONLY, NO choices
       p += 'Respond with this exact JSON structure:\n';
       p += '{\n';
-      p += '  "passage": "string — the conclusive narrative passage, 200-400 words"\n';
+      p += '  "passage": "string — the conclusive narrative passage, 200-400 words, split into paragraphs"\n';
       p += '}\n\n';
 
       p += 'RULES:\n';
