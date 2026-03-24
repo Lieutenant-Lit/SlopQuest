@@ -231,7 +231,6 @@
         errors.push('Missing choice_metadata object');
       } else {
         var required = ['A', 'B', 'C', 'D'];
-        var isHardOrBrutal = difficulty === 'hard' || difficulty === 'brutal';
         for (var i = 0; i < required.length; i++) {
           var key = required[i];
           if (!response.choice_metadata[key]) {
@@ -241,9 +240,9 @@
             if (!response.choice_metadata[key].outcome) {
               errors.push('choice_metadata.' + key + ' missing outcome');
             }
-            // narration_directive required on Hard/Brutal only
-            if (isHardOrBrutal && !response.choice_metadata[key].narration_directive) {
-              errors.push('choice_metadata.' + key + ' missing narration_directive (required on ' + difficulty + ')');
+            // narration_directive required on ALL difficulties
+            if (!response.choice_metadata[key].narration_directive) {
+              errors.push('choice_metadata.' + key + ' missing narration_directive');
             }
           }
         }

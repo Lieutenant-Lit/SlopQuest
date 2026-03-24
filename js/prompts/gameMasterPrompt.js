@@ -16,7 +16,6 @@
     buildSystem: function (gameState) {
       var meta = gameState.meta || {};
       var difficulty = meta.difficulty || 'normal';
-      var isHardOrBrutal = difficulty === 'hard' || difficulty === 'brutal';
       var diffConfig = SQ.DifficultyConfig[difficulty] || SQ.DifficultyConfig.normal;
 
       var p = '';
@@ -76,12 +75,7 @@
 
       // Difficulty parameters
       p += 'DIFFICULTY: ' + diffConfig.label + '\n';
-      p += '- Safe choice ratio: ' + diffConfig.safe_choice_ratio + '\n';
-      p += '- Consequence severity: ' + diffConfig.consequence_severity + '\n';
-      p += '- Game over allowed: ' + diffConfig.allow_game_over + '\n';
-      p += '- Hint transparency: ' + diffConfig.hint_transparency + '\n';
-      p += '- NPC forgiveness: ' + diffConfig.npc_forgiveness + '\n';
-      p += '\n';
+      p += '- Game over allowed: ' + diffConfig.allow_game_over + '\n\n';
 
       // Response JSON schema
       p += 'Respond with this exact JSON structure:\n';
@@ -104,13 +98,8 @@
       p += '    "story_complete": "true when Act 3 end_condition is met (see PACING)"\n';
       p += '  },\n';
       p += '  "choice_metadata": {\n';
-      if (isHardOrBrutal) {
-        p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
-        p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
-      } else {
-        p += '    "A": { "outcome": "advance_safe|advance_risky|hidden_benefit|advances_act|conclusion", "consequence": "brief mechanical note" },\n';
-        p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
-      }
+      p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
+      p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       p += '  }\n';
       p += '}\n\n';
 
@@ -157,38 +146,35 @@
       // Difficulty-specific rules
       if (difficulty === 'chill') {
         p += 'CHILL MODE RULES (MANDATORY):\n';
-        p += '- NEVER use game_over outcome on choices. The player cannot fail on Chill.\n';
-        p += '- Consequences are mild inconveniences at most. Minor setbacks resolve quickly.\n';
-        p += '- At least 3 of 4 choices should be advance_safe. The "risky" choice should have minor consequences.\n';
-        p += '- NPCs are forgiving. Relationship penalties are small and temporary.\n';
-        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
+        p += '- NEVER use game_over or severe_penalty outcomes. The player cannot fail or suffer major setbacks on Chill.\n';
+        p += '- Consequences are narrative texture, not punishment. A "risky" choice leads to a detour or complication, never a real loss.\n';
+        p += '- Match choice risk to the narrative situation: a tense scene can have tense-sounding choices, but their mechanical outcomes MUST remain mild.\n';
+        p += '- NPCs are forgiving. Relationship penalties MUST be small (-5 to -15) and temporary.\n';
+        p += '- narration_directive: keep directives light — guide the Writer toward interesting developments, not consequences.\n';
       } else if (difficulty === 'normal') {
         p += 'NORMAL MODE RULES (MANDATORY):\n';
-        p += '- NEVER use game_over outcome on choices. The player cannot fail on Normal.\n';
-        p += '- Setbacks matter but are never irreversible. The player should have opportunities to recover.\n';
-        p += '- Approximately 2 safe and 2 risky choices per turn.\n';
-        p += '- NPCs can be upset but always have a path to reconciliation.\n';
-        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
+        p += '- Consequences MUST match the narrative situation. A dangerous situation MUST have dangerous choices. A calm conversation MUST have low-risk choices. Do NOT artificially inject danger into safe scenes or safety into dangerous ones.\n';
+        p += '- When the player makes a bad choice in a dangerous situation, consequences MUST be real and felt — lost items, damaged relationships, worsened position. Do NOT soften outcomes because the difficulty is "Normal."\n';
+        p += '- game_over is allowed but MUST be rare and well-earned — only when the narrative makes failure obvious and the player ignored clear warning signs. Expect at most 1 game_over choice per full playthrough.\n';
+        p += '- Recovery from setbacks SHOULD usually be possible with effort, but not guaranteed. Some bridges burn.\n';
+        p += '- narration_directive: give the Writer clear guidance on what happened mechanically so the prose reflects it honestly.\n';
       } else if (difficulty === 'hard') {
         p += 'HARD MODE RULES (MANDATORY):\n';
-        p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
-        p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
-        p += '- Consequences are serious and recovery is realistic for the setting.\n';
-        p += '- NPCs have low forgiveness. Burning a relationship has lasting consequences.\n';
-        p += '- Include at least one advance_risky or severe_penalty outcome per set of choices.\n';
-        p += '- game_over outcomes are available — use for tone-appropriate failures. Respect the STYLE & TONE setting when deciding what failure looks like.\n';
-        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
+        p += '- Consequences are severe by default. When the player makes a risky choice, the outcome MUST hurt — lost allies, destroyed resources, permanent relationship damage. Do NOT hedge or soften.\n';
+        p += '- Dangerous situations MUST feel dangerous: at least one choice per set SHOULD carry severe_penalty or worse when the narrative context warrants it.\n';
+        p += '- game_over outcomes are expected. Use them when the narrative situation creates genuine mortal/critical danger and the player walks into it. Do not gate game_over behind artificial rarity — let the story dictate when death or failure is on the table.\n';
+        p += '- NPCs hold grudges. A betrayal or major insult MUST cause lasting relationship damage (-30 or worse). Reconciliation requires significant effort.\n';
+        p += '- Recovery from severe setbacks requires sacrifice — time, resources, or relationships spent to undo damage.\n';
+        p += '- narration_directive: be specific and unflinching. Tell the Writer exactly what was lost, broken, or destroyed. No euphemisms.\n';
       } else if (difficulty === 'brutal') {
         p += 'BRUTAL MODE RULES (MANDATORY):\n';
-        p += '- choice_metadata MUST include outcome, consequence, and narration_directive for every choice\n';
-        p += '- Maintain safe_choice_ratio: approximately ' + diffConfig.safe_choice_ratio + ' of choices should be advance_safe\n';
-        p += '- At most 1 clearly safe choice per turn. At least 1 choice should have critical or severely punishing consequences.\n';
-        p += '- Setbacks stack and compound the character\'s problems.\n';
-        p += '- Recovery is slow without effort. Active intervention is required for meaningful recovery.\n';
-        p += '- Some game_over choices should appear safe. The "obvious" safe choice may actually lead to failure.\n';
-        p += '- NPCs never forgive. One wrong interaction permanently closes that NPC\'s alliance.\n';
-        p += '- Create cascading problems: if the player is already burdened with setbacks, make the situation worse.\n';
-        p += '- You may use advances_act and conclusion outcomes when pacing conditions are met.\n';
+        p += '- The world is hostile. Consequences are immediate and severe. When a choice goes wrong, it goes VERY wrong.\n';
+        p += '- At most 1 clearly safe choice per set. Every other choice MUST carry meaningful risk appropriate to the situation.\n';
+        p += '- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC\'s hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n';
+        p += '- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n';
+        p += '- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n';
+        p += '- NPCs NEVER forgive. One wrong interaction permanently closes that relationship. Relationship penalties are large (-40 or worse) and irreversible.\n';
+        p += '- narration_directive: be brutal and specific. Tell the Writer to show the full weight of consequences with no softening, no last-minute saves, no silver linings.\n';
       }
 
       return p;
