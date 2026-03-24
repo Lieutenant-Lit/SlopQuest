@@ -168,8 +168,8 @@
         p += '- narration_directive: be specific and unflinching. Tell the Writer exactly what was lost, broken, or destroyed. No euphemisms.\n';
       } else if (difficulty === 'brutal') {
         p += 'BRUTAL MODE RULES (MANDATORY):\n';
-        p += '- The world is hostile. Consequences are immediate and severe. When a choice goes wrong, it goes VERY wrong.\n';
-        p += '- At most 1 clearly safe choice per set. Every other choice MUST carry meaningful risk appropriate to the situation.\n';
+        p += '- The world is hostile. Consequences are immediate and devastating. When a choice goes wrong, it goes VERY wrong.\n';
+        p += '- Consequences compound and do not resolve on their own. The danger comes from the world being unforgiving, not from artificially limiting safe options — let the narrative situation dictate how many choices are risky on any given turn.\n';
         p += '- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC\'s hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n';
         p += '- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n';
         p += '- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n';
