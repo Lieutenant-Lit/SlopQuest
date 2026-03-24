@@ -1,61 +1,30 @@
 /**
- * SQ.DifficultyConfig — Difficulty parameter tables from design doc Section 3.
- * Difficulty is mechanical, not tonal. These parameters constrain how
- * forgiving the world is; the prose tone stays consistent.
+ * SQ.DifficultyConfig — Difficulty tier definitions.
+ * Difficulty is mechanical, not tonal. The Game Master prompt contains
+ * the detailed per-tier rules; this config holds only the properties
+ * that are consumed programmatically (labels, allow_game_over).
  */
 (function () {
   SQ.DifficultyConfig = {
     chill: {
       label: 'Chill',
-      description: 'A relaxing story experience. No game overs, obvious hints.',
-      safe_choice_ratio: 0.75,
-      consequence_severity: 'mild',
-      allow_game_over: false,
-      game_over_frequency: 'never',
-      hint_transparency: 'obvious',
-      relationship_decay_rate: 'slow',
-      threat_timer_pressure: 'relaxed',
-      recovery_paths: 'always available',
-      npc_forgiveness: 'high'
+      description: 'A relaxing story experience. No game overs. Consequences are mild.',
+      allow_game_over: false
     },
     normal: {
       label: 'Normal',
-      description: 'A balanced adventure. Choices have consequences but recovery is usually possible.',
-      safe_choice_ratio: 0.50,
-      consequence_severity: 'moderate',
-      allow_game_over: false,
-      game_over_frequency: 'never',
-      hint_transparency: 'moderate',
-      relationship_decay_rate: 'normal',
-      threat_timer_pressure: 'moderate',
-      recovery_paths: 'usually available',
-      npc_forgiveness: 'moderate'
+      description: 'A balanced adventure. Choices matter. Game over is rare but possible.',
+      allow_game_over: true
     },
     hard: {
       label: 'Hard',
-      description: 'High stakes. Consequences are serious and sometimes irreversible.',
-      safe_choice_ratio: 0.35,
-      consequence_severity: 'severe',
-      allow_game_over: true,
-      game_over_frequency: 'rare',
-      hint_transparency: 'subtle',
-      relationship_decay_rate: 'fast',
-      threat_timer_pressure: 'urgent',
-      recovery_paths: 'sometimes available',
-      npc_forgiveness: 'low'
+      description: 'High stakes. Consequences are severe and sometimes irreversible.',
+      allow_game_over: true
     },
     brutal: {
       label: 'Brutal',
-      description: 'Unforgiving. Critical consequences are common, recovery is rare.',
-      safe_choice_ratio: 0.25,
-      consequence_severity: 'critical',
-      allow_game_over: true,
-      game_over_frequency: 'common',
-      hint_transparency: 'cryptic',
-      relationship_decay_rate: 'aggressive',
-      threat_timer_pressure: 'immediate',
-      recovery_paths: 'rarely available',
-      npc_forgiveness: 'none'
+      description: 'Unforgiving. The world punishes carelessness. Traps exist.',
+      allow_game_over: true
     }
   };
 

@@ -213,45 +213,29 @@ This is comfortable on any modern model. The event log is the component that can
 
 ## 3. Difficulty System
 
-Difficulty is **mechanical, not tonal**. The LLM doesn't "try to be harder" — the skeleton and state parameters constrain how forgiving the world is. The prose tone stays consistent; what changes is the math underneath.
+Difficulty is **mechanical, not tonal**. The prose tone stays consistent regardless of difficulty; what changes is how harsh the Game Master's consequences are.
 
-### 3.1 Difficulty Parameters
+### 3.1 Difficulty Configuration
+
+The config stores only the properties consumed programmatically. All behavioral rules live in the Game Master prompt as strong MUST-language per tier.
 
 | Parameter | Chill | Normal | Hard | Brutal |
 |-----------|-------|--------|------|--------|
-| `safe_choice_ratio` | 0.75 | 0.50 | 0.35 | 0.25 |
-| `consequence_severity` | mild | moderate | severe | critical |
-| `resource_abundance` | generous | moderate | scarce | desperate |
-| `allow_game_over` | false | false | true | true |
-| `game_over_frequency` | never | never | rare (1 per act max) | common (multiple per act) |
-| `hint_transparency` | obvious | moderate | subtle | cryptic |
-| `relationship_decay_rate` | slow | normal | fast | aggressive |
-| `pending_consequence_speed` | slow (5+ scenes) | normal (3-4 scenes) | fast (1-2 scenes) | immediate (0-1 scenes) |
-| `recovery_paths` | always available | usually available | sometimes available | rarely available |
-| `npc_forgiveness` | high | moderate | low | none |
+| `label` | Chill | Normal | Hard | Brutal |
+| `allow_game_over` | false | true | true | true |
 
-### 3.2 How Critical Consequences Work (Hard & Brutal)
+### 3.2 How Difficulty Works
 
-The skeleton generator pre-determines which choices have critical (irreversible) consequences. What "critical" means depends on the story's Style & Tone — death in a thriller, total humiliation in a comedy, heartbreak in a romance. The passage generator receives a `narration_directive` that explicitly instructs it to narrate the consequence without softening the outcome.
+Difficulty is enforced entirely by the Game Master prompt, not the skeleton. The skeleton is **difficulty-agnostic** — it defines story structure, NPCs, and world rules without knowing what difficulty the player chose.
 
-**The LLM does not decide whether to trigger a critical consequence. The skeleton decides. The LLM narrates.**
+The Game Master receives tier-specific rules with strong consequence enforcement:
 
-Example prompt fragment for a death outcome:
-```
-The player chose option A.
-Outcome classification: DEATH
-Cause: The bridge was sabotaged by the faction the player antagonized in Scene 4.
-Narration directive: The character dies here. Narrate the death vividly and 
-definitively. Do not offer survival, last-minute rescues, or "barely alive" 
-outcomes. The character is dead. End the passage with finality.
-Post-narration: Set game state to game_over. Offer rewind.
-```
+- **Chill:** No game_over or severe_penalty. Consequences are narrative texture, not punishment. NPCs are forgiving.
+- **Normal:** Consequences match the narrative situation — dangerous scenes have dangerous choices, calm scenes have safe choices. Game over is rare and well-earned (~1 per playthrough max). Recovery usually possible.
+- **Hard:** Consequences are severe by default. Game over expected when narrative warrants it. NPCs hold grudges. Recovery requires sacrifice.
+- **Brutal:** World is hostile. At most 1 safe choice per set. Trap logic: some safe-appearing choices carry hidden severe consequences based on earlier context. Game over regular in dangerous situations. Setbacks cascade. NPCs never forgive.
 
-For Brutal skeleton generation, enforce hard numerical constraints:
-- At least 40% of choices across the act must have outcome `death` or `severe_penalty`
-- At least one `game_over` state must exist per act
-- No scene may have more than two `advance_safe` options
-- At least one death per act must be non-obvious (requires interpreting earlier clues)
+All difficulties use a unified `choice_metadata` schema that always includes `narration_directive` — instructions from the Game Master to the Writer on how to narrate consequences. This ensures the Writer always receives explicit guidance on what happened mechanically.
 
 ### 3.3 Story Length
 
@@ -270,7 +254,7 @@ Player-configurable at game setup. Controls total turn count, skeleton complexit
 
 These values are passed to the skeleton generation prompt as target parameters. The skeleton generator adjusts NPC roster size, faction complexity, and pacing accordingly. A Short game has a tight, focused plot. A Long game has interlocking faction threads and compounding consequences.
 
-**Length × Difficulty interaction:** Brutal + Short is a sprint where nearly every choice is life-or-death. Brutal + Long is a war of attrition where consequences compound over dozens of turns. Both are valid and play very differently.
+**Length × Difficulty interaction:** The Game Master applies consequence rules across different turn counts. Brutal + Short is a sprint where nearly every choice is life-or-death. Brutal + Long is a war of attrition where consequences compound over dozens of turns.
 
 ---
 

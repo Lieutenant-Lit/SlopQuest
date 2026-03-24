@@ -10,7 +10,6 @@
      * @returns {string} System prompt
      */
     build: function (setupConfig) {
-      var difficulty = SQ.DifficultyConfig[setupConfig.difficulty] || SQ.DifficultyConfig.normal;
       var storyLength = SQ.StoryLengthConfig[setupConfig.storyLength] || SQ.StoryLengthConfig.medium;
 
       var p = '';
@@ -27,7 +26,6 @@
       p += '- Tone: ' + (setupConfig.tone || 'balanced') + '\n';
       p += '- Perspective: ' + (setupConfig.perspective || 'second person') + '\n';
       p += '- Tense: ' + (setupConfig.tense || 'present') + '\n';
-      p += '- Difficulty: ' + difficulty.label + '\n';
       p += '- Story length: ' + storyLength.label + '\n\n';
 
       // Required JSON schema
@@ -84,7 +82,7 @@
       p += 'CRITICAL — TONE ALIGNMENT:\n';
       p += '- The tone_notes you generate MUST reinforce the player\'s Writing Style and Tone settings above, not subvert or contradict them.\n';
       p += '- If the player asked for comedy, tone_notes must establish a comedic atmosphere — not inject grimdark undertones.\n';
-      p += '- Difficulty controls the MECHANICAL severity and frequency of setbacks, NOT their narrative flavor. "Brutal + comedy" means relentless comedic disasters and social catastrophes, not grimdark undertones. "Brutal + horror" means genuine mortal danger. Match the tone the player asked for.\n';
+      p += '- The skeleton is tone-first. Match the atmosphere and mood to whatever the player asked for — comedy means comedy, horror means horror.\n';
       p += '- Read what the player actually wrote and serve that vision.\n\n';
 
       // Story length rules
@@ -93,72 +91,6 @@
       p += '- Turns per act: ' + storyLength.turns_per_act.min + '-' + storyLength.turns_per_act.max + '\n';
       p += '- Faction count: ' + storyLength.faction_count.min + '-' + storyLength.faction_count.max + '\n';
       p += '- Subplot threads: ' + storyLength.subplot_threads.min + '-' + storyLength.subplot_threads.max + '\n\n';
-
-      // Difficulty rules
-      p += 'DIFFICULTY RULES (' + difficulty.label + '):\n';
-      p += '- Safe choice ratio: ' + difficulty.safe_choice_ratio + ' (proportion of choices that are safe)\n';
-      p += '- Consequence severity: ' + difficulty.consequence_severity + '\n';
-      p += '- Game over allowed: ' + difficulty.allow_game_over + '\n';
-      p += '- Game over frequency: ' + difficulty.game_over_frequency + '\n';
-      p += '- Hint transparency: ' + difficulty.hint_transparency + '\n';
-      p += '- Relationship decay rate: ' + difficulty.relationship_decay_rate + '\n';
-      p += '- Threat timer pressure: ' + difficulty.threat_timer_pressure + '\n';
-      p += '- Recovery paths: ' + difficulty.recovery_paths + '\n';
-      p += '- NPC forgiveness: ' + difficulty.npc_forgiveness + '\n\n';
-
-      // Tier-specific skeleton constraints
-      if (setupConfig.difficulty === 'chill') {
-        p += 'CHILL DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- The skeleton must NEVER include critical/irreversible outcomes or game_over triggers\n';
-        p += '- All choices should lead to interesting story developments, not punishments\n';
-        p += '- Consequences should be narrative setbacks at most — lost items, blocked paths, NPC disappointment — never punishing\n';
-        p += '- NPCs should be generally helpful or at worst inconvenient\n';
-        p += '- Locked constraints should protect the player from accidentally entering punishing situations\n';
-        p += '- The key_beats should focus on discovery, relationships, and narrative progression — not overcoming threats\n\n';
-      } else if (setupConfig.difficulty === 'normal') {
-        p += 'NORMAL DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- The skeleton must NOT include game_over triggers\n';
-        p += '- Consequences should be meaningful but recoverable — relationship damage, lost items, setbacks appropriate to the tone\n';
-        p += '- Include both safe and risky choices. Risky choices should have bigger rewards but real mechanical costs\n';
-        p += '- NPCs can be antagonistic but should offer paths to resolution or avoidance\n';
-        p += '- The story should feel challenging but fair — a player paying attention should rarely feel stuck\n\n';
-      } else if (setupConfig.difficulty === 'hard') {
-        p += 'HARD DIFFICULTY SKELETON REQUIREMENTS:\n';
-        p += '- Critical/irreversible consequences are possible but rare: include at most 1 critical choice per act\n';
-        p += '- Critical choices MUST be foreshadowed — clues in earlier passages should hint at the stakes\n';
-        p += '- Include severe consequences appropriate to the tone — what counts as "severe" depends on the genre (social ruin in comedy, mortal danger in horror, career destruction in drama)\n';
-        p += '- Recovery paths exist but require sacrifice — fixing mistakes requires effort, alliances cost favors\n';
-        p += '- NPCs hold grudges. Betraying or ignoring an NPC should have lasting consequences\n\n';
-      } else if (setupConfig.difficulty === 'brutal') {
-        p += 'BRUTAL DIFFICULTY REQUIREMENTS:\n';
-        p += '- At least 40% of choices across each act must carry severe or catastrophic consequences appropriate to the tone\n';
-        p += '- At least one game_over state must exist per act\n';
-        p += '- No scene may have more than two advance_safe options\n';
-        p += '- At least one catastrophic failure per act must be non-obvious — what "catastrophic" means depends on the tone (total social ruin in comedy, actual death in horror, permanent exposure in a spy thriller)\n';
-        p += '- Create genuine trap logic — choices that SOUND safe but have critical consequences based on earlier context the player may not have noticed\n';
-        p += '- Consequences are immediate and severe for the setting and tone\n';
-        p += '- NPCs do not forgive easily. A single wrong move with an NPC should permanently close that relationship\n';
-        p += '- Include cascading failure states where one bad choice makes subsequent choices more dangerous\n\n';
-      }
-
-      // Length × Difficulty interaction
-      p += 'LENGTH × DIFFICULTY INTERACTION (' + storyLength.label + ' + ' + difficulty.label + '):\n';
-      if (setupConfig.storyLength === 'short') {
-        if (setupConfig.difficulty === 'brutal') {
-          p += '- Short + Brutal = a relentless sprint. Nearly every choice matters. Pack maximum consequences into few turns.\n';
-        } else {
-          p += '- Short story: keep the plot focused and tight. Every scene should advance the central question.\n';
-        }
-      } else if (setupConfig.storyLength === 'long') {
-        if (setupConfig.difficulty === 'brutal' || setupConfig.difficulty === 'hard') {
-          p += '- Long + ' + difficulty.label + ' = a long grind. Consequences compound over dozens of turns.\n';
-        } else {
-          p += '- Long story: develop subplots, deepen NPC relationships, let consequences play out over many scenes.\n';
-        }
-      } else {
-        p += '- Medium length: balance pacing with depth. Enough room for subplots but keep the main arc tight.\n';
-      }
-      p += '\n';
 
       // Starting inventory guidance
       p += 'STARTING INVENTORY — REQUIRED:\n';
