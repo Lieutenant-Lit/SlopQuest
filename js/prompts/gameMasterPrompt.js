@@ -155,7 +155,7 @@
         p += 'NORMAL MODE RULES (MANDATORY):\n';
         p += '- Consequences MUST match the narrative situation. A dangerous situation MUST have dangerous choices. A calm conversation MUST have low-risk choices. Do NOT artificially inject danger into safe scenes or safety into dangerous ones.\n';
         p += '- When the player makes a bad choice in a dangerous situation, consequences MUST be real and felt — lost items, damaged relationships, worsened position. Do NOT soften outcomes because the difficulty is "Normal."\n';
-        p += '- game_over is allowed but MUST be rare and well-earned — only when the narrative makes failure obvious and the player ignored clear warning signs. Expect at most 1 game_over choice per full playthrough.\n';
+        p += '- game_over is allowed when the narrative makes failure obvious and the player ignored clear warning signs. Do NOT treat it as a quota — use it when the story demands it, not on a schedule.\n';
         p += '- Recovery from setbacks SHOULD usually be possible with effort, but not guaranteed. Some bridges burn.\n';
         p += '- narration_directive: give the Writer clear guidance on what happened mechanically so the prose reflects it honestly.\n';
       } else if (difficulty === 'hard') {
