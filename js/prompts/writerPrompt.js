@@ -244,20 +244,17 @@
       if (choice) {
         if (choice.text) p += '\nChoice text: "' + choice.text + '"';
 
-        // On Hard/Brutal, the Game Master's directives from the previous turn
-        // tell the Writer exactly how to narrate the outcome
-        if (choice.outcome) {
-          p += '\n\nOUTCOME CLASSIFICATION: ' + choice.outcome.toUpperCase();
-          if (choice.consequence) p += '\nConsequence: ' + choice.consequence;
-          if (choice.narration_directive) {
-            p += '\nNARRATION DIRECTIVE: ' + choice.narration_directive;
-            p += '\nYou MUST narrate this outcome exactly as classified. Do not soften, alter, or provide alternatives to the predetermined outcome.';
-          }
+        // Relay GM narration guidance as plain prose — no GM field names
+        if (choice.narration_directive) {
+          p += '\n\nWhat happened: ' + choice.narration_directive;
+          p += '\nYou MUST narrate this outcome. Do not soften, alter, or provide alternatives.';
+        } else if (choice.consequence) {
+          p += '\n\nWhat happened: ' + choice.consequence;
+        }
 
-          // Game over instruction (death, failure, etc.)
-          if (choice.outcome === 'game_over') {
-            p += '\n\nThe character has FAILED irreversibly. Narrate the failure vividly and definitively. Do not offer survival, last-minute rescues, or recovery.';
-          }
+        // Irreversible failure
+        if (choice.outcome === 'game_over') {
+          p += '\nThe character has FAILED irreversibly. Narrate the failure vividly and definitively. Do not offer survival, last-minute rescues, or recovery.';
         }
       }
 
@@ -365,8 +362,6 @@
       var choice = gameState.current_choices && gameState.current_choices[choiceId];
       var p = 'The player chose option ' + choiceId + '.';
       if (choice && choice.text) p += '\nChoice text: "' + choice.text + '"';
-
-      p += '\n\nTERMINAL TYPE: ' + terminalType.toUpperCase();
 
       if (gmResponse && gmResponse.state_updates && gmResponse.state_updates.event_log_entry) {
         p += '\nGAME MASTER SUMMARY: ' + gmResponse.state_updates.event_log_entry;
