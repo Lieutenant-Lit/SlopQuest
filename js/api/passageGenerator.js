@@ -168,6 +168,27 @@
           }
           SQ.Logger.infoFull(label, 'Full response', response);
 
+          // Strip unexpected fields from Writer choices (belt-and-suspenders)
+          if ((label === 'Writer' || label === 'Writer-Finale') && response.choices) {
+            var extraFields = [];
+            var choiceKeys = ['A', 'B', 'C', 'D'];
+            for (var ci = 0; ci < choiceKeys.length; ci++) {
+              var ch = response.choices[choiceKeys[ci]];
+              if (ch && typeof ch === 'object') {
+                var keys = Object.keys(ch);
+                for (var ki = 0; ki < keys.length; ki++) {
+                  if (keys[ki] !== 'text') {
+                    extraFields.push(choiceKeys[ci] + '.' + keys[ki]);
+                    delete ch[keys[ki]];
+                  }
+                }
+              }
+            }
+            if (extraFields.length > 0) {
+              SQ.Logger.warn(label, 'Stripped unexpected fields from choices', { fields: extraFields });
+            }
+          }
+
           return response;
         });
     }
