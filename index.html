@@ -232,6 +232,10 @@
           <span>Enable persistent logging</span>
         </label>
         <button id="btn-view-logs" class="btn btn-secondary" style="margin-top: var(--spacing-sm);">View Logs</button>
+        <div style="margin-top: var(--spacing-md);">
+          <label for="github-token-input">GitHub Token <span style="opacity:0.6; font-size:0.85em;">(for log push)</span></label>
+          <input type="password" id="github-token-input" placeholder="ghp_... or github_pat_..." autocomplete="off" style="margin-top: var(--spacing-xs); width: 100%;">
+        </div>
       </div>
 
     </div>
@@ -521,6 +525,7 @@
           <select id="log-filter-category">
             <option value="">All Categories</option>
           </select>
+          <button id="btn-log-push" class="btn btn-secondary">Push to GitHub</button>
           <button id="btn-log-export" class="btn btn-secondary">Export</button>
           <button id="btn-log-clear" class="btn btn-secondary">Clear</button>
           <button id="btn-log-close" class="btn btn-secondary">Close</button>

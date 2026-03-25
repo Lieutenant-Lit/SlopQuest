@@ -15,6 +15,10 @@
         self._export();
       });
 
+      document.getElementById('btn-log-push').addEventListener('click', function () {
+        self._pushToGithub();
+      });
+
       document.getElementById('btn-log-clear').addEventListener('click', function () {
         SQ.Logger.clear();
         self._render();
@@ -111,6 +115,55 @@
       var div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
+    },
+
+    _pushToGithub: function () {
+      var token = SQ.PlayerConfig.getGithubToken();
+      if (!token) {
+        alert('No GitHub token set. Add one in Settings > Developer.');
+        return;
+      }
+
+      var btn = document.getElementById('btn-log-push');
+      btn.disabled = true;
+      btn.textContent = 'Pushing...';
+
+      var json = SQ.Logger.exportJSON();
+      var ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      var filename = 'slopquest-logs-' + ts + '.json';
+      var content = btoa(unescape(encodeURIComponent(json)));
+
+      fetch('https://api.github.com/repos/Lieutenant-Lit/SlopQuest/contents/logs/' + filename, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: 'logs',
+          content: content,
+          branch: 'logs'
+        })
+      })
+        .then(function (response) {
+          if (response.ok) {
+            btn.textContent = 'Pushed!';
+            setTimeout(function () {
+              btn.disabled = false;
+              btn.textContent = 'Push to GitHub';
+            }, 2000);
+          } else {
+            return response.json().then(function (data) {
+              throw new Error('HTTP ' + response.status + ': ' + (data.message || 'Unknown error'));
+            });
+          }
+        })
+        .catch(function (err) {
+          alert('Push failed: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = 'Push to GitHub';
+        });
     },
 
     _export: function () {
