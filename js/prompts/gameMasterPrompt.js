@@ -98,10 +98,16 @@
       p += '    "story_complete": "true when Act 3 end_condition is met (see PACING)"\n';
       p += '  },\n';
       p += '  "choice_metadata": {\n';
-      p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion", "consequence": "what happens mechanically", "narration_directive": "instructions for the Writer next turn" },\n';
+      p += '    "A": { "outcome": "advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion", "consequence": "1-2 sentences — what happens mechanically", "narration_directive": "1-2 sentences — direction for Writer, not a script" },\n';
       p += '    "B": { ... }, "C": { ... }, "D": { ... }\n';
       p += '  }\n';
       p += '}\n\n';
+
+      p += 'FIELD LENGTH RULES:\n';
+      p += '- consequence: 1-2 sentences. State the mechanical effect only — what changes, what is lost/gained.\n';
+      p += '- narration_directive: 1-2 sentences. Give the Writer a direction, not a script. Say WHAT happens, not HOW to write it.\n';
+      p += '- event_log_entry: One sentence.\n';
+      p += '- new_scene_context: 1-2 sentences.\n\n';
 
       // General rules
       p += 'RULES:\n';
