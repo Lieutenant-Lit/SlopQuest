@@ -2,29 +2,11 @@
  * SQ.UIDesigner — Generates and applies dynamic UI themes via LLM.
  * Produces a color palette, font selections, and SVG decorations
  * based on the story's setting and tone. Applies them as CSS custom
- * properties and DOM injections; removes them cleanly on game exit.
+ * properties scoped to #screen-game and DOM injections; removes them
+ * cleanly on game exit.
  */
 (function () {
   var MAX_RETRIES = 1;
-
-  /** CSS variable defaults (mirrors :root in main.css). */
-  var CSS_DEFAULTS = {
-    '--color-bg': '#0a0a0f',
-    '--color-surface': '#14141f',
-    '--color-surface-raised': '#1e1e2e',
-    '--color-border': '#2a2a3a',
-    '--color-text': '#e0e0e8',
-    '--color-text-muted': '#8888a0',
-    '--color-primary': '#7c6ff0',
-    '--color-primary-hover': '#9488f8',
-    '--color-secondary': '#2a2a3a',
-    '--color-secondary-hover': '#3a3a4a',
-    '--color-danger': '#e04050',
-    '--color-success': '#40c060',
-    '--color-warning': '#e0a030',
-    '--font-body': "'Georgia', 'Times New Roman', serif",
-    '--font-ui': "system-ui, -apple-system, 'Segoe UI', sans-serif"
-  };
 
   /** Map from theme JSON color keys to CSS variable names. */
   var COLOR_MAP = {
@@ -43,6 +25,73 @@
     warning: '--color-warning'
   };
 
+  /** All CSS variable names we set, for cleanup. */
+  var ALL_CSS_VARS = Object.keys(COLOR_MAP).map(function (k) { return COLOR_MAP[k]; });
+  ALL_CSS_VARS.push('--font-body', '--font-ui');
+
+  /**
+   * Convert a hex color to sRGB relative luminance.
+   * @param {string} hex - Color in #RRGGBB or #RGB format
+   * @returns {number} Relative luminance (0-1)
+   */
+  function hexToLuminance(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    var r = parseInt(hex.substring(0, 2), 16) / 255;
+    var g = parseInt(hex.substring(2, 4), 16) / 255;
+    var b = parseInt(hex.substring(4, 6), 16) / 255;
+
+    r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+    g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+    b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  /**
+   * Compute WCAG contrast ratio between two hex colors.
+   * @returns {number} Contrast ratio (1-21)
+   */
+  function contrastRatio(hex1, hex2) {
+    var l1 = hexToLuminance(hex1);
+    var l2 = hexToLuminance(hex2);
+    var lighter = Math.max(l1, l2);
+    var darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  /**
+   * Sanitize an SVG string to remove dangerous elements and attributes.
+   * Strips <script>, on* event handlers, javascript: URIs, and xlink:href with data/javascript.
+   * @param {string} svgStr - Raw SVG string from LLM
+   * @returns {string} Sanitized SVG string
+   */
+  function sanitizeSvg(svgStr) {
+    if (!svgStr || typeof svgStr !== 'string') return '';
+
+    // Remove <script> tags and their content
+    var clean = svgStr.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+    // Remove on* event handler attributes (onclick, onload, onerror, etc.)
+    clean = clean.replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+
+    // Remove javascript: URIs in any attribute
+    clean = clean.replace(/javascript\s*:/gi, '');
+
+    // Remove data: URIs in href/xlink:href (potential script injection)
+    clean = clean.replace(/(xlink:)?href\s*=\s*(?:"data:[^"]*"|'data:[^']*')/gi, '');
+
+    // Remove <use> elements referencing external resources
+    clean = clean.replace(/<use[^>]*href\s*=\s*(?:"(?!#)[^"]*"|'(?!#)[^']*')[^>]*\/?>/gi, '');
+
+    // Remove <foreignObject> elements (can embed arbitrary HTML)
+    clean = clean.replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '');
+
+    return clean;
+  }
+
   SQ.UIDesigner = {
     /** Currently injected Google Fonts <link> element. */
     _fontLink: null,
@@ -52,6 +101,8 @@
     _dividerEl: null,
     /** Injected background style element reference. */
     _bgStyleEl: null,
+    /** Injected card border style element reference. */
+    _cardBorderStyleEl: null,
 
     /**
      * Generate a UI theme from the LLM.
@@ -89,7 +140,7 @@
     },
 
     /**
-     * Parse and validate the LLM response.
+     * Parse, validate, and sanitize the LLM response.
      * @private
      */
     _parseAndValidate: function (raw, model, systemPrompt, userMsg, attempt) {
@@ -115,18 +166,64 @@
         throw new Error('UI Designer returned invalid theme (missing colors).');
       }
 
+      // Validate hex color format
+      var hexPattern = /^#[0-9a-fA-F]{3,8}$/;
+      Object.keys(theme.colors).forEach(function (key) {
+        if (theme.colors[key] && !hexPattern.test(theme.colors[key])) {
+          delete theme.colors[key];
+        }
+      });
+
+      // Contrast validation — text must be readable against backgrounds
+      if (theme.colors.text && theme.colors.bg) {
+        var textBgRatio = contrastRatio(theme.colors.text, theme.colors.bg);
+        if (textBgRatio < 4.5) {
+          SQ.Logger.warn('UIDesigner', 'Poor text/bg contrast (' + textBgRatio.toFixed(1) + ':1), discarding theme colors');
+          theme.colors = {};
+        }
+      }
+      if (theme.colors.text && theme.colors.surface && Object.keys(theme.colors).length > 0) {
+        var textSurfaceRatio = contrastRatio(theme.colors.text, theme.colors.surface);
+        if (textSurfaceRatio < 4.5) {
+          SQ.Logger.warn('UIDesigner', 'Poor text/surface contrast (' + textSurfaceRatio.toFixed(1) + ':1), discarding theme colors');
+          theme.colors = {};
+        }
+      }
+
       if (!theme.fonts || typeof theme.fonts !== 'object') {
-        // Non-fatal — use defaults
         theme.fonts = { body: 'Georgia', ui: 'system-ui' };
+      }
+
+      // Sanitize font names (prevent injection via font-family)
+      if (theme.fonts.body) {
+        theme.fonts.body = theme.fonts.body.replace(/[<>"';{}()]/g, '');
+      }
+      if (theme.fonts.ui) {
+        theme.fonts.ui = theme.fonts.ui.replace(/[<>"';{}()]/g, '');
       }
 
       if (!theme.decorations || typeof theme.decorations !== 'object') {
         theme.decorations = {};
       }
 
+      // Sanitize all SVG strings
+      if (theme.decorations.divider_svg) {
+        theme.decorations.divider_svg = sanitizeSvg(theme.decorations.divider_svg);
+      }
+      if (theme.decorations.background_pattern_svg) {
+        theme.decorations.background_pattern_svg = sanitizeSvg(theme.decorations.background_pattern_svg);
+      }
+
+      // Sanitize card_border_style (only allow CSS border shorthand characters)
+      if (theme.decorations.card_border_style) {
+        theme.decorations.card_border_style = theme.decorations.card_border_style.replace(/[<>"';{}()]/g, '');
+      }
+
       if (typeof theme.css_filter !== 'string') {
         theme.css_filter = 'none';
       }
+      // Sanitize css_filter
+      theme.css_filter = theme.css_filter.replace(/[<>"';{}]/g, '');
 
       SQ.Logger.info('UIDesigner', 'Theme generated', {
         primary: theme.colors.primary,
@@ -139,19 +236,21 @@
     },
 
     /**
-     * Apply a theme to the document.
-     * Sets CSS custom properties, loads Google Fonts, and injects SVG decorations.
+     * Apply a theme to the game screen.
+     * Sets CSS custom properties on #screen-game (scoped, not :root),
+     * loads Google Fonts, and injects SVG decorations.
      * @param {object} theme - The theme JSON from generate()
      */
     apply: function (theme) {
       if (!theme) return;
-      var root = document.documentElement;
+      var gameScreen = document.getElementById('screen-game');
+      if (!gameScreen) return;
 
-      // 1. Apply colors
+      // 1. Apply colors (scoped to game screen)
       if (theme.colors) {
         Object.keys(COLOR_MAP).forEach(function (key) {
           if (theme.colors[key]) {
-            root.style.setProperty(COLOR_MAP[key], theme.colors[key]);
+            gameScreen.style.setProperty(COLOR_MAP[key], theme.colors[key]);
           }
         });
       }
@@ -161,21 +260,38 @@
         this._loadFonts(theme.fonts);
 
         if (theme.fonts.body) {
-          root.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
+          gameScreen.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
         }
         if (theme.fonts.ui) {
-          root.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
+          gameScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
         }
       }
 
       // 3. Apply CSS filter to game screen
-      var gameScreen = document.getElementById('screen-game');
-      if (gameScreen && theme.css_filter && theme.css_filter !== 'none') {
+      if (theme.css_filter && theme.css_filter !== 'none') {
         gameScreen.style.filter = theme.css_filter;
       }
 
       // 4. Inject SVG decorations
       this._applyDecorations(theme.decorations || {});
+
+      // 5. Also apply to game over screen so theme carries through
+      var gameOverScreen = document.getElementById('screen-gameover');
+      if (gameOverScreen && theme.colors) {
+        Object.keys(COLOR_MAP).forEach(function (key) {
+          if (theme.colors[key]) {
+            gameOverScreen.style.setProperty(COLOR_MAP[key], theme.colors[key]);
+          }
+        });
+        if (theme.fonts) {
+          if (theme.fonts.body) {
+            gameOverScreen.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
+          }
+          if (theme.fonts.ui) {
+            gameOverScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
+          }
+        }
+      }
 
       this._activeTheme = theme;
     },
@@ -184,23 +300,27 @@
      * Remove the active theme, restoring defaults.
      */
     remove: function () {
-      var root = document.documentElement;
+      // 1. Reset CSS custom properties on game screen
+      var gameScreen = document.getElementById('screen-game');
+      if (gameScreen) {
+        ALL_CSS_VARS.forEach(function (prop) {
+          gameScreen.style.removeProperty(prop);
+        });
+        gameScreen.style.filter = '';
+      }
 
-      // 1. Reset CSS custom properties
-      Object.keys(CSS_DEFAULTS).forEach(function (prop) {
-        root.style.removeProperty(prop);
-      });
+      // 2. Reset CSS custom properties on game over screen
+      var gameOverScreen = document.getElementById('screen-gameover');
+      if (gameOverScreen) {
+        ALL_CSS_VARS.forEach(function (prop) {
+          gameOverScreen.style.removeProperty(prop);
+        });
+      }
 
-      // 2. Remove Google Fonts link
+      // 3. Remove Google Fonts link
       if (this._fontLink) {
         this._fontLink.remove();
         this._fontLink = null;
-      }
-
-      // 3. Remove CSS filter
-      var gameScreen = document.getElementById('screen-game');
-      if (gameScreen) {
-        gameScreen.style.filter = '';
       }
 
       // 4. Remove SVG decorations

@@ -66,6 +66,14 @@ a {
   display: flex;
 }
 
+/* Game & game-over screens own their background so scoped CSS vars take effect */
+#screen-game,
+#screen-gameover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.5s ease, color 0.3s ease;
+}
+
 /* ===== SCREEN HEADER ===== */
 .screen-header {
   padding: var(--spacing-md) 0;
