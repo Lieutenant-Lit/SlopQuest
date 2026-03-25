@@ -375,7 +375,7 @@
 
               SQ.PassageGenerator._attemptCall(
                 gmModel, gmSystem, gmUser,
-                { temperature: 0.3, max_tokens: 1500 },
+                { temperature: 0.3, max_tokens: 2500 },
                 'GameMaster',
                 function (r) { return SQ.StateValidator.validateGameMasterResponse(r, difficulty); },
                 0

@@ -22,7 +22,8 @@
     game_state_debug_enabled: false,
     disable_default_voices: false,
     logging_enabled: false,
-    playtester_enabled: false
+    playtester_enabled: false,
+    github_token: ''
   };
 
   SQ.PlayerConfig = {
@@ -216,6 +217,16 @@
     setPlaytesterEnabled: function (enabled) {
       var config = this.load();
       config.playtester_enabled = !!enabled;
+      this.save(config);
+    },
+
+    getGithubToken: function () {
+      return this.load().github_token || '';
+    },
+
+    setGithubToken: function (token) {
+      var config = this.load();
+      config.github_token = token;
       this.save(config);
     }
   };

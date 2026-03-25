@@ -237,6 +237,11 @@
         }
       });
 
+      // GitHub token for log push
+      document.getElementById('github-token-input').addEventListener('change', function () {
+        SQ.PlayerConfig.setGithubToken(this.value.trim());
+      });
+
       // View logs button
       document.getElementById('btn-view-logs').addEventListener('click', function () {
         SQ.LogViewer.show();
@@ -321,6 +326,13 @@
       }
 
       this._syncModelSelect('playtester-model-select', 'playtester-model-custom-input', SQ.PlayerConfig.getModel('playtester'));
+
+      // Populate GitHub token field
+      var githubToken = SQ.PlayerConfig.getGithubToken();
+      var githubInput = document.getElementById('github-token-input');
+      if (githubToken) {
+        githubInput.value = githubToken;
+      }
 
       // Populate ElevenLabs key field
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();

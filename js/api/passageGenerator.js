@@ -41,7 +41,7 @@
 
         var gameMasterPromise = self._attemptCall(
           gmModel, gmSystem, gmUser,
-          { temperature: 0.3, max_tokens: 1500, source: 'gamemaster' },
+          { temperature: 0.3, max_tokens: 2500, source: 'gamemaster' },
           'GameMaster',
           function (response) { return SQ.StateValidator.validateGameMasterResponse(response, difficulty); },
           0
@@ -73,7 +73,7 @@
 
       return self._attemptCall(
         gmModel, gmSystem, gmUser,
-        { temperature: 0.3, max_tokens: 1500, source: 'gamemaster' },
+        { temperature: 0.3, max_tokens: 2500, source: 'gamemaster' },
         'GameMaster-Finale',
         function (response) { return SQ.StateValidator.validateFinaleGMResponse(response); },
         0

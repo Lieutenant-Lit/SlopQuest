@@ -130,7 +130,9 @@
 
     /** Log at info level without clipping data (for large structured objects like skeletons). */
     infoFull: function (category, message, data) {
-      _log('info', category, message, data, true);
+      var snapshot;
+      try { snapshot = JSON.parse(JSON.stringify(data)); } catch (e) { snapshot = data; }
+      _log('info', category, message, snapshot, true);
     },
 
     warn: function (category, message, data) {
