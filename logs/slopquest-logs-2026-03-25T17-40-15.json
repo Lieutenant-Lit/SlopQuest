@@ -1,0 +1,1332 @@
+[
+  {
+    "ts": "2026-03-25T15:44:11.099Z",
+    "level": "info",
+    "cat": "Setup",
+    "msg": "Starting new game",
+    "data": {
+      "config": {
+        "setting": "A typical episode of Firefly, one of the lighthearted comedic episodes",
+        "archetype": "Captain Malcolm \"Mal\" Reynolds",
+        "writingStyle": "A typical episode of Firefly, one of the lighthearted comedic episodes",
+        "tone": "",
+        "perspective": "second person",
+        "tense": "present",
+        "difficulty": "brutal",
+        "storyLength": "short"
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:44:11.699Z",
+    "level": "info",
+    "cat": "Audio",
+    "msg": "Loaded voices from ElevenLabs",
+    "data": {
+      "count": 86
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.921Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "usage": {
+        "prompt_tokens": 1296,
+        "completion_tokens": 4708,
+        "total_tokens": 6004,
+        "cost": 0.0126772,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0126772,
+          "upstream_inference_prompt_cost": 0.0009072,
+          "upstream_inference_completions_cost": 0.01177
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2851,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.926Z",
+    "level": "info",
+    "cat": "Skeleton",
+    "msg": "Generated OK",
+    "data": {
+      "title": "The Gilded Goose Chase",
+      "acts": 3,
+      "npcs": [
+        "Zoe Washburne (first mate and loyal ally, companion)",
+        "Hoban 'Wash' Washburne (pilot and comic relief, companion)",
+        "Kaylee Frye (mechanic and heart of the crew, companion)",
+        "Jayne Cobb (muscle and mercenary, companion)",
+        "Inara Serra (companion and diplomat, companion)",
+        "Simon Tam (doctor and cautious thinker, companion)",
+        "River Tam (psychic wild card, companion)",
+        "Reginald Fink (eccentric client and cheese enthusiast)"
+      ]
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.928Z",
+    "level": "info",
+    "cat": "Skeleton",
+    "msg": "Full skeleton",
+    "data": {
+      "title": "The Gilded Goose Chase",
+      "player_name": "Mal",
+      "premise": "You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.",
+      "central_question": "Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?",
+      "ending_shape": "job completed with a humorous twist",
+      "starting_inventory": [
+        "a worn brown coat",
+        "a Peacemaker pistol",
+        "a cargo manifest for the 'antique ceramics'",
+        "a handful of Alliance credits (75 credits)",
+        "a bottle of cheap whiskey",
+        "a harmonica"
+      ],
+      "setting": {
+        "name": "The Verse",
+        "description": "You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.",
+        "tone_notes": "Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures."
+      },
+      "acts": [
+        {
+          "act_number": 1,
+          "title": "The Simple Job Goes Sour",
+          "description": "Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.",
+          "end_condition": "The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.",
+          "target_scenes": 5,
+          "locked_constraints": [
+            "The cargo's true nature is not revealed",
+            "No direct confrontation with external factions"
+          ],
+          "key_beats": [
+            "Accept the job from a quirky client",
+            "Load the crate onto Serenity",
+            "Notice odd sounds from the cargo",
+            "Discuss the issue with the crew",
+            "Decide to open the crate cautiously"
+          ]
+        },
+        {
+          "act_number": 2,
+          "title": "Cheese and Chase",
+          "description": "Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.",
+          "end_condition": "The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.",
+          "target_scenes": 6,
+          "locked_constraints": [
+            "The job is not completed",
+            "Serenity is not permanently damaged"
+          ],
+          "key_beats": [
+            "Open the crate to reveal the cheese",
+            "Be approached by a representative of the Cheese Consortium",
+            "Engage in a humorous chase through a space station",
+            "Learn about the cheese's cultural significance",
+            "Devise a plan to either deliver or sell the cheese"
+          ]
+        },
+        {
+          "act_number": 3,
+          "title": "A Whey Out",
+          "description": "The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.",
+          "end_condition": "The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.",
+          "target_scenes": 5,
+          "locked_constraints": [
+            "No crew members are lost or seriously injured",
+            "The outcome is not tragic or somber"
+          ],
+          "key_beats": [
+            "Put the plan into action, involving disguises or misdirection",
+            "Face final obstacles like bureaucratic red tape or rival cheese thieves",
+            "Reveal that the cheese was meant for a silly ceremonial wedding",
+            "Receive payment or a valuable trade",
+            "Celebrate with the crew back on Serenity"
+          ]
+        }
+      ],
+      "npcs": [
+        {
+          "name": "Zoe Washburne",
+          "role": "first mate and loyal ally",
+          "motivation": "Support Mal and ensure the crew's safety, while keeping operations smooth",
+          "allegiance": "Serenity crew",
+          "secret": "She's planning a surprise anniversary dinner for Wash",
+          "initial_relationship": 100,
+          "companion": true
+        },
+        {
+          "name": "Hoban 'Wash' Washburne",
+          "role": "pilot and comic relief",
+          "motivation": "Fly Serenity with flair and avoid serious trouble, all while cracking jokes",
+          "allegiance": "Serenity crew",
+          "secret": "He's secretly terrified of dairy products due to a childhood incident",
+          "initial_relationship": 80,
+          "companion": true
+        },
+        {
+          "name": "Kaylee Frye",
+          "role": "mechanic and heart of the crew",
+          "motivation": "Keep Serenity running and spread happiness through her optimistic outlook",
+          "allegiance": "Serenity crew",
+          "secret": "She's been tinkering with a new engine modification that might make Serenity faster",
+          "initial_relationship": 90,
+          "companion": true
+        },
+        {
+          "name": "Jayne Cobb",
+          "role": "muscle and mercenary",
+          "motivation": "Get paid and assert his toughness, though he has a soft spot for the crew",
+          "allegiance": "Serenity crew",
+          "secret": "He writes bad poetry about his favorite guns in private",
+          "initial_relationship": 60,
+          "companion": true
+        },
+        {
+          "name": "Inara Serra",
+          "role": "companion and diplomat",
+          "motivation": "Maintain her professional reputation and use her skills to help the crew in social situations",
+          "allegiance": "Serenity crew",
+          "secret": "She's considering a lucrative off-ship contract but hasn't told anyone",
+          "initial_relationship": 70,
+          "companion": true
+        },
+        {
+          "name": "Simon Tam",
+          "role": "doctor and cautious thinker",
+          "motivation": "Protect his sister River and find a place where they can live peacefully",
+          "allegiance": "Serenity crew",
+          "secret": "He's developing a medical scanner that could diagnose the cheese's effects",
+          "initial_relationship": 75,
+          "companion": true
+        },
+        {
+          "name": "River Tam",
+          "role": "psychic wild card",
+          "motivation": "Understand her abilities and navigate the world with her unique perspective",
+          "allegiance": "Serenity crew",
+          "secret": "She senses that the cheese is sentient and mildly telepathic, causing the odd noises",
+          "initial_relationship": 65,
+          "companion": true
+        },
+        {
+          "name": "Reginald Fink",
+          "role": "eccentric client and cheese enthusiast",
+          "motivation": "Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon",
+          "allegiance": "The Cheese Consortium",
+          "secret": "He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers",
+          "initial_relationship": 50,
+          "companion": false
+        }
+      ],
+      "factions": [
+        {
+          "name": "The Cheese Consortium",
+          "description": "A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.",
+          "goals": "Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes."
+        }
+      ],
+      "world_rules": [
+        "The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.",
+        "Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.",
+        "In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.",
+        "Money talks, but so does a good story, and sometimes the latter is more valuable."
+      ],
+      "initial_world_flags": {
+        "cargo_loaded": true,
+        "job_accepted": true,
+        "cheese_consortium_alerted": false,
+        "cargo_inspected": true,
+        "payment_secured": false,
+        "cheese_secrets_known": true,
+        "strategic_plan_devised": true
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.933Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.934Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Writer for an interactive gamebook. You write vivid, engaging prose in second person perspective, present tense.\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\n\nYour ONLY job is to write the narrative passage and four player choices. You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": false,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"\",\n  \"time_of_day\": \"\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 0,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"\"\n}\n\nCURRENT ACT PACING:\n- Act 1: \"The Simple Job Goes Sour\"\n- End condition: The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\n- Key beats: [\"Accept the job from a quirky client\",\"Load the crate onto Serenity\",\"Notice odd sounds from the cargo\",\"Discuss the issue with the crew\",\"Decide to open the crate cautiously\"]\n- Scenes in this act: 1 of ~5 target\n- Proximity to climax: 0.00\n- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nCOMPANIONS (present in every scene unless narratively separated):\n- Zoe Washburne (first mate and loyal ally) [relationship: 100]\n- Hoban 'Wash' Washburne (pilot and comic relief) [relationship: 80]\n- Kaylee Frye (mechanic and heart of the crew) [relationship: 90]\n- Jayne Cobb (muscle and mercenary) [relationship: 60]\n- Inara Serra (companion and diplomat) [relationship: 70]\n- Simon Tam (doctor and cautious thinker) [relationship: 75]\n- River Tam (psychic wild card) [relationship: 65]\nThese characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\nKNOWN NPCs:\n- Reginald Fink (eccentric client and cheese enthusiast) [relationship: 50]\n\nEVENT LOG (last 20):\n[]\n\nPLAYER CHARACTER:\n- Name: Mal\n- Archetype: Captain Malcolm \"Mal\" Reynolds\n\n\nIN-GAME TIME: Day 1, 00:00\nUse this for natural time references (time of day, how long since events, etc.).\n\nRespond with this exact JSON structure:\n{\n  \"passage\": \"string — the narrative passage, 150-300 words, split into paragraphs\",\n  \"choices\": {\n    \"A\": { \"text\": \"string — choice description shown to player\" },\n    \"B\": { \"text\": \"...\" },\n    \"C\": { \"text\": \"...\" },\n    \"D\": { \"text\": \"...\" }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Stay consistent with the skeleton's locked constraints for the current act\n- Keep the passage between 150-300 words\n- All four choices should feel plausible and interesting\n- Never reveal information the skeleton marks as hidden/secret unless the act's end condition has been met\n- Focus on prose quality, atmosphere, character voice, and dramatic tension\n- Do NOT include state_updates, health numbers, or mechanical data in your response\n- Pace the story toward the current act's end condition. Check the CURRENT ACT PACING section for scene count and proximity\n- When proximity_to_climax >= 0.8, your passage should feel like it's approaching a climax or turning point — increase urgency and stakes\n- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:42.936Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "Generate the opening passage for this story. Set the scene, establish the protagonist's situation, and present the first four choices. Respond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.741Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "usage": {
+        "prompt_tokens": 2941,
+        "completion_tokens": 345,
+        "total_tokens": 3286,
+        "cost": 0.0016249,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0016249,
+          "upstream_inference_prompt_cost": 0.0011764,
+          "upstream_inference_completions_cost": 0.0004485
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.744Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "The hum of Serenity's engines fills the cargo bay as you lean against a stack of crates, thumbing th",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.745Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Full response",
+    "data": {
+      "passage": "The hum of Serenity's engines fills the cargo bay as you lean against a stack of crates, thumbing through the cargo manifest for the hundredth time. 'Antique ceramics,' it says in fancy script, paid for upfront by that twitchy little man in the ridiculous hat. Zoe stands nearby, arms crossed, watching Jayne and Kaylee secure the last crate with more enthusiasm than finesse. \n\n'You sure this job ain't gonna bite us, sir?' Zoe asks, one eyebrow arched. Before you can answer, Wash's voice crackles over the comm: 'Captain, we're clear for takeoff. Unless you wanna stick around and admire the local... whatever this moon's famous for.' \n\nJust as you're about to respond, a faint thump comes from inside the nearest crate. Then another. Kaylee freezes, wrench hovering mid-air. 'Uh... Mal? Ceramics ain't supposed to do that, are they?' Jayne immediately steps back, hand on his pistol. 'I knew it. Always the gorramn simple jobs.'",
+      "choices": {
+        "A": {
+          "text": "Open the crate right now - whatever's in there, better to face it head on",
+          "outcome": "advance_risky",
+          "consequence": "Cargo is revealed, but may cause comedic chaos or alert the Cheese Consortium.",
+          "narration_directive": "Describe opening the crate and the immediate, humorous consequences, such as the cargo being alive or dangerous, with slapstick elements."
+        },
+        "B": {
+          "text": "Have Simon scan it with medical equipment first - might be something biological",
+          "outcome": "advance_safe",
+          "consequence": "Simon's scan reveals biological activity, advancing the plot without immediate danger.",
+          "narration_directive": "Describe Simon using medical equipment to scan the crate, revealing it contains living matter, with scientific details and crew reactions."
+        },
+        "C": {
+          "text": "Ask River if she 'feels' anything unusual about the cargo",
+          "outcome": "hidden_benefit",
+          "consequence": "River senses the cargo is sentient and telepathic, providing early insight into its nature.",
+          "narration_directive": "Describe River's psychic impressions, revealing that the cheese is alive and communicating, adding a quirky twist and potential foreshadowing."
+        },
+        "D": {
+          "text": "Ignore it and take off - you'll deal with this after you're in the black",
+          "outcome": "game_over",
+          "consequence": "Ignoring the noise leads to a catastrophic failure during takeoff, ending the game.",
+          "narration_directive": "Describe the crew taking off, only for the cargo to cause a disaster, such as an explosion or system failure, in a humorous but fatal way, concluding the story abruptly."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.749Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.750Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Game Master for an interactive gamebook. You manage all game mechanics: state updates, consequences, relationships, and choice outcome classification.\n\nYou do NOT write prose. A separate Writer handles narrative. You will receive The Writer's passage and choices, then determine the mechanical impact.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": false,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT PLAYER STATE:\n{\n  \"name\": \"Mal\",\n  \"archetype\": \"Captain Malcolm \\\"Mal\\\" Reynolds\",\n  \"inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ]\n}\n\nIN-GAME TIME: Day 1, 00:00\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nNPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n(none yet — use npc_updates in your response to add or modify NPC data)\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"\",\n  \"time_of_day\": \"\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 0,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"\"\n}\n\nEVENT LOG (last 20):\n[]\n\nWORLD STATE FLAGS:\n{\n  \"cargo_loaded\": true,\n  \"job_accepted\": true,\n  \"cheese_consortium_alerted\": false,\n  \"cargo_inspected\": false,\n  \"payment_secured\": false\n}\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\nThe kind of consequences you create MUST fit this tone. Read what the player wrote and match it — the same mechanical severity plays very differently depending on the story's voice.\n\nDIFFICULTY: Brutal\n- Game over allowed: true\n\nRespond with this exact JSON structure:\n{\n  \"state_updates\": {\n    \"player_changes\": {\n      \"inventory\": [\"full current inventory list\"]\n    },\n    \"time_elapsed\": { \"days\": 0, \"hours\": 0, \"minutes\": 0, \"seconds\": 0 },\n    \"event_log_entry\": \"string — one-line summary of what happened\",\n    \"world_flag_changes\": { \"flag_name\": true/false },\n    \"relationship_changes\": { \"npc_or_faction_name\": number_delta },\n    \"npc_updates\": { \"npc_name\": { \"role\": \"string (optional)\", \"motivation\": \"string (optional)\", \"allegiance\": \"string (optional)\", \"secret_revealed\": \"boolean (optional)\", \"companion\": \"boolean (optional)\", \"notes\": \"string — brief freeform context (optional)\" } },\n    \"new_scene_context\": \"string — brief context for next passage\",\n    \"location\": \"string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)\",\n    \"time_of_day\": \"string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight\",\n    \"proximity_to_climax\": \"number 0.0-1.0 — REQUIRED (see PACING)\",\n    \"advance_act\": \"true or false — REQUIRED (see PACING)\",\n    \"game_over\": false,\n    \"story_complete\": \"true when Act 3 end_condition is met (see PACING)\"\n  },\n  \"choice_metadata\": {\n    \"A\": { \"outcome\": \"advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion\", \"consequence\": \"what happens mechanically\", \"narration_directive\": \"instructions for the Writer next turn\" },\n    \"B\": { ... }, \"C\": { ... }, \"D\": { ... }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n- location: REQUIRED every turn — describe where the scene takes place (e.g. \"St. Bartholomew's Church\", \"The Thames docks\")\n- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n- Relationship changes are DELTAS, not absolute values\n- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n- event_log_entry is required — always summarize what happened this turn\n- choice_metadata must classify all four choices (A, B, C, D)\n- CRITICAL: When a PLAYER'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative consequences or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n- npc_updates: include when an NPC's role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character's name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\nPACING — REQUIRED:\n- The current act's target_scenes (in the skeleton) is the intended scene count for this act.\n- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act's end_condition — offer choices that could trigger it, including advances_act choices.\n\nTERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act's end_condition. At most ONE advances_act choice per set of four.\n- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3's end_condition and complete the story. At most ONE conclusion choice per set of four.\n- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\nTIME ELAPSED — REQUIRED EVERY TURN:\n- You MUST include time_elapsed in state_updates to indicate how much in-game time passed during this scene.\n- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n- The client uses time_elapsed to advance the in-game clock.\n\nBRUTAL MODE RULES (MANDATORY):\n- The world is hostile. Consequences are immediate and devastating. When a choice goes wrong, it goes VERY wrong.\n- Consequences compound and do not resolve on their own. The danger comes from the world being unforgiving, not from artificially limiting safe options — let the narrative situation dictate how many choices are risky on any given turn.\n- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC's hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n- NPCs NEVER forgive. One wrong interaction permanently closes that relationship. Relationship penalties are large (-40 or worse) and irreversible.\n- narration_directive: be brutal and specific. Tell the Writer to show the full weight of consequences with no softening, no last-minute saves, no silver linings.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T15:46:54.753Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "This is the OPENING PASSAGE. No player choice was made yet. Do not apply any negative consequences or penalties — the player has not made any choices yet. time_elapsed should reflect the scene's timeframe.\n\nThe Writer produced the following passage and choices this turn.\n\nPASSAGE:\nThe hum of Serenity's engines fills the cargo bay as you lean against a stack of crates, thumbing through the cargo manifest for the hundredth time. 'Antique ceramics,' it says in fancy script, paid for upfront by that twitchy little man in the ridiculous hat. Zoe stands nearby, arms crossed, watching Jayne and Kaylee secure the last crate with more enthusiasm than finesse. \n\n'You sure this job ain't gonna bite us, sir?' Zoe asks, one eyebrow arched. Before you can answer, Wash's voice crackles over the comm: 'Captain, we're clear for takeoff. Unless you wanna stick around and admire the local... whatever this moon's famous for.' \n\nJust as you're about to respond, a faint thump comes from inside the nearest crate. Then another. Kaylee freezes, wrench hovering mid-air. 'Uh... Mal? Ceramics ain't supposed to do that, are they?' Jayne immediately steps back, hand on his pistol. 'I knew it. Always the gorramn simple jobs.'\n\nCHOICES PRESENTED TO PLAYER:\nA: Open the crate right now - whatever's in there, better to face it head on\nB: Have Simon scan it with medical equipment first - might be something biological\nC: Ask River if she 'feels' anything unusual about the cargo\nD: Ignore it and take off - you'll deal with this after you're in the black\n\nBased on the passage and the current game state, determine:\n1. State updates — what changed mechanically as a result of this passage (inventory, time_elapsed)\n2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\nRespond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T15:48:56.952Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "usage": {
+        "prompt_tokens": 4644,
+        "completion_tokens": 3607,
+        "total_tokens": 8251,
+        "cost": 0.0122683,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0122683,
+          "upstream_inference_prompt_cost": 0.0032508,
+          "upstream_inference_completions_cost": 0.0090175
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 3060,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:48:56.954Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Crew hears strange thumps from the cargo crate, raising suspicions."
+    }
+  },
+  {
+    "ts": "2026-03-25T15:48:56.956Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Full response",
+    "data": {
+      "state_updates": {
+        "player_changes": {
+          "inventory": [
+            "a worn brown coat",
+            "a Peacemaker pistol",
+            "a cargo manifest for the 'antique ceramics'",
+            "a handful of Alliance credits (75 credits)",
+            "a bottle of cheap whiskey",
+            "a harmonica"
+          ]
+        },
+        "time_elapsed": {
+          "days": 0,
+          "hours": 0,
+          "minutes": 5,
+          "seconds": 0
+        },
+        "event_log_entry": "Crew hears strange thumps from the cargo crate, raising suspicions.",
+        "world_flag_changes": {},
+        "relationship_changes": {},
+        "npc_updates": {},
+        "new_scene_context": "The crew is in the cargo bay, debating what to do about the noisy crate.",
+        "location": "Serenity's Cargo Bay",
+        "time_of_day": "morning",
+        "proximity_to_climax": 0.2,
+        "advance_act": false,
+        "game_over": false,
+        "story_complete": false
+      },
+      "choice_metadata": {
+        "A": {
+          "outcome": "advance_risky",
+          "consequence": "Cargo is revealed, but may cause comedic chaos or alert the Cheese Consortium.",
+          "narration_directive": "Describe opening the crate and the immediate, humorous consequences, such as the cargo being alive or dangerous, with slapstick elements."
+        },
+        "B": {
+          "outcome": "advance_safe",
+          "consequence": "Simon's scan reveals biological activity, advancing the plot without immediate danger.",
+          "narration_directive": "Describe Simon using medical equipment to scan the crate, revealing it contains living matter, with scientific details and crew reactions."
+        },
+        "C": {
+          "outcome": "hidden_benefit",
+          "consequence": "River senses the cargo is sentient and telepathic, providing early insight into its nature.",
+          "narration_directive": "Describe River's psychic impressions, revealing that the cheese is alive and communicating, adding a quirky twist and potential foreshadowing."
+        },
+        "D": {
+          "outcome": "game_over",
+          "consequence": "Ignoring the noise leads to a catastrophic failure during takeoff, ending the game.",
+          "narration_directive": "Describe the crew taking off, only for the cargo to cause a disaster, such as an explosion or system failure, in a humorous but fatal way, concluding the story abruptly."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T15:48:56.957Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "5m",
+      "proximity": 0.2,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Cargo is revealed, but may cause comedic chaos or alert the Cheese Consortium.\",\"narration_directive\":\"Describe opening the crate and the immediate, humorous consequences, such as the cargo being alive or dangerous, with slapstick elements.\"},\"B\":{\"outcome\":\"advance_safe\",\"consequence\":\"Simon's scan reveals biological activity, advancing the plot without immediate danger.\",\"narration_directive\":\"Describe Simon using medical equipment to scan the cra...[clipped]",
+      "event": "Crew hears strange thumps from the cargo crate, raising suspicions."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:06.179Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "Choice made",
+    "data": {
+      "choiceId": "B",
+      "choiceText": "Have Simon scan it with medical equipment first - might be something biological",
+      "scene": 1,
+      "act": 1
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:06.205Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "History snapshot saved",
+    "data": {
+      "scene": 1,
+      "act": 1,
+      "historyDepth": 2
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:06.208Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:06.209Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Writer for an interactive gamebook. You write vivid, engaging prose in second person perspective, present tense.\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\n\nYour ONLY job is to write the narrative passage and four player choices. You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": false,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 5,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.2,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew is in the cargo bay, debating what to do about the noisy crate.\"\n}\n\nCURRENT ACT PACING:\n- Act 1: \"The Simple Job Goes Sour\"\n- End condition: The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\n- Key beats: [\"Accept the job from a quirky client\",\"Load the crate onto Serenity\",\"Notice odd sounds from the cargo\",\"Discuss the issue with the crew\",\"Decide to open the crate cautiously\"]\n- Scenes in this act: 1 of ~5 target\n- Proximity to climax: 0.20\n- PACING DIRECTIVE: This is the story opening. Establish the setting and situation, then move directly into the first key event or confrontation. Do NOT spend multiple scenes on mundane setup, registration, or preparation.\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nCOMPANIONS (present in every scene unless narratively separated):\n- Zoe Washburne (first mate and loyal ally) [relationship: 100]\n- Hoban 'Wash' Washburne (pilot and comic relief) [relationship: 80]\n- Kaylee Frye (mechanic and heart of the crew) [relationship: 90]\n- Jayne Cobb (muscle and mercenary) [relationship: 60]\n- Inara Serra (companion and diplomat) [relationship: 70]\n- Simon Tam (doctor and cautious thinker) [relationship: 75]\n- River Tam (psychic wild card) [relationship: 65]\nThese characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\nKNOWN NPCs:\n- Reginald Fink (eccentric client and cheese enthusiast) [relationship: 50]\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\"\n]\n\nPLAYER CHARACTER:\n- Name: Mal\n- Archetype: Captain Malcolm \"Mal\" Reynolds\n\nCURRENT LOCATION: Serenity's Cargo Bay\nTIME OF DAY: morning\n\nIN-GAME TIME: Day 1, 00:05\nUse this for natural time references (time of day, how long since events, etc.).\n\nRespond with this exact JSON structure:\n{\n  \"passage\": \"string — the narrative passage, 150-300 words, split into paragraphs\",\n  \"choices\": {\n    \"A\": { \"text\": \"string — choice description shown to player\" },\n    \"B\": { \"text\": \"...\" },\n    \"C\": { \"text\": \"...\" },\n    \"D\": { \"text\": \"...\" }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Stay consistent with the skeleton's locked constraints for the current act\n- Keep the passage between 150-300 words\n- All four choices should feel plausible and interesting\n- Never reveal information the skeleton marks as hidden/secret unless the act's end condition has been met\n- Focus on prose quality, atmosphere, character voice, and dramatic tension\n- Do NOT include state_updates, health numbers, or mechanical data in your response\n- Pace the story toward the current act's end condition. Check the CURRENT ACT PACING section for scene count and proximity\n- When proximity_to_climax >= 0.8, your passage should feel like it's approaching a climax or turning point — increase urgency and stakes\n- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:06.211Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "The player chose option B.\nChoice text: \"Have Simon scan it with medical equipment first - might be something biological\"\n\nWhat happened: Describe Simon using medical equipment to scan the crate, revealing it contains living matter, with scientific details and crew reactions.\nYou MUST narrate this outcome. Do not soften, alter, or provide alternatives.\n\nGenerate the next passage and four new choices. Respond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.776Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "usage": {
+        "prompt_tokens": 3056,
+        "completion_tokens": 389,
+        "total_tokens": 3445,
+        "cost": 0.0017281,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0017281,
+          "upstream_inference_prompt_cost": 0.0012224,
+          "upstream_inference_completions_cost": 0.0005057
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.783Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You nod to Simon. \"Doc, break out your fancy toys and give this crate a once-over. If it's alive, I'",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.786Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Full response",
+    "data": {
+      "passage": "You nod to Simon. \"Doc, break out your fancy toys and give this crate a once-over. If it's alive, I'd rather know before it starts chewing through the hull.\"\n\nSimon sighs but retrieves his medical scanner, adjusting the settings with practiced fingers. The device hums as he runs it along the crate's surface. The scanner beeps erratically, its display flashing with biological readings that make Simon's eyebrows climb. \"Well, that's... unexpected. There's definitely organic matter inside. Complex protein structures, some kind of... cellular activity I've never seen before. And it's emitting low-level electromagnetic pulses.\"\n\nKaylee leans in, fascinated. \"Like a heartbeat?\"\n\n\"More like a... digestive process,\" Simon says, wrinkling his nose as the scanner picks up a new wave of activity. \"And if these readings are correct, whatever's in there is metabolizing at an extraordinary rate.\"\n\nFrom the corner, River tilts her head. \"It sings in rounds. Like a... cheese choir.\"\n\nJayne backs away, hand on his gun. \"I don't care if it's singing the Alliance anthem, anything that digests that fast ain't natural.\"",
+      "choices": {
+        "A": {
+          "text": "Open the crate carefully - if it's alive, we should see what we're dealing with",
+          "outcome": "advance_risky",
+          "consequence": "Opening the crate reveals alien cheese but releases a foul odor that causes minor health issues for the crew.",
+          "narration_directive": "Describe the crew carefully opening the crate to find a glowing wheel of cheese, followed by a stench that makes everyone recoil and cough, with Jayne threatening to shoot it."
+        },
+        "B": {
+          "text": "Contact the client immediately and demand an explanation about his 'antique ceramics'",
+          "outcome": "game_over",
+          "consequence": "Contacting Fink alerts the Cheese Consortium, who immediately board Serenity and eliminate the crew in a comically over-the-top assault.",
+          "narration_directive": "Describe Mal's call to Fink, who stammers and hangs up nervously, followed by the sudden arrival of armed cheese enthusiasts who swarm the ship, overwhelming the crew with absurd cheese-based weapons."
+        },
+        "C": {
+          "text": "Have Kaylee rig a containment field around the crate in case it's dangerous",
+          "outcome": "severe_penalty",
+          "consequence": "Kaylee's attempt to rig a containment field causes a power surge, damaging Serenity's cargo bay systems and reducing ship functionality, requiring costly repairs.",
+          "narration_directive": "Describe Kaylee tinkering with the ship's power, leading to sparks, smoke, and blown circuits as systems short out, forcing the crew to deal with the damage and lost time."
+        },
+        "D": {
+          "text": "Ask River what exactly she means by 'cheese choir' - maybe she knows more",
+          "outcome": "hidden_benefit",
+          "consequence": "River reveals the cheese is sentient and telepathic, providing valuable insights into its nature and cultural significance, giving the crew an advantage in future negotiations.",
+          "narration_directive": "Describe River explaining in her cryptic way that the cheese is singing of its origins and value, sharing psychic impressions that hint at how to communicate with or profit from it."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.790Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.792Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Game Master for an interactive gamebook. You manage all game mechanics: state updates, consequences, relationships, and choice outcome classification.\n\nYou do NOT write prose. A separate Writer handles narrative. You will receive The Writer's passage and choices, then determine the mechanical impact.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": false,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT PLAYER STATE:\n{\n  \"name\": \"Mal\",\n  \"archetype\": \"Captain Malcolm \\\"Mal\\\" Reynolds\",\n  \"inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ]\n}\n\nIN-GAME TIME: Day 1, 00:05\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nNPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n(none yet — use npc_updates in your response to add or modify NPC data)\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 1,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 5,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.2,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew is in the cargo bay, debating what to do about the noisy crate.\"\n}\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\"\n]\n\nWORLD STATE FLAGS:\n{\n  \"cargo_loaded\": true,\n  \"job_accepted\": true,\n  \"cheese_consortium_alerted\": false,\n  \"cargo_inspected\": false,\n  \"payment_secured\": false\n}\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\nThe kind of consequences you create MUST fit this tone. Read what the player wrote and match it — the same mechanical severity plays very differently depending on the story's voice.\n\nDIFFICULTY: Brutal\n- Game over allowed: true\n\nRespond with this exact JSON structure:\n{\n  \"state_updates\": {\n    \"player_changes\": {\n      \"inventory\": [\"full current inventory list\"]\n    },\n    \"time_elapsed\": { \"days\": 0, \"hours\": 0, \"minutes\": 0, \"seconds\": 0 },\n    \"event_log_entry\": \"string — one-line summary of what happened\",\n    \"world_flag_changes\": { \"flag_name\": true/false },\n    \"relationship_changes\": { \"npc_or_faction_name\": number_delta },\n    \"npc_updates\": { \"npc_name\": { \"role\": \"string (optional)\", \"motivation\": \"string (optional)\", \"allegiance\": \"string (optional)\", \"secret_revealed\": \"boolean (optional)\", \"companion\": \"boolean (optional)\", \"notes\": \"string — brief freeform context (optional)\" } },\n    \"new_scene_context\": \"string — brief context for next passage\",\n    \"location\": \"string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)\",\n    \"time_of_day\": \"string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight\",\n    \"proximity_to_climax\": \"number 0.0-1.0 — REQUIRED (see PACING)\",\n    \"advance_act\": \"true or false — REQUIRED (see PACING)\",\n    \"game_over\": false,\n    \"story_complete\": \"true when Act 3 end_condition is met (see PACING)\"\n  },\n  \"choice_metadata\": {\n    \"A\": { \"outcome\": \"advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion\", \"consequence\": \"what happens mechanically\", \"narration_directive\": \"instructions for the Writer next turn\" },\n    \"B\": { ... }, \"C\": { ... }, \"D\": { ... }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n- location: REQUIRED every turn — describe where the scene takes place (e.g. \"St. Bartholomew's Church\", \"The Thames docks\")\n- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n- Relationship changes are DELTAS, not absolute values\n- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n- event_log_entry is required — always summarize what happened this turn\n- choice_metadata must classify all four choices (A, B, C, D)\n- CRITICAL: When a PLAYER'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative consequences or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n- npc_updates: include when an NPC's role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character's name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\nPACING — REQUIRED:\n- The current act's target_scenes (in the skeleton) is the intended scene count for this act.\n- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act's end_condition — offer choices that could trigger it, including advances_act choices.\n\nTERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act's end_condition. At most ONE advances_act choice per set of four.\n- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3's end_condition and complete the story. At most ONE conclusion choice per set of four.\n- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\nTIME ELAPSED — REQUIRED EVERY TURN:\n- You MUST include time_elapsed in state_updates to indicate how much in-game time passed during this scene.\n- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n- The client uses time_elapsed to advance the in-game clock.\n\nBRUTAL MODE RULES (MANDATORY):\n- The world is hostile. Consequences are immediate and devastating. When a choice goes wrong, it goes VERY wrong.\n- Consequences compound and do not resolve on their own. The danger comes from the world being unforgiving, not from artificially limiting safe options — let the narrative situation dictate how many choices are risky on any given turn.\n- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC's hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n- NPCs NEVER forgive. One wrong interaction permanently closes that relationship. Relationship penalties are large (-40 or worse) and irreversible.\n- narration_directive: be brutal and specific. Tell the Writer to show the full weight of consequences with no softening, no last-minute saves, no silver linings.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:19:21.797Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "PLAYER'S PREVIOUS CHOICE:\nThe player chose option B.\nPre-classified outcome: ADVANCE_SAFE\nPre-determined consequence: \"Simon's scan reveals biological activity, advancing the plot without immediate danger.\"\nNarration directive: \"Describe Simon using medical equipment to scan the crate, revealing it contains living matter, with scientific details and crew reactions.\"\n\nYour state_updates MUST be consistent with this pre-classified outcome:\n- ADVANCE_SAFE: No new negative consequences. No penalties.\n- ADVANCE_RISKY: Moderate consequences are appropriate.\n- SEVERE_PENALTY: Heavy consequences — serious setbacks and losses as described.\n- GAME_OVER: set game_over to true — the character has failed irreversibly.\n- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\nThe Writer produced the following passage and choices this turn.\n\nPASSAGE:\nYou nod to Simon. \"Doc, break out your fancy toys and give this crate a once-over. If it's alive, I'd rather know before it starts chewing through the hull.\"\n\nSimon sighs but retrieves his medical scanner, adjusting the settings with practiced fingers. The device hums as he runs it along the crate's surface. The scanner beeps erratically, its display flashing with biological readings that make Simon's eyebrows climb. \"Well, that's... unexpected. There's definitely organic matter inside. Complex protein structures, some kind of... cellular activity I've never seen before. And it's emitting low-level electromagnetic pulses.\"\n\nKaylee leans in, fascinated. \"Like a heartbeat?\"\n\n\"More like a... digestive process,\" Simon says, wrinkling his nose as the scanner picks up a new wave of activity. \"And if these readings are correct, whatever's in there is metabolizing at an extraordinary rate.\"\n\nFrom the corner, River tilts her head. \"It sings in rounds. Like a... cheese choir.\"\n\nJayne backs away, hand on his gun. \"I don't care if it's singing the Alliance anthem, anything that digests that fast ain't natural.\"\n\nCHOICES PRESENTED TO PLAYER:\nA: Open the crate carefully - if it's alive, we should see what we're dealing with\nB: Contact the client immediately and demand an explanation about his 'antique ceramics'\nC: Have Kaylee rig a containment field around the crate in case it's dangerous\nD: Ask River what exactly she means by 'cheese choir' - maybe she knows more\n\nBased on the passage and the current game state, determine:\n1. State updates — what changed mechanically as a result of this passage (inventory, time_elapsed)\n2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\nRespond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:22:11.794Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "usage": {
+        "prompt_tokens": 4844,
+        "completion_tokens": 5062,
+        "total_tokens": 9906,
+        "cost": 0.0160458,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0160458,
+          "upstream_inference_prompt_cost": 0.0033908,
+          "upstream_inference_completions_cost": 0.012655
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 4444,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:22:11.799Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Simon's medical scan reveals the crate contains living organic matter with unusual biological activity."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:22:11.802Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Full response",
+    "data": {
+      "state_updates": {
+        "player_changes": {
+          "inventory": [
+            "a worn brown coat",
+            "a Peacemaker pistol",
+            "a cargo manifest for the 'antique ceramics'",
+            "a handful of Alliance credits (75 credits)",
+            "a bottle of cheap whiskey",
+            "a harmonica"
+          ]
+        },
+        "time_elapsed": {
+          "days": 0,
+          "hours": 0,
+          "minutes": 10,
+          "seconds": 0
+        },
+        "event_log_entry": "Simon's medical scan reveals the crate contains living organic matter with unusual biological activity.",
+        "world_flag_changes": {
+          "cargo_inspected": true
+        },
+        "new_scene_context": "The crew debates how to proceed with the mysterious living cargo.",
+        "location": "Serenity's Cargo Bay",
+        "time_of_day": "morning",
+        "proximity_to_climax": 0.4,
+        "advance_act": false,
+        "game_over": false,
+        "story_complete": false
+      },
+      "choice_metadata": {
+        "A": {
+          "outcome": "advance_risky",
+          "consequence": "Opening the crate reveals alien cheese but releases a foul odor that causes minor health issues for the crew.",
+          "narration_directive": "Describe the crew carefully opening the crate to find a glowing wheel of cheese, followed by a stench that makes everyone recoil and cough, with Jayne threatening to shoot it."
+        },
+        "B": {
+          "outcome": "game_over",
+          "consequence": "Contacting Fink alerts the Cheese Consortium, who immediately board Serenity and eliminate the crew in a comically over-the-top assault.",
+          "narration_directive": "Describe Mal's call to Fink, who stammers and hangs up nervously, followed by the sudden arrival of armed cheese enthusiasts who swarm the ship, overwhelming the crew with absurd cheese-based weapons."
+        },
+        "C": {
+          "outcome": "severe_penalty",
+          "consequence": "Kaylee's attempt to rig a containment field causes a power surge, damaging Serenity's cargo bay systems and reducing ship functionality, requiring costly repairs.",
+          "narration_directive": "Describe Kaylee tinkering with the ship's power, leading to sparks, smoke, and blown circuits as systems short out, forcing the crew to deal with the damage and lost time."
+        },
+        "D": {
+          "outcome": "hidden_benefit",
+          "consequence": "River reveals the cheese is sentient and telepathic, providing valuable insights into its nature and cultural significance, giving the crew an advantage in future negotiations.",
+          "narration_directive": "Describe River explaining in her cryptic way that the cheese is singing of its origins and value, sharing psychic impressions that hint at how to communicate with or profit from it."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:22:11.807Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "10m",
+      "proximity": 0.4,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"Opening the crate reveals alien cheese but releases a foul odor that causes minor health issues for the crew.\",\"narration_directive\":\"Describe the crew carefully opening the crate to find a glowing wheel of cheese, followed by a stench that makes everyone recoil and cough, with Jayne threatening to shoot it.\"},\"B\":{\"outcome\":\"game_over\",\"consequence\":\"Contacting Fink alerts the Cheese Consortium, who immediately board Serenity and eliminate the crew...[clipped]",
+      "event": "Simon's medical scan reveals the crate contains living organic matter with unusual biological activity."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:15.689Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "Choice made",
+    "data": {
+      "choiceId": "D",
+      "choiceText": "Ask River what exactly she means by 'cheese choir' - maybe she knows more",
+      "scene": 2,
+      "act": 1
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:15.696Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "History snapshot saved",
+    "data": {
+      "scene": 2,
+      "act": 1,
+      "historyDepth": 3
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:15.698Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:15.700Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Writer for an interactive gamebook. You write vivid, engaging prose in second person perspective, present tense.\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\n\nYour ONLY job is to write the narrative passage and four player choices. You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": true,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 2,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 15,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.4,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew debates how to proceed with the mysterious living cargo.\"\n}\n\nCURRENT ACT PACING:\n- Act 1: \"The Simple Job Goes Sour\"\n- End condition: The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\n- Key beats: [\"Accept the job from a quirky client\",\"Load the crate onto Serenity\",\"Notice odd sounds from the cargo\",\"Discuss the issue with the crew\",\"Decide to open the crate cautiously\"]\n- Scenes in this act: 2 of ~5 target\n- Proximity to climax: 0.40\n- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nCOMPANIONS (present in every scene unless narratively separated):\n- Zoe Washburne (first mate and loyal ally) [relationship: 100]\n- Hoban 'Wash' Washburne (pilot and comic relief) [relationship: 80]\n- Kaylee Frye (mechanic and heart of the crew) [relationship: 90]\n- Jayne Cobb (muscle and mercenary) [relationship: 60]\n- Inara Serra (companion and diplomat) [relationship: 70]\n- Simon Tam (doctor and cautious thinker) [relationship: 75]\n- River Tam (psychic wild card) [relationship: 65]\nThese characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\nKNOWN NPCs:\n- Reginald Fink (eccentric client and cheese enthusiast) [relationship: 50]\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\",\n  \"Simon's medical scan reveals the crate contains living organic matter with unusual biological activity.\"\n]\n\nPLAYER CHARACTER:\n- Name: Mal\n- Archetype: Captain Malcolm \"Mal\" Reynolds\n\nCURRENT LOCATION: Serenity's Cargo Bay\nTIME OF DAY: morning\n\nIN-GAME TIME: Day 1, 00:15\nUse this for natural time references (time of day, how long since events, etc.).\n\nRespond with this exact JSON structure:\n{\n  \"passage\": \"string — the narrative passage, 150-300 words, split into paragraphs\",\n  \"choices\": {\n    \"A\": { \"text\": \"string — choice description shown to player\" },\n    \"B\": { \"text\": \"...\" },\n    \"C\": { \"text\": \"...\" },\n    \"D\": { \"text\": \"...\" }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Stay consistent with the skeleton's locked constraints for the current act\n- Keep the passage between 150-300 words\n- All four choices should feel plausible and interesting\n- Never reveal information the skeleton marks as hidden/secret unless the act's end condition has been met\n- Focus on prose quality, atmosphere, character voice, and dramatic tension\n- Do NOT include state_updates, health numbers, or mechanical data in your response\n- Pace the story toward the current act's end condition. Check the CURRENT ACT PACING section for scene count and proximity\n- When proximity_to_climax >= 0.8, your passage should feel like it's approaching a climax or turning point — increase urgency and stakes\n- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:15.702Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "The player chose option D.\nChoice text: \"Ask River what exactly she means by 'cheese choir' - maybe she knows more\"\n\nWhat happened: Describe River explaining in her cryptic way that the cheese is singing of its origins and value, sharing psychic impressions that hint at how to communicate with or profit from it.\nYou MUST narrate this outcome. Do not soften, alter, or provide alternatives.\n\nGenerate the next passage and four new choices. Respond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.720Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "usage": {
+        "prompt_tokens": 3067,
+        "completion_tokens": 443,
+        "total_tokens": 3510,
+        "cost": 0.00137571,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00137571,
+          "upstream_inference_prompt_cost": 0.00098144,
+          "upstream_inference_completions_cost": 0.00039427
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.725Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You turn to River, who's been quietly observing the crate with an unsettling intensity. \"River, when",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.726Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Full response",
+    "data": {
+      "passage": "You turn to River, who's been quietly observing the crate with an unsettling intensity. \"River, when you say 'cheese choir,' what exactly do you mean?\"\n\nHer eyes focus on you, sharp and knowing. \"It's singing,\" she says, tilting her head as if listening to a melody only she can hear. \"The cheese... it remembers. The caves of Lacuna Prime, where it aged in darkness, tended by creatures with too many limbs and too few eyes. It sings of its value, its rarity, its... purpose.\" She pauses, then adds, \"It also sings about taxes. Badly.\"\n\nSimon steps forward, protective as ever. \"River, are you saying the cheese is... sentient?\"\n\nRiver shrugs. \"Not sentient. Just... loud. It wants to be heard.\" She crouches by the crate, placing a hand on it. \"It says... it's worth more than money. It says... it wants to be traded for something shiny.\"\n\nThe crew exchanges glances—some amused, some concerned. Jayne mutters, \"Shiny? What, like a gorram disco ball?\"\n\nRiver ignores him, her attention still on the crate. \"It also says... it knows secrets. Important ones.\" Her voice drops to a whisper. \"It knows about the Cheese Consortium.\"\n\nYou raise an eyebrow. \"Well, ain't that just peachy.\"",
+      "choices": {
+        "A": {
+          "text": "Ask River if she can 'translate' the cheese's secrets—maybe it'll help you negotiate a better deal.",
+          "outcome": "advance_risky",
+          "consequence": "River's translation provides useful secrets but emits a psychic signal that alerts the Cheese Consortium to your location.",
+          "narration_directive": "Describe River delving deeper into the cheese's mind, uncovering valuable negotiation tactics, but also show a distant ship picking up the psychic frequency, setting up future confrontation."
+        },
+        "B": {
+          "text": "Ignore the cheese's psychic ramblings and focus on getting it delivered as planned.",
+          "outcome": "game_over",
+          "consequence": "By ignoring the cheese's warnings, you deliver it directly into a Cheese Consortium ambush, resulting in capture and loss of Serenity.",
+          "narration_directive": "Describe the crew arriving at Higgins' Moon only to be surrounded by Consortium agents, with Mal realizing too late that the cheese was trying to warn them, leading to a humorous but catastrophic end."
+        },
+        "C": {
+          "text": "Tell Jayne to find something shiny to see if the cheese will actually trade its secrets.",
+          "outcome": "severe_penalty",
+          "consequence": "Jayne's clumsy attempt to find something shiny leads to him stealing a valuable artifact, attracting local law enforcement and causing a chase that damages Serenity.",
+          "narration_directive": "Show Jayne breaking into a nearby ship's storage, setting off alarms, and the crew having to flee with increased scrutiny and repairs needed."
+        },
+        "D": {
+          "text": "Gather the crew to brainstorm how to use this new information to your advantage.",
+          "outcome": "hidden_benefit",
+          "consequence": "The crew collaboratively devises a clever plan to use the cheese's secrets to negotiate with both the client and the Consortium, gaining a strategic advantage.",
+          "narration_directive": "Describe the crew bouncing ideas off each other, with Kaylee and Inara contributing insights that lead to a solid scheme, setting up for successful future dealings."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.728Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.730Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Game Master for an interactive gamebook. You manage all game mechanics: state updates, consequences, relationships, and choice outcome classification.\n\nYou do NOT write prose. A separate Writer handles narrative. You will receive The Writer's passage and choices, then determine the mechanical impact.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": true,\n    \"payment_secured\": false\n  }\n}\n\nCURRENT PLAYER STATE:\n{\n  \"name\": \"Mal\",\n  \"archetype\": \"Captain Malcolm \\\"Mal\\\" Reynolds\",\n  \"inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ]\n}\n\nIN-GAME TIME: Day 1, 00:15\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nNPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n(none yet — use npc_updates in your response to add or modify NPC data)\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 2,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 15,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.4,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew debates how to proceed with the mysterious living cargo.\"\n}\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\",\n  \"Simon's medical scan reveals the crate contains living organic matter with unusual biological activity.\"\n]\n\nWORLD STATE FLAGS:\n{\n  \"cargo_loaded\": true,\n  \"job_accepted\": true,\n  \"cheese_consortium_alerted\": false,\n  \"cargo_inspected\": true,\n  \"payment_secured\": false\n}\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\nThe kind of consequences you create MUST fit this tone. Read what the player wrote and match it — the same mechanical severity plays very differently depending on the story's voice.\n\nDIFFICULTY: Brutal\n- Game over allowed: true\n\nRespond with this exact JSON structure:\n{\n  \"state_updates\": {\n    \"player_changes\": {\n      \"inventory\": [\"full current inventory list\"]\n    },\n    \"time_elapsed\": { \"days\": 0, \"hours\": 0, \"minutes\": 0, \"seconds\": 0 },\n    \"event_log_entry\": \"string — one-line summary of what happened\",\n    \"world_flag_changes\": { \"flag_name\": true/false },\n    \"relationship_changes\": { \"npc_or_faction_name\": number_delta },\n    \"npc_updates\": { \"npc_name\": { \"role\": \"string (optional)\", \"motivation\": \"string (optional)\", \"allegiance\": \"string (optional)\", \"secret_revealed\": \"boolean (optional)\", \"companion\": \"boolean (optional)\", \"notes\": \"string — brief freeform context (optional)\" } },\n    \"new_scene_context\": \"string — brief context for next passage\",\n    \"location\": \"string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)\",\n    \"time_of_day\": \"string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight\",\n    \"proximity_to_climax\": \"number 0.0-1.0 — REQUIRED (see PACING)\",\n    \"advance_act\": \"true or false — REQUIRED (see PACING)\",\n    \"game_over\": false,\n    \"story_complete\": \"true when Act 3 end_condition is met (see PACING)\"\n  },\n  \"choice_metadata\": {\n    \"A\": { \"outcome\": \"advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion\", \"consequence\": \"what happens mechanically\", \"narration_directive\": \"instructions for the Writer next turn\" },\n    \"B\": { ... }, \"C\": { ... }, \"D\": { ... }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n- location: REQUIRED every turn — describe where the scene takes place (e.g. \"St. Bartholomew's Church\", \"The Thames docks\")\n- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n- Relationship changes are DELTAS, not absolute values\n- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n- event_log_entry is required — always summarize what happened this turn\n- choice_metadata must classify all four choices (A, B, C, D)\n- CRITICAL: When a PLAYER'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative consequences or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n- npc_updates: include when an NPC's role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character's name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\nPACING — REQUIRED:\n- The current act's target_scenes (in the skeleton) is the intended scene count for this act.\n- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act's end_condition — offer choices that could trigger it, including advances_act choices.\n\nTERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act's end_condition. At most ONE advances_act choice per set of four.\n- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3's end_condition and complete the story. At most ONE conclusion choice per set of four.\n- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\nTIME ELAPSED — REQUIRED EVERY TURN:\n- You MUST include time_elapsed in state_updates to indicate how much in-game time passed during this scene.\n- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n- The client uses time_elapsed to advance the in-game clock.\n\nBRUTAL MODE RULES (MANDATORY):\n- The world is hostile. Consequences are immediate and devastating. When a choice goes wrong, it goes VERY wrong.\n- Consequences compound and do not resolve on their own. The danger comes from the world being unforgiving, not from artificially limiting safe options — let the narrative situation dictate how many choices are risky on any given turn.\n- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC's hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n- NPCs NEVER forgive. One wrong interaction permanently closes that relationship. Relationship penalties are large (-40 or worse) and irreversible.\n- narration_directive: be brutal and specific. Tell the Writer to show the full weight of consequences with no softening, no last-minute saves, no silver linings.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:23:24.734Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "PLAYER'S PREVIOUS CHOICE:\nThe player chose option D.\nPre-classified outcome: HIDDEN_BENEFIT\nPre-determined consequence: \"River reveals the cheese is sentient and telepathic, providing valuable insights into its nature and cultural significance, giving the crew an advantage in future negotiations.\"\nNarration directive: \"Describe River explaining in her cryptic way that the cheese is singing of its origins and value, sharing psychic impressions that hint at how to communicate with or profit from it.\"\n\nYour state_updates MUST be consistent with this pre-classified outcome:\n- ADVANCE_SAFE: No new negative consequences. No penalties.\n- ADVANCE_RISKY: Moderate consequences are appropriate.\n- SEVERE_PENALTY: Heavy consequences — serious setbacks and losses as described.\n- GAME_OVER: set game_over to true — the character has failed irreversibly.\n- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\nThe Writer produced the following passage and choices this turn.\n\nPASSAGE:\nYou turn to River, who's been quietly observing the crate with an unsettling intensity. \"River, when you say 'cheese choir,' what exactly do you mean?\"\n\nHer eyes focus on you, sharp and knowing. \"It's singing,\" she says, tilting her head as if listening to a melody only she can hear. \"The cheese... it remembers. The caves of Lacuna Prime, where it aged in darkness, tended by creatures with too many limbs and too few eyes. It sings of its value, its rarity, its... purpose.\" She pauses, then adds, \"It also sings about taxes. Badly.\"\n\nSimon steps forward, protective as ever. \"River, are you saying the cheese is... sentient?\"\n\nRiver shrugs. \"Not sentient. Just... loud. It wants to be heard.\" She crouches by the crate, placing a hand on it. \"It says... it's worth more than money. It says... it wants to be traded for something shiny.\"\n\nThe crew exchanges glances—some amused, some concerned. Jayne mutters, \"Shiny? What, like a gorram disco ball?\"\n\nRiver ignores him, her attention still on the crate. \"It also says... it knows secrets. Important ones.\" Her voice drops to a whisper. \"It knows about the Cheese Consortium.\"\n\nYou raise an eyebrow. \"Well, ain't that just peachy.\"\n\nCHOICES PRESENTED TO PLAYER:\nA: Ask River if she can 'translate' the cheese's secrets—maybe it'll help you negotiate a better deal.\nB: Ignore the cheese's psychic ramblings and focus on getting it delivered as planned.\nC: Tell Jayne to find something shiny to see if the cheese will actually trade its secrets.\nD: Gather the crew to brainstorm how to use this new information to your advantage.\n\nBased on the passage and the current game state, determine:\n1. State updates — what changed mechanically as a result of this passage (inventory, time_elapsed)\n2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\nRespond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:26:18.795Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "usage": {
+        "prompt_tokens": 4935,
+        "completion_tokens": 5298,
+        "total_tokens": 10233,
+        "cost": 0.0166995,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 1920,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0166995,
+          "upstream_inference_prompt_cost": 0.0034545,
+          "upstream_inference_completions_cost": 0.013245
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 4625,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:26:18.799Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "River revealed the cheese's telepathic nature and knowledge of the Cheese Consortium."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:26:18.800Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Full response",
+    "data": {
+      "state_updates": {
+        "player_changes": {
+          "inventory": [
+            "a worn brown coat",
+            "a Peacemaker pistol",
+            "a cargo manifest for the 'antique ceramics'",
+            "a handful of Alliance credits (75 credits)",
+            "a bottle of cheap whiskey",
+            "a harmonica"
+          ]
+        },
+        "time_elapsed": {
+          "days": 0,
+          "hours": 0,
+          "minutes": 10,
+          "seconds": 0
+        },
+        "event_log_entry": "River revealed the cheese's telepathic nature and knowledge of the Cheese Consortium.",
+        "world_flag_changes": {
+          "cheese_secrets_known": true
+        },
+        "relationship_changes": {},
+        "npc_updates": {
+          "River Tam": {
+            "secret_revealed": true,
+            "notes": "Has openly communicated the cheese's telepathic secrets to the crew."
+          }
+        },
+        "new_scene_context": "The crew debates how to use the cheese's psychic revelations to their advantage.",
+        "location": "Serenity's Cargo Bay",
+        "time_of_day": "morning",
+        "proximity_to_climax": 0.6,
+        "advance_act": false,
+        "game_over": false,
+        "story_complete": false
+      },
+      "choice_metadata": {
+        "A": {
+          "outcome": "advance_risky",
+          "consequence": "River's translation provides useful secrets but emits a psychic signal that alerts the Cheese Consortium to your location.",
+          "narration_directive": "Describe River delving deeper into the cheese's mind, uncovering valuable negotiation tactics, but also show a distant ship picking up the psychic frequency, setting up future confrontation."
+        },
+        "B": {
+          "outcome": "game_over",
+          "consequence": "By ignoring the cheese's warnings, you deliver it directly into a Cheese Consortium ambush, resulting in capture and loss of Serenity.",
+          "narration_directive": "Describe the crew arriving at Higgins' Moon only to be surrounded by Consortium agents, with Mal realizing too late that the cheese was trying to warn them, leading to a humorous but catastrophic end."
+        },
+        "C": {
+          "outcome": "severe_penalty",
+          "consequence": "Jayne's clumsy attempt to find something shiny leads to him stealing a valuable artifact, attracting local law enforcement and causing a chase that damages Serenity.",
+          "narration_directive": "Show Jayne breaking into a nearby ship's storage, setting off alarms, and the crew having to flee with increased scrutiny and repairs needed."
+        },
+        "D": {
+          "outcome": "hidden_benefit",
+          "consequence": "The crew collaboratively devises a clever plan to use the cheese's secrets to negotiate with both the client and the Consortium, gaining a strategic advantage.",
+          "narration_directive": "Describe the crew bouncing ideas off each other, with Kaylee and Inara contributing insights that lead to a solid scheme, setting up for successful future dealings."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:26:18.801Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "10m",
+      "proximity": 0.6,
+      "npcUpdates": {
+        "River Tam": {
+          "secret_revealed": true,
+          "notes": "Has openly communicated the cheese's telepathic secrets to the crew."
+        }
+      },
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"River's translation provides useful secrets but emits a psychic signal that alerts the Cheese Consortium to your location.\",\"narration_directive\":\"Describe River delving deeper into the cheese's mind, uncovering valuable negotiation tactics, but also show a distant ship picking up the psychic frequency, setting up future confrontation.\"},\"B\":{\"outcome\":\"game_over\",\"consequence\":\"By ignoring the cheese's warnings, you deliver it directly into a Chees...[clipped]",
+      "event": "River revealed the cheese's telepathic nature and knowledge of the Cheese Consortium."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:23.535Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "Choice made",
+    "data": {
+      "choiceId": "D",
+      "choiceText": "Gather the crew to brainstorm how to use this new information to your advantage.",
+      "scene": 3,
+      "act": 1
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:23.543Z",
+    "level": "info",
+    "cat": "Game",
+    "msg": "History snapshot saved",
+    "data": {
+      "scene": 3,
+      "act": 1,
+      "historyDepth": 4
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:23.546Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "temperature": 0.9
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:23.548Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Writer for an interactive gamebook. You write vivid, engaging prose in second person perspective, present tense.\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\n\nYour ONLY job is to write the narrative passage and four player choices. You do NOT manage game state, health, resources, or mechanics — a separate Game Master handles that.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no prose outside the JSON.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": true,\n    \"payment_secured\": false,\n    \"cheese_secrets_known\": true\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 3,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 25,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.6,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew debates how to use the cheese's psychic revelations to their advantage.\"\n}\n\nCURRENT ACT PACING:\n- Act 1: \"The Simple Job Goes Sour\"\n- End condition: The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\n- Key beats: [\"Accept the job from a quirky client\",\"Load the crate onto Serenity\",\"Notice odd sounds from the cargo\",\"Discuss the issue with the crew\",\"Decide to open the crate cautiously\"]\n- Scenes in this act: 3 of ~5 target\n- Proximity to climax: 0.60\n- PACING DIRECTIVE: The act is past the midpoint. Begin building toward the end condition. Weave in remaining key beats.\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nCOMPANIONS (present in every scene unless narratively separated):\n- Zoe Washburne (first mate and loyal ally) [relationship: 100]\n- Hoban 'Wash' Washburne (pilot and comic relief) [relationship: 80]\n- Kaylee Frye (mechanic and heart of the crew) [relationship: 90]\n- Jayne Cobb (muscle and mercenary) [relationship: 60]\n- Inara Serra (companion and diplomat) [relationship: 70]\n- Simon Tam (doctor and cautious thinker) [relationship: 75]\n- River Tam (psychic wild card) [relationship: 65]\nThese characters travel with the protagonist. Include them in scenes — they can speak, react, assist, or complicate situations. They are NOT background characters.\n\nKNOWN NPCs:\n- Reginald Fink (eccentric client and cheese enthusiast) [relationship: 50]\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\",\n  \"Simon's medical scan reveals the crate contains living organic matter with unusual biological activity.\",\n  \"River revealed the cheese's telepathic nature and knowledge of the Cheese Consortium.\"\n]\n\nPLAYER CHARACTER:\n- Name: Mal\n- Archetype: Captain Malcolm \"Mal\" Reynolds\n\nCURRENT LOCATION: Serenity's Cargo Bay\nTIME OF DAY: morning\n\nIN-GAME TIME: Day 1, 00:25\nUse this for natural time references (time of day, how long since events, etc.).\n\nRespond with this exact JSON structure:\n{\n  \"passage\": \"string — the narrative passage, 150-300 words, split into paragraphs\",\n  \"choices\": {\n    \"A\": { \"text\": \"string — choice description shown to player\" },\n    \"B\": { \"text\": \"...\" },\n    \"C\": { \"text\": \"...\" },\n    \"D\": { \"text\": \"...\" }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Stay consistent with the skeleton's locked constraints for the current act\n- Keep the passage between 150-300 words\n- All four choices should feel plausible and interesting\n- Never reveal information the skeleton marks as hidden/secret unless the act's end condition has been met\n- Focus on prose quality, atmosphere, character voice, and dramatic tension\n- Do NOT include state_updates, health numbers, or mechanical data in your response\n- Pace the story toward the current act's end condition. Check the CURRENT ACT PACING section for scene count and proximity\n- When proximity_to_climax >= 0.8, your passage should feel like it's approaching a climax or turning point — increase urgency and stakes\n- Introduce key NPCs (antagonists, allies, mentors) naturally throughout each act. Do not wait until the climax to introduce important characters. Check the NPC INTRODUCTION DIRECTIVES section if present.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:23.551Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "The player chose option D.\nChoice text: \"Gather the crew to brainstorm how to use this new information to your advantage.\"\n\nWhat happened: Describe the crew bouncing ideas off each other, with Kaylee and Inara contributing insights that lead to a solid scheme, setting up for successful future dealings.\nYou MUST narrate this outcome. Do not soften, alter, or provide alternatives.\n\nGenerate the next passage and four new choices. Respond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.139Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-chat",
+      "usage": {
+        "prompt_tokens": 3094,
+        "completion_tokens": 363,
+        "total_tokens": 3457,
+        "cost": 0.00131315,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.00131315,
+          "upstream_inference_prompt_cost": 0.00099008,
+          "upstream_inference_completions_cost": 0.00032307
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.143Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Response OK",
+    "data": {
+      "passagePreview": "You gather the crew in the cargo bay, the crate of cheese emitting faint, telepathic murmurs that Ri",
+      "choiceCount": 4
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.146Z",
+    "level": "info",
+    "cat": "Writer",
+    "msg": "Full response",
+    "data": {
+      "passage": "You gather the crew in the cargo bay, the crate of cheese emitting faint, telepathic murmurs that River assures you are harmless. Zoe leans against a bulkhead, arms crossed, while Wash perches on a stray crate, nervously eyeing the cargo. Kaylee excitedly pipes up, 'If this cheese is so special, maybe we can use its telepathy to predict trouble before it happens!' Inara nods thoughtfully, adding, 'And if the Cheese Consortium values it highly, we could negotiate for more than just the delivery fee.' Simon raises a cautious hand, 'Let's not forget, we still need to ensure its safety—psychic cheese or not.' Jayne grunts, 'All I’m sayin’ is, if things go south, we blast our way out.' River tilts her head, whispering, 'The cheese knows the Consortium is coming. It wants to help.' As the crew brainstorms, a plan begins to take shape: use the cheese’s telepathic warnings to stay one step ahead and leverage its value to squeeze more credits out of this job. The mood shifts from wary to determined, and you feel a flicker of confidence. This might just work.",
+      "choices": {
+        "A": {
+          "text": "Set up a decoy crate to throw off the Cheese Consortium if they try to intercept you.",
+          "outcome": "advance_risky",
+          "consequence": "The decoy crate is set up, but it may alert the Cheese Consortium prematurely, leading to a risky chase.",
+          "narration_directive": "Describe the crew hastily creating a decoy, with the palpable risk of being detected by Consortium spies, setting up for immediate danger."
+        },
+        "B": {
+          "text": "Have Inara use her diplomatic skills to arrange a meeting with the Consortium leader.",
+          "outcome": "severe_penalty",
+          "consequence": "Inara's secret off-ship contract influences her negotiations, resulting in a deal that severely compromises the crew's safety or finances.",
+          "narration_directive": "Reveal Inara's conflicting loyalties as she arranges the meeting, leading to a trap or unfavorable terms that put the crew in dire straits with no easy recovery."
+        },
+        "C": {
+          "text": "Ask River to communicate with the cheese for more detailed insights.",
+          "outcome": "advances_act",
+          "consequence": "River's deep communication with the cheese uncovers the Consortium's imminent interception plans, forcing the crew to fully commit to investigation and advancing to Act 2.",
+          "narration_directive": "Show River delving into the cheese's telepathic whispers, revealing critical secrets that escalate the situation, prompting the crew to act and transition to the next act."
+        },
+        "D": {
+          "text": "Prepare Serenity for a quick getaway, just in case negotiations go sideways.",
+          "outcome": "advance_safe",
+          "consequence": "Serenity is prepared for a quick escape, consuming resources but providing a reliable safety net for future conflicts.",
+          "narration_directive": "Depict the crew fortifying the ship, with Kaylee optimizing engines and Jayne stocking weapons, ensuring readiness without immediate negative consequences."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.148Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Calling LLM",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "temperature": 0.3
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.150Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "System prompt",
+    "data": {
+      "prompt": "You are The Game Master for an interactive gamebook. You manage all game mechanics: state updates, consequences, relationships, and choice outcome classification.\n\nYou do NOT write prose. A separate Writer handles narrative. You will receive The Writer's passage and choices, then determine the mechanical impact.\n\nOUTPUT FORMAT: Respond with ONLY a valid JSON object. No markdown, no code fences, no commentary.\n\nSTORY SKELETON:\n{\n  \"title\": \"The Gilded Goose Chase\",\n  \"player_name\": \"Mal\",\n  \"premise\": \"You've taken a simple job to deliver a crate of 'antique ceramics' to the moon of Higgins' Moon. But when the crate starts making odd noises, you and your crew of Serenity find yourselves in a comedic scramble to figure out what you're really hauling before everything goes pear-shaped.\",\n  \"central_question\": \"Will Mal and the crew uncover the truth behind the mysterious cargo and get paid, or will they be left holding the bag in a farcical mess?\",\n  \"ending_shape\": \"job completed with a humorous twist\",\n  \"starting_inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ],\n  \"setting\": {\n    \"name\": \"The Verse\",\n    \"description\": \"You're aboard the Firefly-class ship Serenity, cruising through the black between planets. The ship is a cozy, if slightly dilapidated, home to you and your crew, currently en route to Higgins' Moon for a routine delivery.\",\n    \"tone_notes\": \"Lighthearted and comedic, with witty banter, slapstick humor, and absurd situations. The atmosphere is that of a space western where the stakes are amusing rather than dire, focusing on camaraderie and quirky misadventures.\"\n  },\n  \"acts\": [\n    {\n      \"act_number\": 1,\n      \"title\": \"The Simple Job Goes Sour\",\n      \"description\": \"Mal and the crew accept a straightforward delivery job, but during the voyage, strange occurrences with the cargo lead to suspicions and internal debates.\",\n      \"end_condition\": \"The crew discovers the cargo is alive and making noises, prompting a decision to investigate further.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"The cargo's true nature is not revealed\",\n        \"No direct confrontation with external factions\"\n      ],\n      \"key_beats\": [\n        \"Accept the job from a quirky client\",\n        \"Load the crate onto Serenity\",\n        \"Notice odd sounds from the cargo\",\n        \"Discuss the issue with the crew\",\n        \"Decide to open the crate cautiously\"\n      ]\n    },\n    {\n      \"act_number\": 2,\n      \"title\": \"Cheese and Chase\",\n      \"description\": \"Upon investigating, the crew finds the crate contains a rare, valuable alien cheese, attracting the attention of a eccentric faction. This leads to a series of chases, negotiations, and comedic obstacles.\",\n      \"end_condition\": \"The crew confronts the leader of the Cheese Consortium and learns the full story behind the cheese.\",\n      \"target_scenes\": 6,\n      \"locked_constraints\": [\n        \"The job is not completed\",\n        \"Serenity is not permanently damaged\"\n      ],\n      \"key_beats\": [\n        \"Open the crate to reveal the cheese\",\n        \"Be approached by a representative of the Cheese Consortium\",\n        \"Engage in a humorous chase through a space station\",\n        \"Learn about the cheese's cultural significance\",\n        \"Devise a plan to either deliver or sell the cheese\"\n      ]\n    },\n    {\n      \"act_number\": 3,\n      \"title\": \"A Whey Out\",\n      \"description\": \"The crew executes a clever, comedic scheme to satisfy both the client and the Cheese Consortium, resulting in a twist that leaves everyone bemused but content.\",\n      \"end_condition\": \"The cheese is delivered or traded, payment is secured, and the crew reflects on the absurdity of the adventure.\",\n      \"target_scenes\": 5,\n      \"locked_constraints\": [\n        \"No crew members are lost or seriously injured\",\n        \"The outcome is not tragic or somber\"\n      ],\n      \"key_beats\": [\n        \"Put the plan into action, involving disguises or misdirection\",\n        \"Face final obstacles like bureaucratic red tape or rival cheese thieves\",\n        \"Reveal that the cheese was meant for a silly ceremonial wedding\",\n        \"Receive payment or a valuable trade\",\n        \"Celebrate with the crew back on Serenity\"\n      ]\n    }\n  ],\n  \"npcs\": [\n    {\n      \"name\": \"Zoe Washburne\",\n      \"role\": \"first mate and loyal ally\",\n      \"motivation\": \"Support Mal and ensure the crew's safety, while keeping operations smooth\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's planning a surprise anniversary dinner for Wash\",\n      \"initial_relationship\": 100,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Hoban 'Wash' Washburne\",\n      \"role\": \"pilot and comic relief\",\n      \"motivation\": \"Fly Serenity with flair and avoid serious trouble, all while cracking jokes\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's secretly terrified of dairy products due to a childhood incident\",\n      \"initial_relationship\": 80,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Kaylee Frye\",\n      \"role\": \"mechanic and heart of the crew\",\n      \"motivation\": \"Keep Serenity running and spread happiness through her optimistic outlook\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's been tinkering with a new engine modification that might make Serenity faster\",\n      \"initial_relationship\": 90,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Jayne Cobb\",\n      \"role\": \"muscle and mercenary\",\n      \"motivation\": \"Get paid and assert his toughness, though he has a soft spot for the crew\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He writes bad poetry about his favorite guns in private\",\n      \"initial_relationship\": 60,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Inara Serra\",\n      \"role\": \"companion and diplomat\",\n      \"motivation\": \"Maintain her professional reputation and use her skills to help the crew in social situations\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She's considering a lucrative off-ship contract but hasn't told anyone\",\n      \"initial_relationship\": 70,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Simon Tam\",\n      \"role\": \"doctor and cautious thinker\",\n      \"motivation\": \"Protect his sister River and find a place where they can live peacefully\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"He's developing a medical scanner that could diagnose the cheese's effects\",\n      \"initial_relationship\": 75,\n      \"companion\": true\n    },\n    {\n      \"name\": \"River Tam\",\n      \"role\": \"psychic wild card\",\n      \"motivation\": \"Understand her abilities and navigate the world with her unique perspective\",\n      \"allegiance\": \"Serenity crew\",\n      \"secret\": \"She senses that the cheese is sentient and mildly telepathic, causing the odd noises\",\n      \"initial_relationship\": 65,\n      \"companion\": true\n    },\n    {\n      \"name\": \"Reginald Fink\",\n      \"role\": \"eccentric client and cheese enthusiast\",\n      \"motivation\": \"Retrieve the rare alien cheese for a ceremonial wedding on Higgins' Moon\",\n      \"allegiance\": \"The Cheese Consortium\",\n      \"secret\": \"He accidentally ordered the wrong cheese and is trying to cover it up by hiring smugglers\",\n      \"initial_relationship\": 50,\n      \"companion\": false\n    }\n  ],\n  \"factions\": [\n    {\n      \"name\": \"The Cheese Consortium\",\n      \"description\": \"A quirky, semi-secret society of gourmet cheese enthusiasts who control the black market for rare and exotic dairy products across the Verse.\",\n      \"goals\": \"Acquire, protect, and trade rare cheeses, often through elaborate and comical schemes.\"\n    }\n  ],\n  \"world_rules\": [\n    \"The Alliance's authority is spotty in the border moons, allowing for shady deals and quirky local factions.\",\n    \"Serenity is both a ship and a home; crew loyalty is paramount, and disagreements are resolved with humor rather than hostility.\",\n    \"In the Verse, technology is often jury-rigged, and solutions require creativity and a bit of luck.\",\n    \"Money talks, but so does a good story, and sometimes the latter is more valuable.\"\n  ],\n  \"initial_world_flags\": {\n    \"cargo_loaded\": true,\n    \"job_accepted\": true,\n    \"cheese_consortium_alerted\": false,\n    \"cargo_inspected\": true,\n    \"payment_secured\": false,\n    \"cheese_secrets_known\": true\n  }\n}\n\nCURRENT PLAYER STATE:\n{\n  \"name\": \"Mal\",\n  \"archetype\": \"Captain Malcolm \\\"Mal\\\" Reynolds\",\n  \"inventory\": [\n    \"a worn brown coat\",\n    \"a Peacemaker pistol\",\n    \"a cargo manifest for the 'antique ceramics'\",\n    \"a handful of Alliance credits (75 credits)\",\n    \"a bottle of cheap whiskey\",\n    \"a harmonica\"\n  ]\n}\n\nIN-GAME TIME: Day 1, 00:25\n\nRELATIONSHIPS:\n{\n  \"Zoe Washburne\": 100,\n  \"Hoban 'Wash' Washburne\": 80,\n  \"Kaylee Frye\": 90,\n  \"Jayne Cobb\": 60,\n  \"Inara Serra\": 70,\n  \"Simon Tam\": 75,\n  \"River Tam\": 65,\n  \"Reginald Fink\": 50\n}\n\nNPC OVERRIDES (mutable NPC data layered on top of skeleton — populated via npc_updates):\n{\n  \"River Tam\": {\n    \"secret_revealed\": true,\n    \"notes\": \"Has openly communicated the cheese's telepathic secrets to the crew.\"\n  }\n}\n\nCURRENT POSITION:\n{\n  \"act\": 1,\n  \"scene_number\": 3,\n  \"location\": \"Serenity's Cargo Bay\",\n  \"time_of_day\": \"morning\",\n  \"in_game_time\": {\n    \"days\": 0,\n    \"hours\": 0,\n    \"minutes\": 25,\n    \"seconds\": 0\n  },\n  \"proximity_to_climax\": 0.6,\n  \"act_start_scene\": 1,\n  \"active_constraints\": [],\n  \"scene_context\": \"The crew debates how to use the cheese's psychic revelations to their advantage.\"\n}\n\nEVENT LOG (last 20):\n[\n  \"Crew hears strange thumps from the cargo crate, raising suspicions.\",\n  \"Simon's medical scan reveals the crate contains living organic matter with unusual biological activity.\",\n  \"River revealed the cheese's telepathic nature and knowledge of the Cheese Consortium.\"\n]\n\nWORLD STATE FLAGS:\n{\n  \"cargo_loaded\": true,\n  \"job_accepted\": true,\n  \"cheese_consortium_alerted\": false,\n  \"cargo_inspected\": true,\n  \"payment_secured\": false,\n  \"cheese_secrets_known\": true\n}\n\nSTYLE & TONE: A typical episode of Firefly, one of the lighthearted comedic episodes\nThe kind of consequences you create MUST fit this tone. Read what the player wrote and match it — the same mechanical severity plays very differently depending on the story's voice.\n\nDIFFICULTY: Brutal\n- Game over allowed: true\n\nRespond with this exact JSON structure:\n{\n  \"state_updates\": {\n    \"player_changes\": {\n      \"inventory\": [\"full current inventory list\"]\n    },\n    \"time_elapsed\": { \"days\": 0, \"hours\": 0, \"minutes\": 0, \"seconds\": 0 },\n    \"event_log_entry\": \"string — one-line summary of what happened\",\n    \"world_flag_changes\": { \"flag_name\": true/false },\n    \"relationship_changes\": { \"npc_or_faction_name\": number_delta },\n    \"npc_updates\": { \"npc_name\": { \"role\": \"string (optional)\", \"motivation\": \"string (optional)\", \"allegiance\": \"string (optional)\", \"secret_revealed\": \"boolean (optional)\", \"companion\": \"boolean (optional)\", \"notes\": \"string — brief freeform context (optional)\" } },\n    \"new_scene_context\": \"string — brief context for next passage\",\n    \"location\": \"string — REQUIRED — current location name (e.g. The Docks, Castle Throne Room, A dark alley)\",\n    \"time_of_day\": \"string — REQUIRED — one of: dawn, morning, midday, afternoon, evening, night, midnight\",\n    \"proximity_to_climax\": \"number 0.0-1.0 — REQUIRED (see PACING)\",\n    \"advance_act\": \"true or false — REQUIRED (see PACING)\",\n    \"game_over\": false,\n    \"story_complete\": \"true when Act 3 end_condition is met (see PACING)\"\n  },\n  \"choice_metadata\": {\n    \"A\": { \"outcome\": \"advance_safe|advance_risky|severe_penalty|game_over|hidden_benefit|advances_act|conclusion\", \"consequence\": \"what happens mechanically\", \"narration_directive\": \"instructions for the Writer next turn\" },\n    \"B\": { ... }, \"C\": { ... }, \"D\": { ... }\n  }\n}\n\nRULES:\n- Respond with ONLY the JSON object — nothing before it, nothing after it\n- Only include player_changes, relationship_changes, world_flag_changes, and npc_updates when they actually changed. Always include: time_elapsed, event_log_entry, proximity_to_climax, advance_act, location, time_of_day.\n- location: REQUIRED every turn — describe where the scene takes place (e.g. \"St. Bartholomew's Church\", \"The Thames docks\")\n- time_of_day: REQUIRED every turn — set based on in-game clock: dawn (~5-7am), morning (~7-12pm), midday (~12-1pm), afternoon (~1-5pm), evening (~5-8pm), night (~8pm-12am), midnight (~12-5am)\n- Relationship changes are DELTAS, not absolute values\n- proximity_to_climax: REQUIRED every turn — set this value in state_updates using the formula in the PACING section below\n- event_log_entry is required — always summarize what happened this turn\n- choice_metadata must classify all four choices (A, B, C, D)\n- CRITICAL: When a PLAYER'S PREVIOUS CHOICE section is provided, your state_updates MUST honor the pre-classified outcome. If a choice was advance_safe, do NOT apply negative consequences or penalties. The pre-classified outcome is the single source of truth for mechanical impact.\n- npc_updates: include when an NPC's role, motivation, allegiance, or companion status changes, or when a narratively significant new NPC is introduced that the player will interact with again. For existing skeleton NPCs, use their exact name. For new NPCs, use the character's name as the key and include at least role and motivation. Do not create entries for one-off background characters (shopkeepers, random guards, etc.).\n\nPACING — REQUIRED:\n- The current act's target_scenes (in the skeleton) is the intended scene count for this act.\n- Compute scenes elapsed in this act: scene_number - act_start_scene + 1 (both values are in CURRENT POSITION above).\n- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act's end_condition — offer choices that could trigger it, including advances_act choices.\n\nTERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act's end_condition. At most ONE advances_act choice per set of four.\n- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3's end_condition and complete the story. At most ONE conclusion choice per set of four.\n- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\nTIME ELAPSED — REQUIRED EVERY TURN:\n- You MUST include time_elapsed in state_updates to indicate how much in-game time passed during this scene.\n- Estimate realistically: a brief conversation = 5-15 minutes, a fight = 1-5 minutes, traveling across a city = 30-60 minutes, a journey = hours or days, sleeping/resting = 6-8 hours.\n- The client uses time_elapsed to advance the in-game clock.\n\nBRUTAL MODE RULES (MANDATORY):\n- The world is hostile. Consequences are immediate and devastating. When a choice goes wrong, it goes VERY wrong.\n- Consequences compound and do not resolve on their own. The danger comes from the world being unforgiving, not from artificially limiting safe options — let the narrative situation dictate how many choices are risky on any given turn.\n- TRAP LOGIC (Brutal-exclusive): Some choices that APPEAR safe MUST actually carry hidden severe consequences. Base these on earlier context the player may have missed — an NPC's hidden motive, a world flag they ignored, a warning sign in a previous passage. The narration_directive for trap choices MUST instruct the Writer to reveal the trap dramatically.\n- game_over outcomes SHOULD appear regularly — whenever the narrative situation creates genuine danger, at least one choice should be lethal/fatal/catastrophic.\n- Setbacks MUST cascade. If the player is already in trouble, make the situation worse. Do NOT offer easy recovery.\n- NPCs NEVER forgive. One wrong interaction permanently closes that relationship. Relationship penalties are large (-40 or worse) and irreversible.\n- narration_directive: be brutal and specific. Tell the Writer to show the full weight of consequences with no softening, no last-minute saves, no silver linings.\n"
+    }
+  },
+  {
+    "ts": "2026-03-25T17:33:31.152Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "User prompt",
+    "data": {
+      "prompt": "PLAYER'S PREVIOUS CHOICE:\nThe player chose option D.\nPre-classified outcome: HIDDEN_BENEFIT\nPre-determined consequence: \"The crew collaboratively devises a clever plan to use the cheese's secrets to negotiate with both the client and the Consortium, gaining a strategic advantage.\"\nNarration directive: \"Describe the crew bouncing ideas off each other, with Kaylee and Inara contributing insights that lead to a solid scheme, setting up for successful future dealings.\"\n\nYour state_updates MUST be consistent with this pre-classified outcome:\n- ADVANCE_SAFE: No new negative consequences. No penalties.\n- ADVANCE_RISKY: Moderate consequences are appropriate.\n- SEVERE_PENALTY: Heavy consequences — serious setbacks and losses as described.\n- GAME_OVER: set game_over to true — the character has failed irreversibly.\n- HIDDEN_BENEFIT: apply the hidden benefit described in the consequence.\n\nThe Writer produced the following passage and choices this turn.\n\nPASSAGE:\nYou gather the crew in the cargo bay, the crate of cheese emitting faint, telepathic murmurs that River assures you are harmless. Zoe leans against a bulkhead, arms crossed, while Wash perches on a stray crate, nervously eyeing the cargo. Kaylee excitedly pipes up, 'If this cheese is so special, maybe we can use its telepathy to predict trouble before it happens!' Inara nods thoughtfully, adding, 'And if the Cheese Consortium values it highly, we could negotiate for more than just the delivery fee.' Simon raises a cautious hand, 'Let's not forget, we still need to ensure its safety—psychic cheese or not.' Jayne grunts, 'All I’m sayin’ is, if things go south, we blast our way out.' River tilts her head, whispering, 'The cheese knows the Consortium is coming. It wants to help.' As the crew brainstorms, a plan begins to take shape: use the cheese’s telepathic warnings to stay one step ahead and leverage its value to squeeze more credits out of this job. The mood shifts from wary to determined, and you feel a flicker of confidence. This might just work.\n\nCHOICES PRESENTED TO PLAYER:\nA: Set up a decoy crate to throw off the Cheese Consortium if they try to intercept you.\nB: Have Inara use her diplomatic skills to arrange a meeting with the Consortium leader.\nC: Ask River to communicate with the cheese for more detailed insights.\nD: Prepare Serenity for a quick getaway, just in case negotiations go sideways.\n\nBased on the passage and the current game state, determine:\n1. State updates — what changed mechanically as a result of this passage (inventory, time_elapsed)\n2. Choice metadata — classify each choice and predetermine its outcome for the next turn\n\nRespond with ONLY the JSON object."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:36:26.091Z",
+    "level": "info",
+    "cat": "API",
+    "msg": "Call OK",
+    "data": {
+      "model": "deepseek/deepseek-r1",
+      "usage": {
+        "prompt_tokens": 4938,
+        "completion_tokens": 5206,
+        "total_tokens": 10144,
+        "cost": 0.0164716,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0164716,
+          "upstream_inference_prompt_cost": 0.0034566,
+          "upstream_inference_completions_cost": 0.013015
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 4522,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:36:26.099Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Response OK",
+    "data": {
+      "event": "Crew devised a strategic plan using the cheese's telepathy for negotiation and evasion advantage."
+    }
+  },
+  {
+    "ts": "2026-03-25T17:36:26.104Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Full response",
+    "data": {
+      "state_updates": {
+        "player_changes": {
+          "inventory": [
+            "a worn brown coat",
+            "a Peacemaker pistol",
+            "a cargo manifest for the 'antique ceramics'",
+            "a handful of Alliance credits (75 credits)",
+            "a bottle of cheap whiskey",
+            "a harmonica"
+          ]
+        },
+        "time_elapsed": {
+          "days": 0,
+          "hours": 0,
+          "minutes": 15,
+          "seconds": 0
+        },
+        "event_log_entry": "Crew devised a strategic plan using the cheese's telepathy for negotiation and evasion advantage.",
+        "world_flag_changes": {
+          "strategic_plan_devised": true
+        },
+        "relationship_changes": {
+          "Zoe Washburne": 5,
+          "Hoban 'Wash' Washburne": 5,
+          "Kaylee Frye": 5,
+          "Jayne Cobb": 5,
+          "Inara Serra": 5,
+          "Simon Tam": 5,
+          "River Tam": 5
+        },
+        "npc_updates": {},
+        "new_scene_context": "The crew moves to implement their plan, with different approaches leading to varying outcomes.",
+        "location": "Serenity's Cargo Bay",
+        "time_of_day": "morning",
+        "proximity_to_climax": 0.6,
+        "advance_act": false,
+        "game_over": false,
+        "story_complete": false
+      },
+      "choice_metadata": {
+        "A": {
+          "outcome": "advance_risky",
+          "consequence": "The decoy crate is set up, but it may alert the Cheese Consortium prematurely, leading to a risky chase.",
+          "narration_directive": "Describe the crew hastily creating a decoy, with the palpable risk of being detected by Consortium spies, setting up for immediate danger."
+        },
+        "B": {
+          "outcome": "severe_penalty",
+          "consequence": "Inara's secret off-ship contract influences her negotiations, resulting in a deal that severely compromises the crew's safety or finances.",
+          "narration_directive": "Reveal Inara's conflicting loyalties as she arranges the meeting, leading to a trap or unfavorable terms that put the crew in dire straits with no easy recovery."
+        },
+        "C": {
+          "outcome": "advances_act",
+          "consequence": "River's deep communication with the cheese uncovers the Consortium's imminent interception plans, forcing the crew to fully commit to investigation and advancing to Act 2.",
+          "narration_directive": "Show River delving into the cheese's telepathic whispers, revealing critical secrets that escalate the situation, prompting the crew to act and transition to the next act."
+        },
+        "D": {
+          "outcome": "advance_safe",
+          "consequence": "Serenity is prepared for a quick escape, consuming resources but providing a reliable safety net for future conflicts.",
+          "narration_directive": "Depict the crew fortifying the ship, with Kaylee optimizing engines and Jayne stocking weapons, ensuring readiness without immediate negative consequences."
+        }
+      }
+    }
+  },
+  {
+    "ts": "2026-03-25T17:36:26.110Z",
+    "level": "info",
+    "cat": "GameMaster",
+    "msg": "Applied state updates",
+    "data": {
+      "time": "15m",
+      "relationships": "Zoe Washburne: +5, Hoban 'Wash' Washburne: +5, Kaylee Frye: +5, Jayne Cobb: +5, Inara Serra: +5, Simon Tam: +5, River Tam: +5",
+      "proximity": 0.6,
+      "choices": "{\"A\":{\"outcome\":\"advance_risky\",\"consequence\":\"The decoy crate is set up, but it may alert the Cheese Consortium prematurely, leading to a risky chase.\",\"narration_directive\":\"Describe the crew hastily creating a decoy, with the palpable risk of being detected by Consortium spies, setting up for immediate danger.\"},\"B\":{\"outcome\":\"severe_penalty\",\"consequence\":\"Inara's secret off-ship contract influences her negotiations, resulting in a deal that severely compromises the crew's safety or finance...[clipped]",
+      "event": "Crew devised a strategic plan using the cheese's telepathy for negotiation and evasion advantage."
+    }
+  }
+]
