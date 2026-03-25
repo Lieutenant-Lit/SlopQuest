@@ -49,6 +49,11 @@
       var state = SQ.GameState.get();
       if (!state) return;
 
+      // Keep UI theme active on game over screen
+      if (state.ui_theme && SQ.UIDesigner) {
+        SQ.UIDesigner.apply(state.ui_theme);
+      }
+
       var isDeath = state.game_over && !state.story_complete;
       var isComplete = !!state.story_complete;
 

@@ -241,6 +241,20 @@
       SQ.AudioDirector.clearRegistry();
       SQ.AudioDirector.refreshVoices();
 
+      // Fire UI Designer in parallel with skeleton (both only need setupConfig)
+      if (SQ.PlayerConfig.isUiDesignerEnabled() && SQ.UIDesigner) {
+        SQ.UIDesigner.generate(setupConfig).then(function (theme) {
+          var state = SQ.GameState.get();
+          if (state) {
+            state.ui_theme = theme;
+            SQ.GameState.save();
+          }
+          SQ.UIDesigner.apply(theme);
+        }).catch(function (err) {
+          SQ.Logger.warn('UIDesigner', 'Theme generation failed, using defaults', { error: err.message });
+        });
+      }
+
       // Generate skeleton, then opening passage
       SQ.SkeletonGenerator.generate(setupConfig).then(function (skeleton) {
         var state = SQ.GameState.get();

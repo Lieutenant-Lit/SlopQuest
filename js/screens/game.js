@@ -85,6 +85,12 @@
       this._isInitialRender = true;
       this.renderState();
 
+      // Restore UI theme if present (handles page reload / screen re-entry)
+      var state = SQ.GameState.get();
+      if (state && state.ui_theme && SQ.UIDesigner) {
+        SQ.UIDesigner.apply(state.ui_theme);
+      }
+
       // Show/hide playtester UI elements
       var endBtn = document.getElementById('btn-end-playtest');
       var turnCounter = document.getElementById('playtester-turn-counter');

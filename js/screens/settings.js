@@ -208,6 +208,35 @@
         SQ.PlayerConfig.setLoggingEnabled(this.checked);
       });
 
+      // UI Designer toggle
+      document.getElementById('settings-ui-designer-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setUiDesignerEnabled(this.checked);
+        var modelSection = document.getElementById('ui-designer-model-section');
+        if (this.checked) {
+          modelSection.classList.remove('hidden');
+        } else {
+          modelSection.classList.add('hidden');
+        }
+      });
+
+      // UI Designer model selection
+      document.getElementById('ui-designer-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('ui-designer-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('ui_designer', this.value);
+        }
+      });
+
+      document.getElementById('ui-designer-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('ui_designer', this.value.trim());
+        }
+      });
+
       // Playtester toggle
       document.getElementById('settings-playtester-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setPlaytesterEnabled(this.checked);
@@ -314,6 +343,17 @@
       // Set logging toggle state
       document.getElementById('settings-log-toggle').checked =
         SQ.PlayerConfig.isLoggingEnabled();
+
+      // Set UI Designer toggle state and model selector
+      var uiDesignerEnabled = SQ.PlayerConfig.isUiDesignerEnabled();
+      document.getElementById('settings-ui-designer-toggle').checked = uiDesignerEnabled;
+      var uiDesignerModelSection = document.getElementById('ui-designer-model-section');
+      if (uiDesignerEnabled) {
+        uiDesignerModelSection.classList.remove('hidden');
+      } else {
+        uiDesignerModelSection.classList.add('hidden');
+      }
+      this._syncModelSelect('ui-designer-model-select', 'ui-designer-model-custom-input', SQ.PlayerConfig.getModel('ui_designer'));
 
       // Set playtester toggle state and model selector
       var playtesterEnabled = SQ.PlayerConfig.isPlaytesterEnabled();

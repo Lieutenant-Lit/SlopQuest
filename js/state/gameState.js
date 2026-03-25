@@ -49,6 +49,7 @@
           story_length: setupConfig.storyLength || 'medium'
         },
         skeleton: null, // populated after skeleton generation
+        ui_theme: null, // populated after UI Designer generation
         player: {
           name: 'The Wanderer',
           archetype: setupConfig.archetype || '',

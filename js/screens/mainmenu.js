@@ -27,6 +27,11 @@
     },
 
     onShow: function () {
+      // Clear any active UI theme when returning to main menu
+      if (SQ.UIDesigner) {
+        SQ.UIDesigner.remove();
+      }
+
       // Show Continue button only if a saved game exists
       var continueBtn = document.getElementById('btn-continue');
       if (SQ.GameState.exists()) {

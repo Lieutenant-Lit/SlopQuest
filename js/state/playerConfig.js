@@ -13,7 +13,8 @@
       passage: 'anthropic/claude-sonnet-4',
       gamemaster: 'anthropic/claude-sonnet-4',
       image: 'google/gemini-3.1-flash-image-preview',
-      playtester: 'anthropic/claude-sonnet-4'
+      playtester: 'anthropic/claude-sonnet-4',
+      ui_designer: 'google/gemini-2.5-flash'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
@@ -23,6 +24,7 @@
     disable_default_voices: false,
     logging_enabled: false,
     playtester_enabled: false,
+    ui_designer_enabled: false,
     github_token: ''
   };
 
@@ -217,6 +219,17 @@
     setPlaytesterEnabled: function (enabled) {
       var config = this.load();
       config.playtester_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isUiDesignerEnabled: function () {
+      var config = this.load();
+      return config.ui_designer_enabled === true;
+    },
+
+    setUiDesignerEnabled: function (enabled) {
+      var config = this.load();
+      config.ui_designer_enabled = !!enabled;
       this.save(config);
     },
 
