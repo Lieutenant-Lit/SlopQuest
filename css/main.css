@@ -66,6 +66,36 @@ a {
   display: flex;
 }
 
+/* Game & game-over screens own their background so scoped CSS vars take effect */
+#screen-game,
+#screen-gameover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.5s ease, color 0.3s ease, box-shadow 0.5s ease;
+}
+
+/* UI theme decoration base styles */
+.ui-theme-divider {
+  text-align: center;
+  margin: var(--spacing-md) 0;
+  opacity: 0.7;
+  line-height: 0;
+}
+.ui-theme-divider svg {
+  max-width: 100%;
+  height: auto;
+}
+.ui-theme-header-deco {
+  text-align: center;
+  opacity: 0.6;
+  margin: 0 0 var(--spacing-sm) 0;
+  line-height: 0;
+}
+.ui-theme-header-deco svg {
+  max-width: 200px;
+  height: auto;
+}
+
 /* ===== SCREEN HEADER ===== */
 .screen-header {
   padding: var(--spacing-md) 0;
@@ -727,7 +757,7 @@ textarea {
   border: 1px solid var(--color-border);
   width: 100%;
   line-height: 1.4;
-  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
 }
 
 .btn-choice:hover:not(:disabled) {
