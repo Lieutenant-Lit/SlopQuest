@@ -92,6 +92,15 @@
       });
     });
 
+    // Restore UI theme from saved game if available
+    if (SQ.GameState.exists() && SQ.UIDesigner) {
+      SQ.GameState.load();
+      var state = SQ.GameState.get();
+      if (state && state.ui_theme) {
+        SQ.UIDesigner.apply(state.ui_theme);
+      }
+    }
+
     // Determine starting screen:
     // If player has a valid API key, go to setup.
     // Otherwise show settings for first-time setup.

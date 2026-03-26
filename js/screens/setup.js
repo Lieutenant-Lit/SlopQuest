@@ -80,8 +80,8 @@
     },
 
     onShow: function () {
-      // Clear any active UI theme when returning to setup
-      if (SQ.UIDesigner) {
+      // Clear UI theme only if no saved game exists (fresh setup)
+      if (SQ.UIDesigner && !SQ.GameState.exists()) {
         SQ.UIDesigner.remove();
       }
 
@@ -267,6 +267,11 @@
       SQ.HistoryStack.clear();
       SQ.AudioDirector.clearRegistry();
       SQ.AudioDirector.refreshVoices();
+
+      // Clear previous theme before generating new one
+      if (SQ.UIDesigner) {
+        SQ.UIDesigner.remove();
+      }
 
       // Fire UI Designer in parallel with skeleton (both only need setupConfig)
       if (SQ.PlayerConfig.isUiDesignerEnabled() && SQ.UIDesigner) {
