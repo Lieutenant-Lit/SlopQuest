@@ -282,6 +282,10 @@
           <span>Audio debug overlay</span>
         </label>
         <label class="setup-toggle">
+          <input type="checkbox" id="settings-uidesigner-debug-toggle">
+          <span>UI Designer debug overlay</span>
+        </label>
+        <label class="setup-toggle">
           <input type="checkbox" id="settings-log-toggle">
           <span>Enable persistent logging</span>
         </label>
@@ -493,6 +497,13 @@
           <span class="gamestate-debug-collapse">&#9660;</span>
         </div>
         <div id="gamestate-debug-content" class="gamestate-debug-content"></div>
+      </div>
+      <div id="uidesigner-debug-panel" class="gamestate-debug-panel hidden">
+        <div class="gamestate-debug-header" id="uidesigner-debug-header">
+          <span class="gamestate-debug-title">UI Designer</span>
+          <span class="gamestate-debug-collapse">&#9660;</span>
+        </div>
+        <div id="uidesigner-debug-content" class="gamestate-debug-content"></div>
       </div>
     </div>
     <div id="loading-overlay" class="hidden">

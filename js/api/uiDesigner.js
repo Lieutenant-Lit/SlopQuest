@@ -8,6 +8,25 @@
 (function () {
   var MAX_RETRIES = 1;
 
+  /** Pre-defined SVG silhouette shapes for choice icon badges (used as CSS mask-image). */
+  var CHOICE_ICON_SHAPES = {
+    shield: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2L4 7v9c0 7.5 5.1 14.5 12 16 6.9-1.5 12-8.5 12-16V7L16 2z" fill="#fff"/></svg>',
+    skull: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2C9.4 2 4 7 4 13c0 4 2 7.5 5 9.5V26h3v-2h2v2h4v-2h2v2h3v-3.5c3-2 5-5.5 5-9.5 0-6-5.4-11-12-11zm-4 15a2.5 2.5 0 110-5 2.5 2.5 0 010 5zm8 0a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="#fff"/></svg>',
+    heart: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 28S3 20 3 11a6.5 6.5 0 0113-1 6.5 6.5 0 0113 1c0 9-13 17-13 17z" fill="#fff"/></svg>',
+    star: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2l4.3 8.7 9.7 1.4-7 6.8 1.6 9.6L16 24l-8.6 4.5 1.6-9.6-7-6.8 9.7-1.4z" fill="#fff"/></svg>',
+    hexagon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2L4 9v14l12 7 12-7V9L16 2z" fill="#fff"/></svg>',
+    diamond: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 1L1 16l15 15 15-15L16 1z" fill="#fff"/></svg>',
+    gear: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M19 2h-6l-1 4-3.5-1.5-4 4L6 12l-4 1v6l4 1 1.5 3.5-3 3 4 4L12 26l4 4h6l1-4 3.5 1.5 4-4-1.5-3.5 4-1v-6l-4-1-1.5-3.5 3-3-4-4L24 6l-4-4zM16 11a5 5 0 110 10 5 5 0 010-10z" fill="#fff"/></svg>',
+    circle: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="14" fill="#fff"/></svg>',
+    scroll: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M8 2C5.8 2 4 3.8 4 6v20c0 2.2 1.8 4 4 4h16c2.2 0 4-1.8 4-4v-2h-2V6c0-2.2-1.8-4-4-4H8zm0 2h14c1.1 0 2 .9 2 2v18H8c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="#fff"/></svg>',
+    flame: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2s-7 7-7 15c0 5 3 8 4 9 0-3 1-5 3-7 2 2 3 4 3 7 1-1 4-4 4-9C23 9 16 2 16 2z" fill="#fff"/></svg>',
+    crosshair: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2a14 14 0 100 28 14 14 0 000-28zm0 4a10 10 0 110 20 10 10 0 010-20zm-1 2v4h2V8h-2zm0 12v4h2v-4h-2zM8 15v2h4v-2H8zm12 0v2h4v-2h-4z" fill="#fff"/></svg>',
+    leaf: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M28 4S18 4 12 10c-5 5-6 12-6 12s2-1 5-1c-2 2-4 5-4 5s7-2 11-6c6-6 6-16 6-16zM10 18c3-3 8-5 12-6-1 4-3 9-6 12-2 2-6 3-6 3s1-4 3-6z" fill="#fff"/></svg>',
+    crown: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M4 24h24v4H4v-4zM4 10l6 8 6-10 6 10 6-8v14H4V10z" fill="#fff"/></svg>',
+    paw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><ellipse cx="16" cy="22" rx="7" ry="6" fill="#fff"/><circle cx="9" cy="12" r="3.5" fill="#fff"/><circle cx="23" cy="12" r="3.5" fill="#fff"/><circle cx="6" cy="18" r="3" fill="#fff"/><circle cx="26" cy="18" r="3" fill="#fff"/></svg>',
+    bullet: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><path d="M16 2c-3 0-5 2-5 4v12c0 4 2.2 7.5 5 12 2.8-4.5 5-8 5-12V6c0-2-2-4-5-4z" fill="#fff"/></svg>'
+  };
+
   /** Map from theme JSON color keys to CSS variable names. */
   var COLOR_MAP = {
     bg: '--color-bg',
@@ -27,7 +46,7 @@
 
   /** All CSS variable names we set, for cleanup. */
   var ALL_CSS_VARS = Object.keys(COLOR_MAP).map(function (k) { return COLOR_MAP[k]; });
-  ALL_CSS_VARS.push('--font-body', '--font-ui');
+  ALL_CSS_VARS.push('--font-body', '--font-ui', '--font-title');
 
   /**
    * Convert a hex color to sRGB relative luminance.
@@ -118,6 +137,7 @@
     _headerDecoEl: null,
     _headerBorderStyleEl: null,
     _glowStyleEl: null,
+    _choiceIconStyleEl: null,
 
     /**
      * Generate a UI theme from the LLM.
@@ -215,6 +235,9 @@
       if (theme.fonts.ui) {
         theme.fonts.ui = theme.fonts.ui.replace(/[<>"';{}()]/g, '');
       }
+      if (theme.fonts.title) {
+        theme.fonts.title = theme.fonts.title.replace(/[<>"';{}()]/g, '');
+      }
 
       // Glow color
       if (theme.glow_color && typeof theme.glow_color === 'string') {
@@ -256,6 +279,15 @@
         theme.decorations.header_decoration_svg = sanitizeSvg(theme.decorations.header_decoration_svg);
         if (theme.decorations.header_decoration_svg.length > 1500) theme.decorations.header_decoration_svg = null;
       }
+      if (theme.decorations.choice_icon_shape) {
+        var shape = String(theme.decorations.choice_icon_shape).toLowerCase().trim();
+        if (!CHOICE_ICON_SHAPES[shape]) {
+          SQ.Logger.warn('UIDesigner', 'Unknown choice_icon_shape: ' + shape + ', discarding');
+          theme.decorations.choice_icon_shape = null;
+        } else {
+          theme.decorations.choice_icon_shape = shape;
+        }
+      }
 
       // Sanitize CSS value strings
       if (theme.decorations.card_border_style) {
@@ -270,6 +302,7 @@
         bodyFont: theme.fonts.body,
         uiFont: theme.fonts.ui,
         hasSideBorders: !!theme.decorations.side_border_svg,
+        choiceIcon: theme.decorations.choice_icon_shape || 'none',
         hasGlow: !!theme.glow_color
       });
       SQ.Logger.infoFull('UIDesigner', 'Full theme', theme);
@@ -307,6 +340,9 @@
         if (theme.fonts.ui) {
           gameScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
         }
+        if (theme.fonts.title) {
+          gameScreen.style.setProperty('--font-title', "'" + theme.fonts.title + "', " + (theme.fonts.ui ? "'" + theme.fonts.ui + "', " : '') + "system-ui, sans-serif");
+        }
       }
 
       // 3. Apply CSS filter to game screen
@@ -331,6 +367,9 @@
           }
           if (theme.fonts.ui) {
             gameOverScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
+          }
+          if (theme.fonts.title) {
+            gameOverScreen.style.setProperty('--font-title', "'" + theme.fonts.title + "', " + (theme.fonts.ui ? "'" + theme.fonts.ui + "', " : '') + "system-ui, sans-serif");
           }
         }
       }
@@ -394,6 +433,9 @@
       if (fonts.ui && fonts.ui !== 'system-ui') {
         families.push(fonts.ui.replace(/ /g, '+') + ':wght@400;600;700');
       }
+      if (fonts.title && fonts.title !== 'system-ui' && fonts.title !== fonts.ui && fonts.title !== fonts.body) {
+        families.push(fonts.title.replace(/ /g, '+') + ':wght@400;700');
+      }
 
       if (families.length === 0) return;
 
@@ -434,7 +476,7 @@
           'body.game-themed::after { right: 0; transform: scaleX(-1); }' +
           '@media (max-width: 767px) {' +
           '  body.game-themed::before, body.game-themed::after {' +
-          '    width: 16px; opacity: 0.3;' +
+          '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
           '}';
         document.head.appendChild(sideStyle);
@@ -450,7 +492,7 @@
           '  box-shadow: 0 0 40px 15px ' + glowColor + ';' +
           '}' +
           '#screen-game .btn-choice:hover:not(:disabled) {' +
-          '  box-shadow: 0 0 12px ' + glowColor + ';' +
+          '  text-shadow: 0 0 8px ' + glowColor + ';' +
           '}' +
           '#screen-game .game-header-row h1,' +
           '#screen-gameover .screen-header h1 {' +
@@ -517,9 +559,30 @@
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
         var cardStyle = document.createElement('style');
         cardStyle.id = 'ui-theme-card-border';
-        cardStyle.textContent = '#screen-game .card, #screen-game .btn-choice { border: ' + decorations.card_border_style + '; }';
+        cardStyle.textContent = '#screen-game .card { border: ' + decorations.card_border_style + '; }';
         document.head.appendChild(cardStyle);
         this._cardBorderStyleEl = cardStyle;
+      }
+
+      // --- Choice icon shape (mask-image on .choice-label) ---
+      if (decorations.choice_icon_shape && CHOICE_ICON_SHAPES[decorations.choice_icon_shape]) {
+        var iconUri = 'data:image/svg+xml,' + encodeURIComponent(CHOICE_ICON_SHAPES[decorations.choice_icon_shape]);
+        var iconStyle = document.createElement('style');
+        iconStyle.id = 'ui-theme-choice-icon';
+        iconStyle.textContent =
+          '#screen-game .choice-label {' +
+          '  border-radius: 0;' +
+          '  -webkit-mask-image: url("' + iconUri + '");' +
+          '  mask-image: url("' + iconUri + '");' +
+          '  -webkit-mask-size: contain;' +
+          '  mask-size: contain;' +
+          '  -webkit-mask-repeat: no-repeat;' +
+          '  mask-repeat: no-repeat;' +
+          '  -webkit-mask-position: center;' +
+          '  mask-position: center;' +
+          '}';
+        document.head.appendChild(iconStyle);
+        this._choiceIconStyleEl = iconStyle;
       }
     },
 
@@ -531,7 +594,7 @@
       var refs = [
         '_dividerEl', '_bgStyleEl', '_cardBorderStyleEl',
         '_sideBorderStyleEl', '_headerDecoEl', '_headerBorderStyleEl',
-        '_glowStyleEl'
+        '_glowStyleEl', '_choiceIconStyleEl'
       ];
       var self = this;
       refs.forEach(function (ref) {

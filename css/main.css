@@ -22,6 +22,7 @@
 
   --font-body: 'Georgia', 'Times New Roman', serif;
   --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: var(--font-ui);
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -74,6 +75,15 @@ a {
   transition: background-color 0.5s ease, color 0.3s ease, box-shadow 0.5s ease;
 }
 
+/* When side borders are active on mobile, add padding so content clears them */
+@media (max-width: 767px) {
+  body.game-themed #screen-game,
+  body.game-themed #screen-gameover {
+    padding-left: calc(var(--spacing-md) + 12px);
+    padding-right: calc(var(--spacing-md) + 12px);
+  }
+}
+
 /* UI theme decoration base styles */
 .ui-theme-divider {
   text-align: center;
@@ -104,7 +114,7 @@ a {
 }
 
 .screen-header h1 {
-  font-family: var(--font-ui);
+  font-family: var(--font-title, var(--font-ui));
   font-size: 1.5rem;
   font-weight: 700;
 }
@@ -240,18 +250,17 @@ textarea {
 }
 
 .btn-choice {
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: none;
   width: 100%;
   text-align: left;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   line-height: 1.4;
 }
 
 .btn-choice:hover {
-  background: var(--color-surface-raised);
-  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.06);
 }
 
 .btn-back {
@@ -315,9 +324,7 @@ textarea {
   flex: 1;
   text-align: center;
   font-size: 1.125rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
   padding: 0 var(--spacing-xs);
 }
 
@@ -747,22 +754,21 @@ textarea {
 
 .btn-choice {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-sm);
   text-align: left;
-  padding: var(--spacing-md);
-  min-height: 52px;
-  background: var(--color-surface);
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: 44px;
+  background: transparent;
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: none;
   width: 100%;
   line-height: 1.4;
-  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
+  transition: background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
 .btn-choice:hover:not(:disabled) {
-  background: var(--color-surface-raised);
-  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.06);
 }
 
 .btn-choice:active:not(:disabled) {
@@ -792,21 +798,22 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 4px;
   background: var(--color-primary);
   color: #fff;
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1;
   margin-top: 1px;
 }
 
 .choice-text {
   flex: 1;
+  font-family: var(--font-body);
 }
 
 /* Choice enter animation */
@@ -1445,15 +1452,15 @@ textarea {
   }
 
   .btn-choice {
-    min-height: 56px;
-    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 48px;
+    padding: var(--spacing-sm) var(--spacing-lg);
   }
 
   .choice-label {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    font-size: 0.8125rem;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 1rem;
   }
 
   #game-status-bar {

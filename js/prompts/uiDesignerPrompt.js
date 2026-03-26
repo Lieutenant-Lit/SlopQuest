@@ -13,9 +13,10 @@
     build: function (setupConfig) {
       var p = '';
 
-      p += 'You are a visual designer creating an immersive frame for a dark, atmospheric interactive fiction game. ';
-      p += 'Your goal is NOT a generic color swap — it is a complete visual environment that makes the player feel they have stepped into the story world. ';
-      p += 'Think themed borders, atmospheric glows, decorative elements, and carefully chosen typography. ';
+      p += 'You are a visual designer creating an INTENSELY immersive frame for a dark, atmospheric interactive fiction game. ';
+      p += 'Your goal is NOT a generic color swap — it is a complete visual environment that makes the player feel they have STEPPED INSIDE the story world. ';
+      p += 'Think dramatic themed borders, deep atmospheric glows, bold decorative elements, and carefully chosen typography that drips with genre flavor. ';
+      p += 'Be BOLD and DRAMATIC — subtlety is the enemy. Every element should reinforce the genre identity. ';
       p += 'Output ONLY a valid JSON object — no prose, no markdown, no code fences, no explanation. ';
       p += 'Nothing before or after the JSON.\n\n';
 
@@ -33,6 +34,9 @@
       p += 'sepia/warm brown for historical, electric blue for cyberpunk.\n\n';
 
       p += 'FONT RULES:\n';
+      p += '- title font: A DRAMATIC display or decorative font for the game title. This is the most visible text — make it bold and genre-defining. ';
+      p += 'Genre picks: Cinzel or UnifrakturMaguntia for fantasy, Creepster or Nosifer for horror, Pirata One for adventure/pirates, ';
+      p += 'Orbitron or Share Tech Mono for sci-fi, Playfair Display for romance, MedievalSharp for medieval, Rajdhani for action/thriller.\n';
       p += '- body font: A serif or display font from Google Fonts that fits the setting\'s era/mood.\n';
       p += '- ui font: A clean, readable sans-serif from Google Fonts for buttons and UI elements.\n';
       p += '- Use ONLY well-known Google Fonts (e.g. Crimson Text, EB Garamond, Cinzel, Merriweather, ';
@@ -51,12 +55,24 @@
       p += '- side_border_svg: A VERTICAL decorative strip that runs along the left and right edges of the screen. ';
       p += 'This is the most important decoration — it frames the entire game like a book or portal. ';
       p += 'Requirements: width="40" with a tall viewBox (e.g. viewBox="0 0 40 200"), designed to tile vertically (repeat-y). ';
-      p += 'Use simple but evocative shapes — NO text, NO complex gradients. ';
+      p += 'Use simple but evocative GEOMETRIC shapes — NO text, NO complex gradients, NO tiny dots. Use bold lines, bars, and shapes. ';
       p += 'Genre examples: ornate stone pillar carvings or Celtic knotwork for fantasy, corroded metal plating or circuit traces for sci-fi, ';
       p += 'twisted thorny vines or cracked bones for horror, art deco gilded bars for noir, riveted steel panels for steampunk, ';
       p += 'hieroglyphic columns for ancient/historical. ';
       p += 'Use the primary and border colors from your palette. Keep under 2KB. ';
-      p += 'The SVG MUST tile seamlessly — the top and bottom edges must connect when repeated.\n\n';
+      p += 'The SVG MUST tile seamlessly — the top and bottom edges must connect when repeated.\n';
+      p += 'EXAMPLE of a good side border (Celtic knot style — adapt for your genre):\n';
+      p += '<svg xmlns="http://www.w3.org/2000/svg" width="40" viewBox="0 0 40 200">';
+      p += '<rect x="2" width="3" height="200" fill="YOUR_PRIMARY" opacity="0.6"/>';
+      p += '<rect x="35" width="3" height="200" fill="YOUR_PRIMARY" opacity="0.6"/>';
+      p += '<path d="M8,0 Q20,25 32,50 Q20,75 8,100 Q20,125 32,150 Q20,175 8,200" fill="none" stroke="YOUR_PRIMARY" stroke-width="2" opacity="0.4"/>';
+      p += '<circle cx="20" cy="0" r="4" fill="YOUR_PRIMARY" opacity="0.5"/>';
+      p += '<circle cx="20" cy="50" r="4" fill="YOUR_PRIMARY" opacity="0.5"/>';
+      p += '<circle cx="20" cy="100" r="4" fill="YOUR_PRIMARY" opacity="0.5"/>';
+      p += '<circle cx="20" cy="150" r="4" fill="YOUR_PRIMARY" opacity="0.5"/>';
+      p += '<circle cx="20" cy="200" r="4" fill="YOUR_PRIMARY" opacity="0.5"/>';
+      p += '</svg>\n';
+      p += 'Replace YOUR_PRIMARY with your actual primary color hex. Make yours MORE elaborate and genre-specific than this example.\n\n';
 
       p += '- header_decoration_svg: A horizontal ornament placed below the game title. ';
       p += 'A filigree underline, bracket shape, or decorative flourish. width="200" height="20" with viewBox. ';
@@ -68,7 +84,14 @@
       p += '- background_pattern_svg: A subtle, tileable background pattern (small, under 1KB). ';
       p += 'Set to null if a clean background suits the theme better.\n\n';
 
-      p += '- card_border_style: A CSS border shorthand for choice buttons and cards. ';
+      p += '- choice_icon_shape: A string name selecting the shape for choice label badges (A/B/C/D). ';
+      p += 'Available shapes: "shield", "skull", "heart", "star", "hexagon", "diamond", "gear", "circle", ';
+      p += '"scroll", "flame", "crosshair", "leaf", "crown", "paw", "bullet". ';
+      p += 'Pick the shape that best fits the genre. Examples: "shield" or "crown" for fantasy, "skull" or "flame" for horror, ';
+      p += '"star" or "bullet" for western, "heart" for romance, "hexagon" or "gear" for sci-fi, "diamond" for noir, ';
+      p += '"scroll" for historical, "leaf" for nature/pastoral, "crosshair" for thriller/action, "paw" for animal stories.\n\n';
+
+      p += '- card_border_style: A CSS border shorthand for cards (NOT choice buttons — those are borderless text rows). ';
       p += 'Examples: "1px solid #3a2a1a", "2px solid #0ff3". Set to "none" to keep defaults.\n\n';
 
       p += '- header_border_style: A CSS border shorthand for the header bottom border. ';
@@ -77,6 +100,15 @@
 
       p += 'css_filter: An optional CSS filter string to apply mood (e.g. "sepia(0.08)" for historical, ';
       p += '"hue-rotate(10deg)" for alien worlds). Use "none" if not needed. Keep subtle (under 15%).\n\n';
+
+      p += 'DRAMATIC STYLING GUIDANCE (CRITICAL — follow these closely):\n';
+      p += '- Make the glow_color impactful — use alpha 0.3-0.4, NOT timid 0.1-0.2 values.\n';
+      p += '- Side borders should feel like the frame of a portal or ancient tome. Use BOLD strokes and shapes, not tiny dots or thin lines.\n';
+      p += '- The divider SVG should feel like a scene break in an illuminated manuscript — ornate, not a simple horizontal line.\n';
+      p += '- Choose fonts that COMMIT to the genre — Cinzel or MedievalSharp for fantasy, Creepster for horror, Orbitron for sci-fi. NEVER use generic sans-serif for the title font.\n';
+      p += '- The primary color should be VIVID and SATURATED, not muted or grey. Make it pop.\n';
+      p += '- header_border_style should be at least 2px thick with the primary color — make the header feel substantial.\n';
+      p += '- ALL SVG decorations should use BOLD strokes (2-4px), large shapes, and high opacity (0.4-0.8). Avoid anything too subtle to see.\n\n';
 
       p += 'Generate this EXACT JSON schema:\n';
       p += '{\n';
@@ -96,6 +128,7 @@
       p += '    "warning": "#hex — warning/caution color"\n';
       p += '  },\n';
       p += '  "fonts": {\n';
+      p += '    "title": "Google Font family name for the game title — dramatic and genre-defining",\n';
       p += '    "body": "Google Font family name for story text",\n';
       p += '    "ui": "Google Font family name for UI elements"\n';
       p += '  },\n';
@@ -106,6 +139,7 @@
       p += '    "header_decoration_svg": "<svg>...</svg> — ornament below title",\n';
       p += '    "header_border_style": "CSS border shorthand for header bottom",\n';
       p += '    "divider_svg": "<svg>...</svg> — horizontal divider between passage and choices",\n';
+      p += '    "choice_icon_shape": "shape name from allowed list (e.g. shield, skull, heart)",\n';
       p += '    "card_border_style": "CSS border shorthand or none",\n';
       p += '    "background_pattern_svg": "<svg>...</svg> or null"\n';
       p += '  }\n';

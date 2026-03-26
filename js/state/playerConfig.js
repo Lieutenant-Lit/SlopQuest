@@ -189,6 +189,17 @@
       this.save(config);
     },
 
+    isUiDesignerDebugEnabled: function () {
+      var config = this.load();
+      return config.ui_designer_debug_enabled === true;
+    },
+
+    setUiDesignerDebugEnabled: function (enabled) {
+      var config = this.load();
+      config.ui_designer_debug_enabled = !!enabled;
+      this.save(config);
+    },
+
     isDisableDefaultVoicesEnabled: function () {
       var config = this.load();
       return config.disable_default_voices === true;

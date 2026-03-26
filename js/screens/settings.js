@@ -203,6 +203,11 @@
         SQ.PlayerConfig.setGameStateDebugEnabled(this.checked);
       });
 
+      // UI Designer debug toggle
+      document.getElementById('settings-uidesigner-debug-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setUiDesignerDebugEnabled(this.checked);
+      });
+
       // Logging toggle
       document.getElementById('settings-log-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setLoggingEnabled(this.checked);
@@ -339,6 +344,9 @@
 
       document.getElementById('settings-gamestate-debug-toggle').checked =
         SQ.PlayerConfig.isGameStateDebugEnabled();
+
+      document.getElementById('settings-uidesigner-debug-toggle').checked =
+        SQ.PlayerConfig.isUiDesignerDebugEnabled();
 
       // Set logging toggle state
       document.getElementById('settings-log-toggle').checked =
