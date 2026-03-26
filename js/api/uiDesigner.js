@@ -486,8 +486,6 @@
           '  #screen-gameover::before, #screen-gameover::after {' +
           '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
-          '  #screen-game::before, #screen-gameover::before { left: calc(-1 * var(--spacing-md) - 20px); }' +
-          '  #screen-game::after, #screen-gameover::after { right: calc(-1 * var(--spacing-md) - 20px); }' +
           '}';
         document.head.appendChild(sideStyle);
         this._sideBorderStyleEl = sideStyle;
