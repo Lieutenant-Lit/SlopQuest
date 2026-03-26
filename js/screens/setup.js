@@ -409,17 +409,23 @@
       spinner.classList.remove('hidden');
 
       var model = SQ.PlayerConfig.getModel('gamemaster');
+      var useIP = Math.random() < 0.5;
+
+      var userPrompt = useIP
+        ? 'Suggest an adventure setup based on a well-known IP — a popular game, book, movie, anime, or TV show. ' +
+          'Set it in that universe with a character that fits naturally. Pick something unexpected, not the most obvious choice.\n\n'
+        : 'Suggest a completely original adventure setup. Invent a unique world and concept. ' +
+          'Mix genres freely, be creative and surprising.\n\n';
+
       var messages = [
         {
           role: 'system',
-          content: 'You are a creative game designer who suggests varied and imaginative adventure setups for a text-based RPG. ' +
+          content: 'You are a creative game designer who suggests imaginative adventure setups for a text-based RPG. ' +
             'Respond with ONLY a JSON object, no code fences or extra text.'
         },
         {
           role: 'user',
-          content: 'Suggest a creative and unique adventure setup for a text-based RPG. Be wildly varied: ' +
-            'sometimes draw from popular IPs and franchises (games, books, movies, anime, TV shows), ' +
-            'sometimes create completely original worlds and concepts. Mix genres freely. Surprise me.\n\n' +
+          content: userPrompt +
             'Respond with this exact JSON structure:\n' +
             '{\n' +
             '  "setting": "A 2-4 sentence vivid description of the world/universe",\n' +
