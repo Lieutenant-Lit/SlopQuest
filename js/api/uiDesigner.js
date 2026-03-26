@@ -460,7 +460,8 @@
         var sideStyle = document.createElement('style');
         sideStyle.id = 'ui-theme-side-borders';
         sideStyle.textContent =
-          'body.game-themed::before, body.game-themed::after {' +
+          '#screen-game::before, #screen-game::after,' +
+          '#screen-gameover::before, #screen-gameover::after {' +
           '  content: "";' +
           '  position: absolute;' +
           '  top: 0; bottom: 0;' +
@@ -472,10 +473,11 @@
           '  pointer-events: none;' +
           '  z-index: 0;' +
           '}' +
-          'body.game-themed::before { left: 0; }' +
-          'body.game-themed::after { right: 0; transform: scaleX(-1); }' +
+          '#screen-game::before, #screen-gameover::before { left: 0; }' +
+          '#screen-game::after, #screen-gameover::after { right: 0; transform: scaleX(-1); }' +
           '@media (max-width: 767px) {' +
-          '  body.game-themed::before, body.game-themed::after {' +
+          '  #screen-game::before, #screen-game::after,' +
+          '  #screen-gameover::before, #screen-gameover::after {' +
           '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
           '}';
