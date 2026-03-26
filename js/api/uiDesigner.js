@@ -462,7 +462,7 @@
         sideStyle.textContent =
           'body.game-themed::before, body.game-themed::after {' +
           '  content: "";' +
-          '  position: fixed;' +
+          '  position: absolute;' +
           '  top: 0; bottom: 0;' +
           '  width: 40px;' +
           '  background-image: url("' + svgUri + '");' +
