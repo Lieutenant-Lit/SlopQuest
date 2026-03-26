@@ -74,6 +74,15 @@ a {
   transition: background-color 0.5s ease, color 0.3s ease, box-shadow 0.5s ease;
 }
 
+/* When side borders are active on mobile, add padding so content clears them */
+@media (max-width: 767px) {
+  body.game-themed #screen-game,
+  body.game-themed #screen-gameover {
+    padding-left: calc(var(--spacing-md) + 12px);
+    padding-right: calc(var(--spacing-md) + 12px);
+  }
+}
+
 /* UI theme decoration base styles */
 .ui-theme-divider {
   text-align: center;
@@ -240,18 +249,19 @@ textarea {
 }
 
 .btn-choice {
-  background: var(--color-surface);
+  background: transparent;
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: none;
+  border-left: 3px solid var(--color-primary);
   width: 100%;
   text-align: left;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   line-height: 1.4;
 }
 
 .btn-choice:hover {
-  background: var(--color-surface-raised);
-  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.06);
+  border-left-color: var(--color-primary-hover);
 }
 
 .btn-back {
@@ -750,19 +760,20 @@ textarea {
   align-items: flex-start;
   gap: var(--spacing-sm);
   text-align: left;
-  padding: var(--spacing-md);
-  min-height: 52px;
-  background: var(--color-surface);
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: 44px;
+  background: transparent;
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: none;
+  border-left: 3px solid var(--color-primary);
   width: 100%;
   line-height: 1.4;
-  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s ease;
+  transition: border-left-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
 .btn-choice:hover:not(:disabled) {
-  background: var(--color-surface-raised);
-  border-color: var(--color-primary);
+  background: rgba(124, 111, 240, 0.06);
+  border-left-color: var(--color-primary-hover);
 }
 
 .btn-choice:active:not(:disabled) {
@@ -1445,8 +1456,8 @@ textarea {
   }
 
   .btn-choice {
-    min-height: 56px;
-    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 48px;
+    padding: var(--spacing-sm) var(--spacing-lg);
   }
 
   .choice-label {

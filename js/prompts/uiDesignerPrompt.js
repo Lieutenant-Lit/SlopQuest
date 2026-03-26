@@ -13,9 +13,10 @@
     build: function (setupConfig) {
       var p = '';
 
-      p += 'You are a visual designer creating an immersive frame for a dark, atmospheric interactive fiction game. ';
-      p += 'Your goal is NOT a generic color swap — it is a complete visual environment that makes the player feel they have stepped into the story world. ';
-      p += 'Think themed borders, atmospheric glows, decorative elements, and carefully chosen typography. ';
+      p += 'You are a visual designer creating an INTENSELY immersive frame for a dark, atmospheric interactive fiction game. ';
+      p += 'Your goal is NOT a generic color swap — it is a complete visual environment that makes the player feel they have STEPPED INSIDE the story world. ';
+      p += 'Think dramatic themed borders, deep atmospheric glows, bold decorative elements, and carefully chosen typography that drips with genre flavor. ';
+      p += 'Be BOLD and DRAMATIC — subtlety is the enemy. Every element should reinforce the genre identity. ';
       p += 'Output ONLY a valid JSON object — no prose, no markdown, no code fences, no explanation. ';
       p += 'Nothing before or after the JSON.\n\n';
 
@@ -68,7 +69,17 @@
       p += '- background_pattern_svg: A subtle, tileable background pattern (small, under 1KB). ';
       p += 'Set to null if a clean background suits the theme better.\n\n';
 
-      p += '- card_border_style: A CSS border shorthand for choice buttons and cards. ';
+      p += '- choice_icon_svg: An SVG silhouette shape for the choice label badges (A/B/C/D). ';
+      p += 'This shape replaces the default rounded square — it will be used as a CSS mask-image, ';
+      p += 'so it MUST be a FILLED SOLID shape (single color, no transparency inside the shape). ';
+      p += 'Requirements: viewBox="0 0 32 32", width="32" height="32". ';
+      p += 'Genre examples: a shield or crest for fantasy, a skull for horror, a star/sheriff badge for western, ';
+      p += 'a heart for romance, a hexagon or circuit node for sci-fi, a gear for steampunk, ';
+      p += 'a diamond for noir, a paw print for animal stories. ';
+      p += 'Use a single fill color (#fff works best since it is used as a mask). ';
+      p += 'Keep simple — no fine details, just a bold recognizable silhouette. Under 500 bytes.\n\n';
+
+      p += '- card_border_style: A CSS border shorthand for cards (NOT choice buttons — those are borderless text rows). ';
       p += 'Examples: "1px solid #3a2a1a", "2px solid #0ff3". Set to "none" to keep defaults.\n\n';
 
       p += '- header_border_style: A CSS border shorthand for the header bottom border. ';
@@ -77,6 +88,12 @@
 
       p += 'css_filter: An optional CSS filter string to apply mood (e.g. "sepia(0.08)" for historical, ';
       p += '"hue-rotate(10deg)" for alien worlds). Use "none" if not needed. Keep subtle (under 15%).\n\n';
+
+      p += 'DRAMATIC STYLING GUIDANCE:\n';
+      p += '- Make the glow_color impactful — use alpha 0.25-0.4, not timid 0.15 values.\n';
+      p += '- Side borders should feel like the frame of a portal or ancient tome, not a thin decorative afterthought.\n';
+      p += '- The divider SVG should feel like a scene break in an illuminated manuscript, not a simple horizontal line.\n';
+      p += '- Choose fonts that COMMIT to the genre — Cinzel or MedievalSharp for fantasy, Creepster for horror, Orbitron for sci-fi. Avoid safe generic choices.\n\n';
 
       p += 'Generate this EXACT JSON schema:\n';
       p += '{\n';
@@ -106,6 +123,7 @@
       p += '    "header_decoration_svg": "<svg>...</svg> — ornament below title",\n';
       p += '    "header_border_style": "CSS border shorthand for header bottom",\n';
       p += '    "divider_svg": "<svg>...</svg> — horizontal divider between passage and choices",\n';
+      p += '    "choice_icon_svg": "<svg>...</svg> — solid silhouette shape for choice badges",\n';
       p += '    "card_border_style": "CSS border shorthand or none",\n';
       p += '    "background_pattern_svg": "<svg>...</svg> or null"\n';
       p += '  }\n';

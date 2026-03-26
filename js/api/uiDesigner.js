@@ -118,6 +118,7 @@
     _headerDecoEl: null,
     _headerBorderStyleEl: null,
     _glowStyleEl: null,
+    _choiceIconStyleEl: null,
 
     /**
      * Generate a UI theme from the LLM.
@@ -256,6 +257,10 @@
         theme.decorations.header_decoration_svg = sanitizeSvg(theme.decorations.header_decoration_svg);
         if (theme.decorations.header_decoration_svg.length > 1500) theme.decorations.header_decoration_svg = null;
       }
+      if (theme.decorations.choice_icon_svg) {
+        theme.decorations.choice_icon_svg = sanitizeSvg(theme.decorations.choice_icon_svg);
+        if (theme.decorations.choice_icon_svg.length > 1000) theme.decorations.choice_icon_svg = null;
+      }
 
       // Sanitize CSS value strings
       if (theme.decorations.card_border_style) {
@@ -270,6 +275,7 @@
         bodyFont: theme.fonts.body,
         uiFont: theme.fonts.ui,
         hasSideBorders: !!theme.decorations.side_border_svg,
+        hasChoiceIcon: !!theme.decorations.choice_icon_svg,
         hasGlow: !!theme.glow_color
       });
       SQ.Logger.infoFull('UIDesigner', 'Full theme', theme);
@@ -434,7 +440,7 @@
           'body.game-themed::after { right: 0; transform: scaleX(-1); }' +
           '@media (max-width: 767px) {' +
           '  body.game-themed::before, body.game-themed::after {' +
-          '    width: 16px; opacity: 0.3;' +
+          '    width: 24px; opacity: 0.55;' +
           '  }' +
           '}';
         document.head.appendChild(sideStyle);
@@ -450,7 +456,7 @@
           '  box-shadow: 0 0 40px 15px ' + glowColor + ';' +
           '}' +
           '#screen-game .btn-choice:hover:not(:disabled) {' +
-          '  box-shadow: 0 0 12px ' + glowColor + ';' +
+          '  text-shadow: 0 0 8px ' + glowColor + ';' +
           '}' +
           '#screen-game .game-header-row h1,' +
           '#screen-gameover .screen-header h1 {' +
@@ -517,9 +523,30 @@
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
         var cardStyle = document.createElement('style');
         cardStyle.id = 'ui-theme-card-border';
-        cardStyle.textContent = '#screen-game .card, #screen-game .btn-choice { border: ' + decorations.card_border_style + '; }';
+        cardStyle.textContent = '#screen-game .card { border: ' + decorations.card_border_style + '; }';
         document.head.appendChild(cardStyle);
         this._cardBorderStyleEl = cardStyle;
+      }
+
+      // --- Choice icon SVG (mask-image on .choice-label) ---
+      if (decorations.choice_icon_svg) {
+        var iconUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.choice_icon_svg);
+        var iconStyle = document.createElement('style');
+        iconStyle.id = 'ui-theme-choice-icon';
+        iconStyle.textContent =
+          '#screen-game .choice-label {' +
+          '  border-radius: 0;' +
+          '  -webkit-mask-image: url("' + iconUri + '");' +
+          '  mask-image: url("' + iconUri + '");' +
+          '  -webkit-mask-size: contain;' +
+          '  mask-size: contain;' +
+          '  -webkit-mask-repeat: no-repeat;' +
+          '  mask-repeat: no-repeat;' +
+          '  -webkit-mask-position: center;' +
+          '  mask-position: center;' +
+          '}';
+        document.head.appendChild(iconStyle);
+        this._choiceIconStyleEl = iconStyle;
       }
     },
 
@@ -531,7 +558,7 @@
       var refs = [
         '_dividerEl', '_bgStyleEl', '_cardBorderStyleEl',
         '_sideBorderStyleEl', '_headerDecoEl', '_headerBorderStyleEl',
-        '_glowStyleEl'
+        '_glowStyleEl', '_choiceIconStyleEl'
       ];
       var self = this;
       refs.forEach(function (ref) {
