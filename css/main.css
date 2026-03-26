@@ -324,8 +324,17 @@ textarea {
   z-index: 1;
 }
 
+.screen-header-row .btn-settings-gear {
+  margin-left: auto;
+}
+
 .screen-header-row .btn-back {
   margin-bottom: 0;
+}
+
+/* Rewind button: size to match gear icon SVG */
+#btn-rewind {
+  font-size: 1.125rem;
 }
 
 /* ===== GAME SCREEN ===== */
