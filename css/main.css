@@ -120,6 +120,7 @@ body.game-themed .screen {
   font-family: var(--font-title, var(--font-ui));
   font-size: 1.5rem;
   font-weight: 700;
+  text-align: center;
 }
 
 .subtitle {
@@ -306,11 +307,21 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .screen-header-row h1 {
-  flex: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
   text-align: center;
+  pointer-events: none;
+}
+
+.screen-header-row .btn-icon,
+.screen-header-row .btn-back {
+  position: relative;
+  z-index: 1;
 }
 
 .screen-header-row .btn-back {
