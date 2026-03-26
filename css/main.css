@@ -253,7 +253,6 @@ textarea {
   background: transparent;
   color: var(--color-text);
   border: none;
-  border-left: 3px solid var(--color-primary);
   width: 100%;
   text-align: left;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -262,7 +261,6 @@ textarea {
 
 .btn-choice:hover {
   background: rgba(124, 111, 240, 0.06);
-  border-left-color: var(--color-primary-hover);
 }
 
 .btn-back {
@@ -326,9 +324,7 @@ textarea {
   flex: 1;
   text-align: center;
   font-size: 1.125rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
   padding: 0 var(--spacing-xs);
 }
 
@@ -758,7 +754,7 @@ textarea {
 
 .btn-choice {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--spacing-sm);
   text-align: left;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -766,15 +762,13 @@ textarea {
   background: transparent;
   color: var(--color-text);
   border: none;
-  border-left: 3px solid var(--color-primary);
   width: 100%;
   line-height: 1.4;
-  transition: border-left-color 0.15s ease, background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
+  transition: background 0.15s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
 .btn-choice:hover:not(:disabled) {
   background: rgba(124, 111, 240, 0.06);
-  border-left-color: var(--color-primary-hover);
 }
 
 .btn-choice:active:not(:disabled) {
@@ -804,21 +798,22 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 4px;
   background: var(--color-primary);
   color: #fff;
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1;
   margin-top: 1px;
 }
 
 .choice-text {
   flex: 1;
+  font-family: var(--font-body);
 }
 
 /* Choice enter animation */
@@ -1462,10 +1457,10 @@ textarea {
   }
 
   .choice-label {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    font-size: 0.8125rem;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 1rem;
   }
 
   #game-status-bar {

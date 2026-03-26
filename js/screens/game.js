@@ -79,6 +79,17 @@
           header.parentElement.classList.toggle('collapsed');
         }
       });
+
+      // UI Designer debug overlay
+      document.getElementById('uidesigner-debug-header').addEventListener('click', function () {
+        document.getElementById('uidesigner-debug-panel').classList.toggle('collapsed');
+      });
+      document.getElementById('uidesigner-debug-content').addEventListener('click', function (e) {
+        var header = e.target.closest('.gsd-section-header');
+        if (header) {
+          header.parentElement.classList.toggle('collapsed');
+        }
+      });
     },
 
     onShow: function () {
@@ -167,8 +178,9 @@
         this._hideChoiceStatus();
       }
 
-      // Game state debug panel
+      // Debug panels
       this._renderGameStateDebug(state);
+      this._renderUiDesignerDebug(state);
     },
 
     /**
@@ -1227,6 +1239,79 @@
       if (outcome === 'death' || outcome === 'severe_penalty') return 'danger';
       if (outcome === 'hidden_benefit') return 'info';
       return 'muted';
+    },
+
+    /**
+     * Render the UI Designer debug panel showing the active theme.
+     * @private
+     */
+    _renderUiDesignerDebug: function (state) {
+      var panel = document.getElementById('uidesigner-debug-panel');
+      if (!panel) return;
+
+      if (!SQ.PlayerConfig.isUiDesignerDebugEnabled()) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      var theme = state.ui_theme;
+      if (!theme) {
+        panel.classList.add('hidden');
+        return;
+      }
+
+      panel.classList.remove('hidden');
+      var self = this;
+      var html = '';
+
+      // Colors
+      var colorsBody = '';
+      if (theme.colors) {
+        Object.keys(theme.colors).forEach(function (key) {
+          var hex = theme.colors[key] || '—';
+          var swatch = hex !== '—'
+            ? '<span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:' + self._esc(hex) + ';vertical-align:middle;margin-right:4px;border:1px solid rgba(255,255,255,0.2);"></span>'
+            : '';
+          colorsBody += self._gsdRow(key, swatch + self._esc(hex));
+        });
+      }
+      html += self._gsdSection('Colors', colorsBody, false);
+
+      // Fonts
+      var fontsBody = '';
+      if (theme.fonts) {
+        fontsBody += self._gsdRow('Title', self._esc(theme.fonts.title || '—'));
+        fontsBody += self._gsdRow('Body', self._esc(theme.fonts.body || '—'));
+        fontsBody += self._gsdRow('UI', self._esc(theme.fonts.ui || '—'));
+      }
+      html += self._gsdSection('Fonts', fontsBody, false);
+
+      // Glow & Filter
+      var effectsBody = '';
+      effectsBody += self._gsdRow('Glow', self._esc(theme.glow_color || 'none'));
+      effectsBody += self._gsdRow('CSS Filter', self._esc(theme.css_filter || 'none'));
+      html += self._gsdSection('Effects', effectsBody, false);
+
+      // Decorations
+      var decoBody = '';
+      var deco = theme.decorations || {};
+      decoBody += self._gsdRow('Side Border SVG', deco.side_border_svg ? self._gsdTag('present', 'safe') : self._gsdTag('none', 'muted'));
+      decoBody += self._gsdRow('Header Decoration', deco.header_decoration_svg ? self._gsdTag('present', 'safe') : self._gsdTag('none', 'muted'));
+      decoBody += self._gsdRow('Divider SVG', deco.divider_svg ? self._gsdTag('present', 'safe') : self._gsdTag('none', 'muted'));
+      decoBody += self._gsdRow('Background Pattern', deco.background_pattern_svg ? self._gsdTag('present', 'safe') : self._gsdTag('none', 'muted'));
+      decoBody += self._gsdRow('Choice Icon Shape', self._esc(deco.choice_icon_shape || 'default'));
+      decoBody += self._gsdRow('Card Border', self._esc(deco.card_border_style || 'none'));
+      decoBody += self._gsdRow('Header Border', self._esc(deco.header_border_style || 'none'));
+      html += self._gsdSection('Decorations', decoBody, false);
+
+      // Raw JSON
+      var rawBody = '<pre style="white-space:pre-wrap;word-break:break-word;padding:6px;margin:0;font-size:0.6875rem;">' + self._esc(JSON.stringify(theme, null, 2)) + '</pre>';
+      html += self._gsdSection('Raw Theme JSON', rawBody, true);
+
+      var contentEl = document.getElementById('uidesigner-debug-content');
+      if (contentEl) {
+        contentEl.innerHTML = html;
+      }
     },
 
     _esc: function (str) {
