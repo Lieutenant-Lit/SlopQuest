@@ -11,6 +11,13 @@
     init: function () {
       var self = this;
 
+      // Continue — load saved game + history stack and jump to game screen
+      document.getElementById('btn-continue').addEventListener('click', function () {
+        SQ.GameState.load();
+        SQ.HistoryStack.load();
+        SQ.showScreen('game');
+      });
+
       // Wire up all single-select option groups (perspective, tense, difficulty, storyLength, playtesterMaxTurns)
       document.querySelectorAll('#screen-setup .setup-options').forEach(function (group) {
         var groupName = group.getAttribute('data-group');
@@ -59,13 +66,33 @@
         });
       });
 
-      // Generate Story button
+      // Generate Story button — confirm if overwriting a saved game
       document.getElementById('btn-start-game').addEventListener('click', function () {
+        if (SQ.GameState.exists()) {
+          if (!confirm('Starting a new game will erase your current progress. Continue?')) {
+            return;
+          }
+          SQ.GameState.clear();
+          SQ.HistoryStack.clear();
+        }
         self.startGeneration();
       });
     },
 
     onShow: function () {
+      // Clear any active UI theme when returning to setup
+      if (SQ.UIDesigner) {
+        SQ.UIDesigner.remove();
+      }
+
+      // Show Continue button only if a saved game exists
+      var continueBtn = document.getElementById('btn-continue');
+      if (SQ.GameState.exists()) {
+        continueBtn.classList.remove('hidden');
+      } else {
+        continueBtn.classList.add('hidden');
+      }
+
       // Load saved preferences or use defaults
       var prefs = null;
       try {

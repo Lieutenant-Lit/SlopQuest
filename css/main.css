@@ -75,12 +75,17 @@ a {
   transition: background-color 0.5s ease, color 0.3s ease, box-shadow 0.5s ease;
 }
 
-/* When side borders are active on mobile, add padding so content clears them */
+/* When side borders are active, add padding so content clears them */
+body.game-themed #screen-game,
+body.game-themed #screen-gameover {
+  padding-left: calc(var(--spacing-md) + 24px);
+  padding-right: calc(var(--spacing-md) + 24px);
+}
 @media (max-width: 767px) {
   body.game-themed #screen-game,
   body.game-themed #screen-gameover {
-    padding-left: calc(var(--spacing-md) + 12px);
-    padding-right: calc(var(--spacing-md) + 12px);
+    padding-left: calc(var(--spacing-md) + 20px);
+    padding-right: calc(var(--spacing-md) + 20px);
   }
 }
 
@@ -1388,25 +1393,10 @@ textarea {
   line-height: 1.4;
 }
 
-/* ===== MAIN MENU ===== */
-.mainmenu-content {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: var(--spacing-xl);
-}
-
-.mainmenu-content .subtitle {
-  font-size: 1rem;
-  margin-bottom: var(--spacing-md);
-}
-
-.mainmenu-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+/* ===== CONTINUE GAME BANNER ===== */
+#btn-continue {
   width: 100%;
-  max-width: 320px;
+  margin-bottom: var(--spacing-md);
 }
 
 .btn-link {

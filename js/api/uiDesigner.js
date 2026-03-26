@@ -460,9 +460,11 @@
         var sideStyle = document.createElement('style');
         sideStyle.id = 'ui-theme-side-borders';
         sideStyle.textContent =
-          'body.game-themed::before, body.game-themed::after {' +
+          '#screen-game, #screen-gameover { position: relative; }' +
+          '#screen-game::before, #screen-game::after,' +
+          '#screen-gameover::before, #screen-gameover::after {' +
           '  content: "";' +
-          '  position: fixed;' +
+          '  position: absolute;' +
           '  top: 0; bottom: 0;' +
           '  width: 40px;' +
           '  background-image: url("' + svgUri + '");' +
@@ -472,10 +474,16 @@
           '  pointer-events: none;' +
           '  z-index: 0;' +
           '}' +
-          'body.game-themed::before { left: 0; }' +
-          'body.game-themed::after { right: 0; transform: scaleX(-1); }' +
+          '#screen-game::before, #screen-gameover::before {' +
+          '  left: calc(-1 * (50vw - 50%));' +
+          '}' +
+          '#screen-game::after, #screen-gameover::after {' +
+          '  right: calc(-1 * (50vw - 50%));' +
+          '  transform: scaleX(-1);' +
+          '}' +
           '@media (max-width: 767px) {' +
-          '  body.game-themed::before, body.game-themed::after {' +
+          '  #screen-game::before, #screen-game::after,' +
+          '  #screen-gameover::before, #screen-gameover::after {' +
           '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
           '}';
@@ -545,15 +553,7 @@
         }
       }
 
-      // --- Background pattern SVG ---
-      if (decorations.background_pattern_svg) {
-        var bgUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.background_pattern_svg);
-        var bgStyle = document.createElement('style');
-        bgStyle.id = 'ui-theme-bg-pattern';
-        bgStyle.textContent = '#screen-game { background-image: url("' + bgUri + '"); background-repeat: repeat; background-size: auto; }';
-        document.head.appendChild(bgStyle);
-        this._bgStyleEl = bgStyle;
-      }
+      // --- Background pattern SVG (disabled — too visually noisy) ---
 
       // --- Card border style ---
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
