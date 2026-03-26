@@ -76,14 +76,12 @@ a {
 }
 
 /* When side borders are active, add padding so content clears them */
-body.game-themed #screen-game,
-body.game-themed #screen-gameover {
+body.game-themed .screen {
   padding-left: calc(var(--spacing-md) + 24px);
   padding-right: calc(var(--spacing-md) + 24px);
 }
 @media (max-width: 767px) {
-  body.game-themed #screen-game,
-  body.game-themed #screen-gameover {
+  body.game-themed .screen {
     padding-left: calc(var(--spacing-md) + 20px);
     padding-right: calc(var(--spacing-md) + 20px);
   }
@@ -312,6 +310,7 @@ textarea {
 
 .screen-header-row h1 {
   flex: 1;
+  text-align: center;
 }
 
 .screen-header-row .btn-back {
