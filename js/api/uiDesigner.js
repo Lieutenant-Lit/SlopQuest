@@ -460,10 +460,11 @@
         var sideStyle = document.createElement('style');
         sideStyle.id = 'ui-theme-side-borders';
         sideStyle.textContent =
+          '#screen-game, #screen-gameover { position: relative; }' +
           '#screen-game::before, #screen-game::after,' +
           '#screen-gameover::before, #screen-gameover::after {' +
           '  content: "";' +
-          '  position: fixed;' +
+          '  position: absolute;' +
           '  top: 0; bottom: 0;' +
           '  width: 40px;' +
           '  background-image: url("' + svgUri + '");' +
@@ -473,13 +474,20 @@
           '  pointer-events: none;' +
           '  z-index: 0;' +
           '}' +
-          '#screen-game::before, #screen-gameover::before { left: 0; }' +
-          '#screen-game::after, #screen-gameover::after { right: 0; transform: scaleX(-1); }' +
+          '#screen-game::before, #screen-gameover::before {' +
+          '  left: calc(-1 * (50vw - 50%));' +
+          '}' +
+          '#screen-game::after, #screen-gameover::after {' +
+          '  right: calc(-1 * (50vw - 50%));' +
+          '  transform: scaleX(-1);' +
+          '}' +
           '@media (max-width: 767px) {' +
           '  #screen-game::before, #screen-game::after,' +
           '  #screen-gameover::before, #screen-gameover::after {' +
           '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
+          '  #screen-game::before, #screen-gameover::before { left: calc(-1 * var(--spacing-md) - 20px); }' +
+          '  #screen-game::after, #screen-gameover::after { right: calc(-1 * var(--spacing-md) - 20px); }' +
           '}';
         document.head.appendChild(sideStyle);
         this._sideBorderStyleEl = sideStyle;
