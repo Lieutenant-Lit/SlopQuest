@@ -2,8 +2,8 @@
  * SQ.UIDesigner — Generates and applies dynamic UI themes via LLM.
  * Produces a color palette, font selections, and SVG decorations
  * based on the story's setting and tone. Applies them as CSS custom
- * properties scoped to #screen-game and DOM injections; removes them
- * cleanly on game exit.
+ * properties scoped to #screen-game, side border decorations on body,
+ * atmospheric glow effects, and DOM injections. Removes cleanly on game exit.
  */
 (function () {
   var MAX_RETRIES = 1;
@@ -92,17 +92,32 @@
     return clean;
   }
 
+  /**
+   * Sanitize a CSS value string (border shorthand, filter, etc.)
+   * @param {string} val - Raw CSS value
+   * @returns {string} Sanitized value
+   */
+  function sanitizeCssValue(val) {
+    if (!val || typeof val !== 'string') return '';
+    return val.replace(/[<>"';{}()]/g, '');
+  }
+
+  /** Regex for validating rgba() glow color values. */
+  var RGBA_PATTERN = /^rgba\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*[\d.]+\s*\)$/;
+
   SQ.UIDesigner = {
     /** Currently injected Google Fonts <link> element. */
     _fontLink: null,
     /** Currently active theme object. */
     _activeTheme: null,
-    /** Injected divider element reference. */
+    /** Injected DOM element and style references for cleanup. */
     _dividerEl: null,
-    /** Injected background style element reference. */
     _bgStyleEl: null,
-    /** Injected card border style element reference. */
     _cardBorderStyleEl: null,
+    _sideBorderStyleEl: null,
+    _headerDecoEl: null,
+    _headerBorderStyleEl: null,
+    _glowStyleEl: null,
 
     /**
      * Generate a UI theme from the LLM.
@@ -130,7 +145,7 @@
 
       return SQ.API.call(model, messages, {
         temperature: 0.4,
-        max_tokens: 2000,
+        max_tokens: 2500,
         timeout: 30000,
         source: 'ui_designer'
       })
@@ -190,11 +205,10 @@
         }
       }
 
+      // Fonts
       if (!theme.fonts || typeof theme.fonts !== 'object') {
         theme.fonts = { body: 'Georgia', ui: 'system-ui' };
       }
-
-      // Sanitize font names (prevent injection via font-family)
       if (theme.fonts.body) {
         theme.fonts.body = theme.fonts.body.replace(/[<>"';{}()]/g, '');
       }
@@ -202,6 +216,25 @@
         theme.fonts.ui = theme.fonts.ui.replace(/[<>"';{}()]/g, '');
       }
 
+      // Glow color
+      if (theme.glow_color && typeof theme.glow_color === 'string') {
+        if (!RGBA_PATTERN.test(theme.glow_color.trim())) {
+          SQ.Logger.warn('UIDesigner', 'Invalid glow_color format, discarding', { value: theme.glow_color });
+          theme.glow_color = null;
+        } else {
+          theme.glow_color = theme.glow_color.trim();
+        }
+      } else {
+        theme.glow_color = null;
+      }
+
+      // CSS filter
+      if (typeof theme.css_filter !== 'string') {
+        theme.css_filter = 'none';
+      }
+      theme.css_filter = sanitizeCssValue(theme.css_filter);
+
+      // Decorations
       if (!theme.decorations || typeof theme.decorations !== 'object') {
         theme.decorations = {};
       }
@@ -209,26 +242,35 @@
       // Sanitize all SVG strings
       if (theme.decorations.divider_svg) {
         theme.decorations.divider_svg = sanitizeSvg(theme.decorations.divider_svg);
+        if (theme.decorations.divider_svg.length > 3000) theme.decorations.divider_svg = null;
       }
       if (theme.decorations.background_pattern_svg) {
         theme.decorations.background_pattern_svg = sanitizeSvg(theme.decorations.background_pattern_svg);
+        if (theme.decorations.background_pattern_svg.length > 2000) theme.decorations.background_pattern_svg = null;
+      }
+      if (theme.decorations.side_border_svg) {
+        theme.decorations.side_border_svg = sanitizeSvg(theme.decorations.side_border_svg);
+        if (theme.decorations.side_border_svg.length > 3000) theme.decorations.side_border_svg = null;
+      }
+      if (theme.decorations.header_decoration_svg) {
+        theme.decorations.header_decoration_svg = sanitizeSvg(theme.decorations.header_decoration_svg);
+        if (theme.decorations.header_decoration_svg.length > 1500) theme.decorations.header_decoration_svg = null;
       }
 
-      // Sanitize card_border_style (only allow CSS border shorthand characters)
+      // Sanitize CSS value strings
       if (theme.decorations.card_border_style) {
-        theme.decorations.card_border_style = theme.decorations.card_border_style.replace(/[<>"';{}()]/g, '');
+        theme.decorations.card_border_style = sanitizeCssValue(theme.decorations.card_border_style);
       }
-
-      if (typeof theme.css_filter !== 'string') {
-        theme.css_filter = 'none';
+      if (theme.decorations.header_border_style) {
+        theme.decorations.header_border_style = sanitizeCssValue(theme.decorations.header_border_style);
       }
-      // Sanitize css_filter
-      theme.css_filter = theme.css_filter.replace(/[<>"';{}]/g, '');
 
       SQ.Logger.info('UIDesigner', 'Theme generated', {
         primary: theme.colors.primary,
         bodyFont: theme.fonts.body,
-        uiFont: theme.fonts.ui
+        uiFont: theme.fonts.ui,
+        hasSideBorders: !!theme.decorations.side_border_svg,
+        hasGlow: !!theme.glow_color
       });
       SQ.Logger.infoFull('UIDesigner', 'Full theme', theme);
 
@@ -238,7 +280,7 @@
     /**
      * Apply a theme to the game screen.
      * Sets CSS custom properties on #screen-game (scoped, not :root),
-     * loads Google Fonts, and injects SVG decorations.
+     * loads Google Fonts, injects SVG decorations, side borders, and glow.
      * @param {object} theme - The theme JSON from generate()
      */
     apply: function (theme) {
@@ -272,10 +314,10 @@
         gameScreen.style.filter = theme.css_filter;
       }
 
-      // 4. Inject SVG decorations
-      this._applyDecorations(theme.decorations || {});
+      // 4. Inject all decorations (SVGs, side borders, glow, header)
+      this._applyDecorations(theme.decorations || {}, theme.glow_color);
 
-      // 5. Also apply to game over screen so theme carries through
+      // 5. Also apply colors/fonts to game over screen
       var gameOverScreen = document.getElementById('screen-gameover');
       if (gameOverScreen && theme.colors) {
         Object.keys(COLOR_MAP).forEach(function (key) {
@@ -292,6 +334,9 @@
           }
         }
       }
+
+      // 6. Add body class for side border pseudo-elements
+      document.body.classList.add('game-themed');
 
       this._activeTheme = theme;
     },
@@ -323,7 +368,10 @@
         this._fontLink = null;
       }
 
-      // 4. Remove SVG decorations
+      // 4. Remove body class
+      document.body.classList.remove('game-themed');
+
+      // 5. Remove all injected decorations
       this._removeDecorations();
 
       this._activeTheme = null;
@@ -334,7 +382,6 @@
      * @private
      */
     _loadFonts: function (fonts) {
-      // Remove previous font link if any
       if (this._fontLink) {
         this._fontLink.remove();
         this._fontLink = null;
@@ -358,14 +405,96 @@
     },
 
     /**
-     * Inject SVG decorative elements into the game screen.
+     * Inject all decorative elements: SVGs, side borders, glow, header.
      * @private
      */
-    _applyDecorations: function (decorations) {
+    _applyDecorations: function (decorations, glowColor) {
       // Clean up any existing decorations first
       this._removeDecorations();
 
-      // Divider SVG between passage and choices
+      // --- Side border SVG (most impactful) ---
+      if (decorations.side_border_svg) {
+        var svgUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.side_border_svg);
+        var sideStyle = document.createElement('style');
+        sideStyle.id = 'ui-theme-side-borders';
+        sideStyle.textContent =
+          'body.game-themed::before, body.game-themed::after {' +
+          '  content: "";' +
+          '  position: fixed;' +
+          '  top: 0; bottom: 0;' +
+          '  width: 40px;' +
+          '  background-image: url("' + svgUri + '");' +
+          '  background-repeat: repeat-y;' +
+          '  background-size: 40px auto;' +
+          '  opacity: 0.5;' +
+          '  pointer-events: none;' +
+          '  z-index: 0;' +
+          '}' +
+          'body.game-themed::before { left: 0; }' +
+          'body.game-themed::after { right: 0; transform: scaleX(-1); }' +
+          '@media (max-width: 767px) {' +
+          '  body.game-themed::before, body.game-themed::after {' +
+          '    width: 16px; opacity: 0.3;' +
+          '  }' +
+          '}' +
+          '@media (max-width: 480px) {' +
+          '  body.game-themed::before, body.game-themed::after {' +
+          '    display: none;' +
+          '  }' +
+          '}';
+        document.head.appendChild(sideStyle);
+        this._sideBorderStyleEl = sideStyle;
+      }
+
+      // --- Glow effect ---
+      if (glowColor) {
+        var glowStyle = document.createElement('style');
+        glowStyle.id = 'ui-theme-glow';
+        glowStyle.textContent =
+          '#screen-game, #screen-gameover {' +
+          '  box-shadow: 0 0 40px 15px ' + glowColor + ';' +
+          '}' +
+          '#screen-game .btn-choice:hover:not(:disabled) {' +
+          '  box-shadow: 0 0 12px ' + glowColor + ';' +
+          '}' +
+          '#screen-game .game-header-row h1,' +
+          '#screen-gameover .screen-header h1 {' +
+          '  text-shadow: 0 0 20px ' + glowColor + ';' +
+          '}';
+        document.head.appendChild(glowStyle);
+        this._glowStyleEl = glowStyle;
+      }
+
+      // --- Header decoration SVG ---
+      if (decorations.header_decoration_svg) {
+        var gameScreen = document.getElementById('screen-game');
+        if (gameScreen) {
+          var screenHeader = gameScreen.querySelector('.screen-header');
+          if (screenHeader) {
+            var headerDeco = document.createElement('div');
+            headerDeco.id = 'ui-theme-header-deco';
+            headerDeco.className = 'ui-theme-header-deco';
+            headerDeco.innerHTML = decorations.header_decoration_svg;
+            screenHeader.parentNode.insertBefore(headerDeco, screenHeader.nextSibling);
+            this._headerDecoEl = headerDeco;
+          }
+        }
+      }
+
+      // --- Header border style ---
+      if (decorations.header_border_style && decorations.header_border_style !== 'none') {
+        var hdrBorderStyle = document.createElement('style');
+        hdrBorderStyle.id = 'ui-theme-header-border';
+        hdrBorderStyle.textContent =
+          '#screen-game .screen-header,' +
+          '#screen-gameover .screen-header {' +
+          '  border-bottom: ' + decorations.header_border_style + ';' +
+          '}';
+        document.head.appendChild(hdrBorderStyle);
+        this._headerBorderStyleEl = hdrBorderStyle;
+      }
+
+      // --- Divider SVG between passage and choices ---
       if (decorations.divider_svg) {
         var passageEl = document.getElementById('passage-text');
         var choicesEl = document.getElementById('choices-container');
@@ -374,51 +503,48 @@
           divider.id = 'ui-theme-divider';
           divider.className = 'ui-theme-divider';
           divider.innerHTML = decorations.divider_svg;
-          divider.style.textAlign = 'center';
-          divider.style.margin = 'var(--spacing-md) 0';
-          divider.style.opacity = '0.7';
           choicesEl.parentNode.insertBefore(divider, choicesEl);
           this._dividerEl = divider;
         }
       }
 
-      // Background pattern SVG
+      // --- Background pattern SVG ---
       if (decorations.background_pattern_svg) {
-        var svgDataUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.background_pattern_svg);
-        var style = document.createElement('style');
-        style.id = 'ui-theme-bg-pattern';
-        style.textContent = '#screen-game { background-image: url("' + svgDataUri + '"); background-repeat: repeat; background-size: auto; }';
-        document.head.appendChild(style);
-        this._bgStyleEl = style;
+        var bgUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.background_pattern_svg);
+        var bgStyle = document.createElement('style');
+        bgStyle.id = 'ui-theme-bg-pattern';
+        bgStyle.textContent = '#screen-game { background-image: url("' + bgUri + '"); background-repeat: repeat; background-size: auto; }';
+        document.head.appendChild(bgStyle);
+        this._bgStyleEl = bgStyle;
       }
 
-      // Card border style
+      // --- Card border style ---
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
-        var borderStyle = document.createElement('style');
-        borderStyle.id = 'ui-theme-card-border';
-        borderStyle.textContent = '#screen-game .card, #screen-game .btn-choice { border: ' + decorations.card_border_style + '; }';
-        document.head.appendChild(borderStyle);
-        this._cardBorderStyleEl = borderStyle;
+        var cardStyle = document.createElement('style');
+        cardStyle.id = 'ui-theme-card-border';
+        cardStyle.textContent = '#screen-game .card, #screen-game .btn-choice { border: ' + decorations.card_border_style + '; }';
+        document.head.appendChild(cardStyle);
+        this._cardBorderStyleEl = cardStyle;
       }
     },
 
     /**
-     * Remove all injected SVG decorations from the DOM.
+     * Remove all injected decorations from the DOM.
      * @private
      */
     _removeDecorations: function () {
-      if (this._dividerEl) {
-        this._dividerEl.remove();
-        this._dividerEl = null;
-      }
-      if (this._bgStyleEl) {
-        this._bgStyleEl.remove();
-        this._bgStyleEl = null;
-      }
-      if (this._cardBorderStyleEl) {
-        this._cardBorderStyleEl.remove();
-        this._cardBorderStyleEl = null;
-      }
+      var refs = [
+        '_dividerEl', '_bgStyleEl', '_cardBorderStyleEl',
+        '_sideBorderStyleEl', '_headerDecoEl', '_headerBorderStyleEl',
+        '_glowStyleEl'
+      ];
+      var self = this;
+      refs.forEach(function (ref) {
+        if (self[ref]) {
+          self[ref].remove();
+          self[ref] = null;
+        }
+      });
     }
   };
 })();
