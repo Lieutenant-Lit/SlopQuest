@@ -436,11 +436,6 @@
           '  body.game-themed::before, body.game-themed::after {' +
           '    width: 16px; opacity: 0.3;' +
           '  }' +
-          '}' +
-          '@media (max-width: 480px) {' +
-          '  body.game-themed::before, body.game-themed::after {' +
-          '    display: none;' +
-          '  }' +
           '}';
         document.head.appendChild(sideStyle);
         this._sideBorderStyleEl = sideStyle;
