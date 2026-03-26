@@ -463,7 +463,7 @@
           '#screen-game::before, #screen-game::after,' +
           '#screen-gameover::before, #screen-gameover::after {' +
           '  content: "";' +
-          '  position: absolute;' +
+          '  position: fixed;' +
           '  top: 0; bottom: 0;' +
           '  width: 40px;' +
           '  background-image: url("' + svgUri + '");' +
@@ -547,15 +547,7 @@
         }
       }
 
-      // --- Background pattern SVG ---
-      if (decorations.background_pattern_svg) {
-        var bgUri = 'data:image/svg+xml,' + encodeURIComponent(decorations.background_pattern_svg);
-        var bgStyle = document.createElement('style');
-        bgStyle.id = 'ui-theme-bg-pattern';
-        bgStyle.textContent = '#screen-game { background-image: url("' + bgUri + '"); background-repeat: repeat; background-size: auto; }';
-        document.head.appendChild(bgStyle);
-        this._bgStyleEl = bgStyle;
-      }
+      // --- Background pattern SVG (disabled — too visually noisy) ---
 
       // --- Card border style ---
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
