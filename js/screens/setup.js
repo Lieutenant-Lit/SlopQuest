@@ -66,6 +66,12 @@
         });
       });
 
+      // AI suggestion link
+      document.getElementById('btn-suggest-game').addEventListener('click', function (e) {
+        e.preventDefault();
+        self.generateSuggestion();
+      });
+
       // Generate Story button — confirm if overwriting a saved game
       document.getElementById('btn-start-game').addEventListener('click', function () {
         if (SQ.GameState.exists()) {
@@ -393,6 +399,66 @@
       var btn = document.getElementById('btn-start-game');
       btn.disabled = false;
       btn.textContent = 'Generate Story';
+    },
+
+    generateSuggestion: function () {
+      var link = document.getElementById('btn-suggest-game');
+      var spinner = document.getElementById('suggest-spinner');
+
+      link.classList.add('disabled');
+      spinner.classList.remove('hidden');
+
+      var model = SQ.PlayerConfig.getModel('gamemaster');
+      var messages = [
+        {
+          role: 'system',
+          content: 'You are a creative game designer who suggests varied and imaginative adventure setups for a text-based RPG. ' +
+            'Respond with ONLY a JSON object, no code fences or extra text.'
+        },
+        {
+          role: 'user',
+          content: 'Suggest a creative and unique adventure setup for a text-based RPG. Be wildly varied: ' +
+            'sometimes draw from popular IPs and franchises (games, books, movies, anime, TV shows), ' +
+            'sometimes create completely original worlds and concepts. Mix genres freely. Surprise me.\n\n' +
+            'Respond with this exact JSON structure:\n' +
+            '{\n' +
+            '  "setting": "A 2-4 sentence vivid description of the world/universe",\n' +
+            '  "character": "A 1-2 sentence description of the player character",\n' +
+            '  "writingStyle": "A short description of the writing style and tone"\n' +
+            '}'
+        }
+      ];
+
+      SQ.API.call(model, messages, {
+        temperature: 0.95,
+        max_tokens: 500,
+        source: 'suggestion'
+      })
+        .then(function (raw) {
+          var result = SQ.API.parseJSON(raw);
+
+          if (result.setting) {
+            document.getElementById('setup-setting-text').value = result.setting;
+          }
+          if (result.character) {
+            document.getElementById('setup-archetype').value = result.character;
+          }
+          if (result.writingStyle) {
+            document.getElementById('setup-style-tone-text').value = result.writingStyle;
+          }
+
+          // Clear chip highlights since AI overwrote the text fields
+          document.querySelectorAll('#screen-setup .setup-chips .setup-chip').forEach(function (c) {
+            c.classList.remove('active');
+          });
+        })
+        .catch(function (err) {
+          SQ.Logger.error('Setup', 'Suggestion generation failed', { error: err.message });
+        })
+        .then(function () {
+          link.classList.remove('disabled');
+          spinner.classList.add('hidden');
+        });
     }
   };
 })();
