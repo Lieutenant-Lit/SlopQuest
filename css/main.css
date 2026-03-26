@@ -22,6 +22,7 @@
 
   --font-body: 'Georgia', 'Times New Roman', serif;
   --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-title: var(--font-ui);
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -113,7 +114,7 @@ a {
 }
 
 .screen-header h1 {
-  font-family: var(--font-ui);
+  font-family: var(--font-title, var(--font-ui));
   font-size: 1.5rem;
   font-weight: 700;
 }
