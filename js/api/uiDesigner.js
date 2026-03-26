@@ -2,7 +2,7 @@
  * SQ.UIDesigner — Generates and applies dynamic UI themes via LLM.
  * Produces a color palette, font selections, and SVG decorations
  * based on the story's setting and tone. Applies them as CSS custom
- * properties scoped to #screen-game, side border decorations on body,
+ * properties on :root (all screens), side border decorations,
  * atmospheric glow effects, and DOM injections. Removes cleanly on game exit.
  */
 (function () {
@@ -138,6 +138,7 @@
     _headerBorderStyleEl: null,
     _glowStyleEl: null,
     _choiceIconStyleEl: null,
+    _filterStyleEl: null,
 
     /**
      * Generate a UI theme from the LLM.
@@ -311,70 +312,55 @@
     },
 
     /**
-     * Apply a theme to the game screen.
-     * Sets CSS custom properties on #screen-game (scoped, not :root),
+     * Apply a theme to all screens.
+     * Sets CSS custom properties on :root so every screen inherits them,
      * loads Google Fonts, injects SVG decorations, side borders, and glow.
      * @param {object} theme - The theme JSON from generate()
      */
     apply: function (theme) {
       if (!theme) return;
-      var gameScreen = document.getElementById('screen-game');
-      if (!gameScreen) return;
+      var root = document.documentElement;
 
-      // 1. Apply colors (scoped to game screen)
+      // 1. Apply colors on :root (inherited by all screens)
       if (theme.colors) {
         Object.keys(COLOR_MAP).forEach(function (key) {
           if (theme.colors[key]) {
-            gameScreen.style.setProperty(COLOR_MAP[key], theme.colors[key]);
+            root.style.setProperty(COLOR_MAP[key], theme.colors[key]);
           }
         });
       }
 
-      // 2. Load and apply fonts
+      // 2. Load and apply fonts on :root
       if (theme.fonts) {
         this._loadFonts(theme.fonts);
 
         if (theme.fonts.body) {
-          gameScreen.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
+          root.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
         }
         if (theme.fonts.ui) {
-          gameScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
+          root.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
         }
         if (theme.fonts.title) {
-          gameScreen.style.setProperty('--font-title', "'" + theme.fonts.title + "', " + (theme.fonts.ui ? "'" + theme.fonts.ui + "', " : '') + "system-ui, sans-serif");
+          root.style.setProperty('--font-title', "'" + theme.fonts.title + "', " + (theme.fonts.ui ? "'" + theme.fonts.ui + "', " : '') + "system-ui, sans-serif");
         }
       }
 
-      // 3. Apply CSS filter to game screen
+      // 3. Apply CSS filter via injected style (avoids stacking context on root)
       if (theme.css_filter && theme.css_filter !== 'none') {
-        gameScreen.style.filter = theme.css_filter;
+        if (this._filterStyleEl) {
+          this._filterStyleEl.remove();
+        }
+        var filterStyle = document.createElement('style');
+        filterStyle.id = 'ui-theme-filter';
+        filterStyle.textContent = '.screen { filter: ' + theme.css_filter + '; }';
+        document.head.appendChild(filterStyle);
+        this._filterStyleEl = filterStyle;
       }
 
       // 4. Inject all decorations (SVGs, side borders, glow, header)
       this._applyDecorations(theme.decorations || {}, theme.glow_color);
 
-      // 5. Also apply colors/fonts to game over screen
-      var gameOverScreen = document.getElementById('screen-gameover');
-      if (gameOverScreen && theme.colors) {
-        Object.keys(COLOR_MAP).forEach(function (key) {
-          if (theme.colors[key]) {
-            gameOverScreen.style.setProperty(COLOR_MAP[key], theme.colors[key]);
-          }
-        });
-        if (theme.fonts) {
-          if (theme.fonts.body) {
-            gameOverScreen.style.setProperty('--font-body', "'" + theme.fonts.body + "', Georgia, serif");
-          }
-          if (theme.fonts.ui) {
-            gameOverScreen.style.setProperty('--font-ui', "'" + theme.fonts.ui + "', system-ui, sans-serif");
-          }
-          if (theme.fonts.title) {
-            gameOverScreen.style.setProperty('--font-title', "'" + theme.fonts.title + "', " + (theme.fonts.ui ? "'" + theme.fonts.ui + "', " : '') + "system-ui, sans-serif");
-          }
-        }
-      }
-
-      // 6. Add body class for side border pseudo-elements
+      // 5. Add body class for themed layout adjustments
       document.body.classList.add('game-themed');
 
       this._activeTheme = theme;
@@ -384,31 +370,26 @@
      * Remove the active theme, restoring defaults.
      */
     remove: function () {
-      // 1. Reset CSS custom properties on game screen
-      var gameScreen = document.getElementById('screen-game');
-      if (gameScreen) {
-        ALL_CSS_VARS.forEach(function (prop) {
-          gameScreen.style.removeProperty(prop);
-        });
-        gameScreen.style.filter = '';
-      }
+      // 1. Reset CSS custom properties on :root
+      var root = document.documentElement;
+      ALL_CSS_VARS.forEach(function (prop) {
+        root.style.removeProperty(prop);
+      });
 
-      // 2. Reset CSS custom properties on game over screen
-      var gameOverScreen = document.getElementById('screen-gameover');
-      if (gameOverScreen) {
-        ALL_CSS_VARS.forEach(function (prop) {
-          gameOverScreen.style.removeProperty(prop);
-        });
-      }
-
-      // 3. Remove Google Fonts link
+      // 2. Remove Google Fonts link
       if (this._fontLink) {
         this._fontLink.remove();
         this._fontLink = null;
       }
 
-      // 4. Remove body class
+      // 3. Remove body class
       document.body.classList.remove('game-themed');
+
+      // 4. Remove filter style
+      if (this._filterStyleEl) {
+        this._filterStyleEl.remove();
+        this._filterStyleEl = null;
+      }
 
       // 5. Remove all injected decorations
       this._removeDecorations();
@@ -460,9 +441,8 @@
         var sideStyle = document.createElement('style');
         sideStyle.id = 'ui-theme-side-borders';
         sideStyle.textContent =
-          '#screen-game, #screen-gameover { position: relative; }' +
-          '#screen-game::before, #screen-game::after,' +
-          '#screen-gameover::before, #screen-gameover::after {' +
+          '.screen { position: relative; }' +
+          '.screen::before, .screen::after {' +
           '  content: "";' +
           '  position: absolute;' +
           '  top: 0; bottom: 0;' +
@@ -474,16 +454,15 @@
           '  pointer-events: none;' +
           '  z-index: 0;' +
           '}' +
-          '#screen-game::before, #screen-gameover::before {' +
+          '.screen::before {' +
           '  left: calc(-1 * (50vw - 50%));' +
           '}' +
-          '#screen-game::after, #screen-gameover::after {' +
+          '.screen::after {' +
           '  right: calc(-1 * (50vw - 50%));' +
           '  transform: scaleX(-1);' +
           '}' +
           '@media (max-width: 767px) {' +
-          '  #screen-game::before, #screen-game::after,' +
-          '  #screen-gameover::before, #screen-gameover::after {' +
+          '  .screen::before, .screen::after {' +
           '    width: 24px; opacity: 0.55; background-size: 24px auto;' +
           '  }' +
           '}';
@@ -496,14 +475,14 @@
         var glowStyle = document.createElement('style');
         glowStyle.id = 'ui-theme-glow';
         glowStyle.textContent =
-          '#screen-game, #screen-gameover {' +
+          '.screen {' +
           '  box-shadow: 0 0 40px 15px ' + glowColor + ';' +
           '}' +
           '#screen-game .btn-choice:hover:not(:disabled) {' +
           '  text-shadow: 0 0 8px ' + glowColor + ';' +
           '}' +
-          '#screen-game .game-header-row h1,' +
-          '#screen-gameover .screen-header h1 {' +
+          '.screen .game-header-row h1,' +
+          '.screen .screen-header h1 {' +
           '  text-shadow: 0 0 20px ' + glowColor + ';' +
           '}';
         document.head.appendChild(glowStyle);
@@ -531,8 +510,7 @@
         var hdrBorderStyle = document.createElement('style');
         hdrBorderStyle.id = 'ui-theme-header-border';
         hdrBorderStyle.textContent =
-          '#screen-game .screen-header,' +
-          '#screen-gameover .screen-header {' +
+          '.screen .screen-header {' +
           '  border-bottom: ' + decorations.header_border_style + ';' +
           '}';
         document.head.appendChild(hdrBorderStyle);
@@ -559,7 +537,7 @@
       if (decorations.card_border_style && decorations.card_border_style !== 'none') {
         var cardStyle = document.createElement('style');
         cardStyle.id = 'ui-theme-card-border';
-        cardStyle.textContent = '#screen-game .card { border: ' + decorations.card_border_style + '; }';
+        cardStyle.textContent = '.screen .card { border: ' + decorations.card_border_style + '; }';
         document.head.appendChild(cardStyle);
         this._cardBorderStyleEl = cardStyle;
       }
