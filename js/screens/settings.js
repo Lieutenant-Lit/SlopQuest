@@ -286,11 +286,11 @@
         self.validateElevenLabsKey();
       });
 
-      // Back button — return to previous screen (or mainmenu as fallback)
+      // Back button — return to previous screen (or setup as fallback)
       document.getElementById('btn-settings-back').addEventListener('click', function () {
-        var target = SQ._previousScreen || 'mainmenu';
+        var target = SQ._previousScreen || 'setup';
         // Don't navigate back to settings itself
-        if (target === 'settings') target = 'mainmenu';
+        if (target === 'settings') target = 'setup';
         SQ.showScreen(target);
       });
     },

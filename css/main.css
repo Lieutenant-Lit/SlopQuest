@@ -1388,25 +1388,10 @@ textarea {
   line-height: 1.4;
 }
 
-/* ===== MAIN MENU ===== */
-.mainmenu-content {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: var(--spacing-xl);
-}
-
-.mainmenu-content .subtitle {
-  font-size: 1rem;
-  margin-bottom: var(--spacing-md);
-}
-
-.mainmenu-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+/* ===== CONTINUE GAME BANNER ===== */
+#btn-continue {
   width: 100%;
-  max-width: 320px;
+  margin-bottom: var(--spacing-md);
 }
 
 .btn-link {

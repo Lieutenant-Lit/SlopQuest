@@ -3,7 +3,7 @@
  * Must be loaded last (depends on all other modules).
  */
 (function () {
-  var SCREEN_IDS = ['settings', 'mainmenu', 'setup', 'game', 'rewind', 'gameover'];
+  var SCREEN_IDS = ['settings', 'setup', 'game', 'rewind', 'gameover'];
 
   /**
    * Switch to a screen by ID. Hides all screens, shows the target,
@@ -22,7 +22,6 @@
     // Map screen IDs to their Screen objects
     var screenMap = {
       settings: SQ.Screens.Settings,
-      mainmenu: SQ.Screens.MainMenu,
       setup: SQ.Screens.Setup,
       game: SQ.Screens.Game,
       rewind: SQ.Screens.Rewind,
@@ -56,7 +55,6 @@
     // Initialize all screens
     var screenMap = {
       settings: SQ.Screens.Settings,
-      mainmenu: SQ.Screens.MainMenu,
       setup: SQ.Screens.Setup,
       game: SQ.Screens.Game,
       rewind: SQ.Screens.Rewind,
@@ -95,10 +93,10 @@
     });
 
     // Determine starting screen:
-    // If player has a valid API key, skip to main menu.
+    // If player has a valid API key, go to setup.
     // Otherwise show settings for first-time setup.
     if (SQ.PlayerConfig.hasApiKey()) {
-      SQ.showScreen('mainmenu');
+      SQ.showScreen('setup');
     } else {
       SQ.showScreen('settings');
     }
