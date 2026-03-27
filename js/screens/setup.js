@@ -495,10 +495,6 @@
             document.getElementById('setup-style-tone-text').value = result.writingStyle;
           }
 
-          // Clear chip highlights since AI overwrote the text fields
-          document.querySelectorAll('#screen-setup .setup-chips .setup-chip').forEach(function (c) {
-            c.classList.remove('active');
-          });
         })
         .catch(function (err) {
           SQ.Logger.error('Setup', 'Suggestion generation failed', { error: err.message });
