@@ -308,20 +308,12 @@
     </div>
     <div class="screen-content">
       <button id="btn-continue" class="btn btn-primary btn-large hidden">Continue Game</button>
-      <p class="subtitle">Configure your adventure</p>
+      <p class="subtitle">Configure your adventure, or <a href="#" id="btn-suggest-game" class="suggest-link">generate a suggestion</a><span id="suggest-spinner" class="spinner spinner-inline hidden"></span></p>
 
       <div class="card">
         <h2>Setting / Universe</h2>
-        <p>Describe your world, or pick a genre to get started.</p>
+        <p>Describe your world.</p>
         <textarea id="setup-setting-text" rows="5" placeholder="Describe your world..."></textarea>
-        <div class="setup-chips" data-chip-target="setup-setting-text">
-          <button class="setup-chip" data-value="dark fantasy">Fantasy</button>
-          <button class="setup-chip" data-value="sci-fi">Sci-Fi</button>
-          <button class="setup-chip" data-value="horror">Horror</button>
-          <button class="setup-chip" data-value="post-apocalyptic">Post-Apocalyptic</button>
-          <button class="setup-chip" data-value="historical">Historical</button>
-          <button class="setup-chip" data-value="mystery">Mystery</button>
-        </div>
       </div>
 
       <div class="card">
@@ -332,20 +324,8 @@
 
       <div class="card">
         <h2>Style &amp; Tone</h2>
-        <p>How should the story read? Describe a style, name an author, or pick from the chips.</p>
+        <p>How should the story read? Describe a style, or name an author.</p>
         <textarea id="setup-style-tone-text" rows="3" placeholder="e.g., Cormac McCarthy meets Terry Pratchett"></textarea>
-        <div class="setup-chips" data-chip-target="setup-style-tone-text">
-          <button class="setup-chip" data-value="literary">Literary</button>
-          <button class="setup-chip" data-value="pulpy">Pulpy</button>
-          <button class="setup-chip" data-value="minimalist">Minimalist</button>
-          <button class="setup-chip" data-value="flowery">Flowery</button>
-          <button class="setup-chip" data-value="humorous">Humorous</button>
-          <button class="setup-chip" data-value="dark and gritty">Dark &amp; Gritty</button>
-          <button class="setup-chip" data-value="epic and mythic">Epic &amp; Mythic</button>
-          <button class="setup-chip" data-value="mysterious">Mysterious</button>
-          <button class="setup-chip" data-value="comedic">Comedic</button>
-          <button class="setup-chip" data-value="whimsical">Whimsical</button>
-        </div>
       </div>
 
       <div class="card">
@@ -490,11 +470,6 @@
         <div id="uidesigner-debug-content" class="gamestate-debug-content"></div>
       </div>
     </div>
-    <div id="loading-overlay" class="hidden">
-      <div class="spinner"></div>
-      <p id="loading-status">Generating...</p>
-      <button id="btn-cancel-loading" class="btn btn-secondary">Cancel</button>
-    </div>
   </div>
 
   <div id="screen-rewind" class="screen">
@@ -548,6 +523,13 @@
         <button id="btn-new-game-from-death" class="btn btn-secondary btn-large">New Game</button>
       </div>
     </div>
+  </div>
+
+  <!-- ===== LOADING OVERLAY ===== -->
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner"></div>
+    <p id="loading-status">Generating...</p>
+    <button id="btn-cancel-loading" class="btn btn-secondary">Cancel</button>
   </div>
 
   <!-- ===== ERROR OVERLAY ===== -->

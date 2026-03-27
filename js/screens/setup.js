@@ -66,6 +66,12 @@
         });
       });
 
+      // AI suggestion link
+      document.getElementById('btn-suggest-game').addEventListener('click', function (e) {
+        e.preventDefault();
+        self.generateSuggestion();
+      });
+
       // Generate Story button — confirm if overwriting a saved game
       document.getElementById('btn-start-game').addEventListener('click', function () {
         if (SQ.GameState.exists()) {
@@ -393,6 +399,110 @@
       var btn = document.getElementById('btn-start-game');
       btn.disabled = false;
       btn.textContent = 'Generate Story';
+    },
+
+    _suggestionThemes: [
+      'spaghetti western', 'deep sea exploration', 'courtroom drama',
+      'competitive cooking', 'space trucking', 'noir detective',
+      'jungle expedition', 'arctic survival', 'heist',
+      'underground racing', 'haunted carnival', 'pirate adventure',
+      'time loop', 'kaiju attack', 'train mystery',
+      'prison break', 'gladiatorial combat', 'ghost hunting',
+      'treasure hunting', 'political intrigue', 'alien first contact',
+      'zombie survival', 'fairy tale remix', 'cyberpunk hacking',
+      'desert caravan', 'volcanic island', 'submarine warfare',
+      'sky pirates', 'witch academy', 'robot uprising',
+      'dinosaur safari', 'spelunking', 'post-apocalyptic road trip',
+      'necromancy gone wrong', 'magical heist', 'interdimensional tourism',
+      'monster hunting', 'merchant trading', 'rebellion against an empire',
+      'dreamworld exploration', 'plague doctor', 'samurai revenge',
+      'solarpunk utopia', 'eldritch fishing village', 'battle royale',
+      'archaeological dig', 'wild west bank robbery', 'mech pilot',
+      'Victorian séance', 'Olympic-style tournament', 'lost colony'
+    ],
+
+    _suggestionIPCategories: [
+      'a classic anime or manga', 'a 90s or 2000s video game',
+      'a fantasy novel series', 'a sci-fi movie',
+      'a horror film', 'a TV drama series',
+      'a Studio Ghibli film', 'a comic book or graphic novel',
+      'a tabletop RPG setting', 'a children\'s cartoon (played seriously)',
+      'a historical drama', 'a crime or thriller novel',
+      'a JRPG', 'a survival horror game',
+      'a Shakespearean play', 'a mythology or folklore tradition',
+      'a mecha anime', 'a western movie',
+      'a musical or stage play', 'a noir film',
+      'a platformer or adventure game', 'a dystopian novel',
+      'a sitcom (played straight)', 'a fighting game',
+      'a space opera franchise', 'a monster-of-the-week show',
+      'a stealth or espionage game', 'a romantic drama',
+      'a board game universe', 'a documentary subject'
+    ],
+
+    generateSuggestion: function () {
+      var link = document.getElementById('btn-suggest-game');
+      var spinner = document.getElementById('suggest-spinner');
+
+      link.classList.add('disabled');
+      spinner.classList.remove('hidden');
+
+      var model = SQ.PlayerConfig.getModel('gamemaster');
+      var useIP = Math.random() < 0.5;
+
+      var theme = this._suggestionThemes[Math.floor(Math.random() * this._suggestionThemes.length)];
+      var ipCategory = this._suggestionIPCategories[Math.floor(Math.random() * this._suggestionIPCategories.length)];
+
+      var userPrompt = useIP
+        ? 'Suggest an adventure setup based on ' + ipCategory + '. ' +
+          'Set it in that universe with a character that fits naturally. Pick something unexpected, not the most obvious choice.\n\n'
+        : 'Suggest a completely original adventure setup themed around: ' + theme + '. ' +
+          'Put a unique spin on it. Be creative and surprising.\n\n';
+
+      var messages = [
+        {
+          role: 'system',
+          content: 'You are a creative game designer who suggests imaginative adventure setups for a text-based RPG. ' +
+            'Be concise and punchy — this is an elevator pitch, not a synopsis. ' +
+            'Respond with ONLY a JSON object, no code fences or extra text.'
+        },
+        {
+          role: 'user',
+          content: userPrompt +
+            'Respond with this exact JSON structure:\n' +
+            '{\n' +
+            '  "setting": "1-2 punchy sentences",\n' +
+            '  "character": "One sentence",\n' +
+            '  "writingStyle": "A few words, like a style mashup e.g. Cormac McCarthy meets Miyazaki"\n' +
+            '}'
+        }
+      ];
+
+      SQ.API.call(model, messages, {
+        temperature: 0.95,
+        max_tokens: 250,
+        source: 'suggestion'
+      })
+        .then(function (raw) {
+          var result = SQ.API.parseJSON(raw);
+
+          if (result.setting) {
+            document.getElementById('setup-setting-text').value = result.setting;
+          }
+          if (result.character) {
+            document.getElementById('setup-archetype').value = result.character;
+          }
+          if (result.writingStyle) {
+            document.getElementById('setup-style-tone-text').value = result.writingStyle;
+          }
+
+        })
+        .catch(function (err) {
+          SQ.Logger.error('Setup', 'Suggestion generation failed', { error: err.message });
+        })
+        .then(function () {
+          link.classList.remove('disabled');
+          spinner.classList.add('hidden');
+        });
     }
   };
 })();

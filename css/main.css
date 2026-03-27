@@ -130,6 +130,31 @@ body.game-themed .screen {
   margin-top: var(--spacing-xs);
 }
 
+.suggest-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.suggest-link:hover {
+  color: var(--color-text);
+}
+
+.suggest-link.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.spinner-inline {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
 /* ===== SCREEN CONTENT ===== */
 .screen-content {
   flex: 1;
@@ -1188,6 +1213,22 @@ textarea {
   color: var(--color-text);
   min-width: 110px;
   flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .setup-inline-groups-stacked .setup-inline-group {
+    flex-wrap: wrap;
+  }
+
+  .setup-inline-label-title {
+    min-width: 100%;
+  }
+
+  .setup-option {
+    padding: var(--spacing-sm) var(--spacing-sm);
+    font-size: 0.8rem;
+    min-height: 38px;
+  }
 }
 
 /* Secondary input (subdued styling) */
