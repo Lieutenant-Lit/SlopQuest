@@ -4,7 +4,7 @@
  * with component name, model, duration, and cost.
  */
 (function () {
-  var DISMISS_MS = 3000;
+  var DISMISS_MS = 6000;
   var FADE_MS = 400;
 
   var SOURCE_LABELS = {
@@ -12,7 +12,7 @@
     gamemaster: 'GM',
     ui_designer: 'UI Designer',
     voice_director: 'Voice Director',
-    skeleton: 'Skeleton',
+    skeleton: 'Story Outline',
     playtester: 'Playtester',
     elevenlabs_tts: 'Voice TTS'
   };

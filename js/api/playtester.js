@@ -433,7 +433,7 @@
 
       if (t.writer.calls > 0) addRow('Writer', t.writer);
       if (t.gamemaster.calls > 0) addRow('Game Master', t.gamemaster);
-      if (t.skeleton.calls > 0) addRow('Skeleton', t.skeleton);
+      if (t.skeleton.calls > 0) addRow('Story Outline', t.skeleton);
       if (t.playtester.calls > 0) addRow('Playtester', t.playtester);
       if (t.image.calls > 0) addRow('Image', t.image);
 

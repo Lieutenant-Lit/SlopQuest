@@ -265,7 +265,7 @@
       // Disable button and show loading overlay
       btn.disabled = true;
       btn.textContent = 'Generating...';
-      if (loadingStatus) loadingStatus.textContent = 'Generating story skeleton...';
+      if (loadingStatus) loadingStatus.textContent = 'Generating story outline...';
       loadingOverlay.classList.remove('hidden');
 
       // Create new game state and clear stale audio caches
