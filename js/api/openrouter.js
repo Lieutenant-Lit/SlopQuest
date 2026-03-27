@@ -92,6 +92,7 @@
       var controller = new AbortController();
       this._controllers[callId] = controller;
       var timeoutId = setTimeout(function () { controller.abort(); }, timeout);
+      var startTime = Date.now();
 
       var body = {
         model: model,
@@ -171,10 +172,14 @@
               ErrorCodes.MALFORMED_RESPONSE
             );
           }
-          SQ.Logger.info('API', 'Call OK', { model: model, usage: data.usage });
-          if (SQ.API.onUsage) {
-            SQ.API.onUsage(model, data.usage || {}, options.source || '');
-          }
+          var durationMs = Date.now() - startTime;
+          var usage = data.usage || {};
+          var source = options.source || '';
+          var cost = SQ.Pricing ? SQ.Pricing.getCost(model, usage.prompt_tokens || 0, usage.completion_tokens || 0) : null;
+          SQ.Logger.info('API', 'Call OK', { model: model, source: source, usage: usage, durationMs: durationMs, cost: cost });
+          SQ.API._usageListeners.forEach(function (fn) {
+            try { fn(model, usage, source, durationMs); } catch (_e) { /* ignore listener errors */ }
+          });
           var msg = data.choices[0].message;
 
           // Return the full message for image callers (they need msg.images).
@@ -233,11 +238,28 @@
     onStatusUpdate: null,
 
     /**
-     * Usage callback fired after each successful API call.
-     * Called with (modelId, usageObj) where usageObj has prompt_tokens, completion_tokens.
-     * @type {function|null}
+     * Usage listener registry. Listeners are called with
+     * (modelId, usageObj, source, durationMs) after each successful API call.
+     * @type {Array<function>}
+     * @private
      */
-    onUsage: null,
+    _usageListeners: [],
+
+    /**
+     * Register a usage listener.
+     * @param {function} fn - Called with (modelId, usage, source, durationMs)
+     */
+    addUsageListener: function (fn) {
+      if (typeof fn === 'function') this._usageListeners.push(fn);
+    },
+
+    /**
+     * Remove a previously registered usage listener.
+     * @param {function} fn
+     */
+    removeUsageListener: function (fn) {
+      this._usageListeners = this._usageListeners.filter(function (f) { return f !== fn; });
+    },
 
     /**
      * Validate an API key with a lightweight test call.

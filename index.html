@@ -286,6 +286,10 @@
           <span>UI Designer debug overlay</span>
         </label>
         <label class="setup-toggle">
+          <input type="checkbox" id="settings-api-notifications-toggle">
+          <span>API cost notifications</span>
+        </label>
+        <label class="setup-toggle">
           <input type="checkbox" id="settings-log-toggle">
           <span>Enable persistent logging</span>
         </label>
@@ -578,6 +582,7 @@
 
   <!-- API modules -->
   <script src="js/api/openrouter.js"></script>
+  <script src="js/api/pricing.js"></script>
   <script src="js/api/skeletonGenerator.js"></script>
   <script src="js/api/passageGenerator.js"></script>
   <script src="js/api/imageGenerator.js"></script>
@@ -586,6 +591,7 @@
   <!-- UI modules -->
   <script src="js/ui/errorOverlay.js"></script>
   <script src="js/ui/logViewer.js"></script>
+  <script src="js/ui/apiToast.js"></script>
 
   <!-- Prompt modules -->
   <script src="js/prompts/difficultyConfig.js"></script>

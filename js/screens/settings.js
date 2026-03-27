@@ -208,6 +208,11 @@
         SQ.PlayerConfig.setUiDesignerDebugEnabled(this.checked);
       });
 
+      // API notifications toggle
+      document.getElementById('settings-api-notifications-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setApiNotificationsEnabled(this.checked);
+      });
+
       // Logging toggle
       document.getElementById('settings-log-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setLoggingEnabled(this.checked);
@@ -347,6 +352,10 @@
 
       document.getElementById('settings-uidesigner-debug-toggle').checked =
         SQ.PlayerConfig.isUiDesignerDebugEnabled();
+
+      // Set API notifications toggle state
+      document.getElementById('settings-api-notifications-toggle').checked =
+        SQ.PlayerConfig.isApiNotificationsEnabled();
 
       // Set logging toggle state
       document.getElementById('settings-log-toggle').checked =

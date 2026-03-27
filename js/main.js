@@ -72,6 +72,19 @@
       SQ.ErrorOverlay.init();
     }
 
+    // Fetch model pricing for cost tracking
+    if (SQ.Pricing && SQ.Pricing.init) {
+      SQ.Pricing.init();
+    }
+
+    // Register API usage listener for toast notifications
+    SQ.API.addUsageListener(function (model, usage, source, durationMs) {
+      var cost = SQ.Pricing ? SQ.Pricing.getCost(model, usage.prompt_tokens || 0, usage.completion_tokens || 0) : null;
+      if (SQ.APIToast) {
+        SQ.APIToast.show({ source: source, model: model, durationMs: durationMs, cost: cost });
+      }
+    });
+
     // Initialize log viewer
     if (SQ.LogViewer && SQ.LogViewer.init) {
       SQ.LogViewer.init();

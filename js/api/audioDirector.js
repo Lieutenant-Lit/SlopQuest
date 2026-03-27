@@ -435,7 +435,8 @@
         { role: 'user', content: userPrompt }
       ], {
         temperature: 0.3,
-        max_tokens: 2000
+        max_tokens: 2000,
+        source: 'voice_director'
       }).then(function (response) {
         try {
           return SQ.API.parseJSON(response);
@@ -535,7 +536,8 @@
         { role: 'user', content: userPrompt }
       ], {
         temperature: 0.3,
-        max_tokens: 2000
+        max_tokens: 2000,
+        source: 'voice_director'
       }).then(function (response) {
         try {
           var castResult = SQ.API.parseJSON(response);
@@ -813,6 +815,8 @@
       var timeoutId = setTimeout(function () {
         if (controller) controller.abort();
       }, ELEVENLABS_TIMEOUT_MS);
+      var ttsStartTime = Date.now();
+      var ttsCharCount = text.length;
 
       return fetch(ELEVENLABS_BASE + '/text-to-speech/' + voiceId + '?output_format=mp3_44100_128', {
         method: 'POST',
@@ -833,13 +837,18 @@
           return response.arrayBuffer();
         })
         .then(function (buffer) {
-          SQ.Logger.info('Audio', 'Segment audio buffer', { byteLength: buffer.byteLength });
+          var ttsDurationMs = Date.now() - ttsStartTime;
+          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount) : null;
+          SQ.Logger.info('API', 'ElevenLabs TTS', { model: 'eleven_flash_v2_5', source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
+          if (SQ.APIToast) {
+            SQ.APIToast.show({ source: 'elevenlabs_tts', model: 'eleven_flash_v2_5', durationMs: ttsDurationMs, cost: ttsCost });
+          }
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
           // Track voice usage for playtester cost reporting
           if (SQ.Playtester && SQ.Playtester.isActive()) {
-            SQ.Playtester.trackVoiceUsage(text.length);
+            SQ.Playtester.trackVoiceUsage(ttsCharCount);
           }
           var blob = new Blob([buffer], { type: 'audio/mpeg' });
           return URL.createObjectURL(blob);
