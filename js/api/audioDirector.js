@@ -62,7 +62,7 @@
 
       var elevenLabsKey = SQ.PlayerConfig.getElevenLabsApiKey();
       if (!elevenLabsKey) {
-        SQ.Logger.warn('Audio', 'No ElevenLabs API key configured');
+        SQ.Logger.info('Audio', 'No ElevenLabs API key configured');
         return Promise.resolve(false);
       }
 
@@ -82,7 +82,7 @@
           // results[1] = casting (already applied to registry via _validateAndApplyVoiceAssignments)
 
           if (!segmentResult || !segmentResult.segments || segmentResult.segments.length === 0) {
-            SQ.Logger.warn('Audio', 'LLM returned empty audio script');
+            SQ.Logger.info('Audio', 'LLM returned empty audio script');
             return false;
           }
           _lastAnalysisSegments = segmentResult.segments;
@@ -111,7 +111,7 @@
         })
         .catch(function (err) {
           if (err.name === 'AbortError') return false;
-          SQ.Logger.warn('Audio', 'Generation failed, degrading to text-only', { error: err.message || String(err) });
+          SQ.Logger.info('Audio', 'Generation failed, degrading to text-only', { error: err.message || String(err) });
           return false;
         });
     },

@@ -272,7 +272,9 @@
       SQ.GameState.create(setupConfig);
       SQ.HistoryStack.clear();
       SQ.AudioDirector.clearRegistry();
-      SQ.AudioDirector.refreshVoices();
+      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.PlayerConfig.hasElevenLabsApiKey()) {
+        SQ.AudioDirector.refreshVoices().catch(function () {});
+      }
 
       // Clear previous theme before generating new one
       if (SQ.UIDesigner) {

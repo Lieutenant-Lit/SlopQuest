@@ -113,13 +113,21 @@
     _persist();
 
     // Mirror to browser console
+    // Errors/warnings always shown; info only when logging is enabled (via console.debug)
     var prefix = '[' + category + '] ';
     if (level === 'error') {
       console.error(prefix + message, data !== undefined ? data : '');
     } else if (level === 'warn') {
       console.warn(prefix + message, data !== undefined ? data : '');
-    } else {
-      console.log(prefix + message, data !== undefined ? data : '');
+    } else if (SQ.PlayerConfig && SQ.PlayerConfig.isLoggingEnabled()) {
+      if (skipClip && data !== undefined) {
+        // Large unclipped data (infoFull) — collapse behind a single line
+        console.groupCollapsed(prefix + message);
+        console.debug(data);
+        console.groupEnd();
+      } else {
+        console.debug(prefix + message, data !== undefined ? data : '');
+      }
     }
   }
 
