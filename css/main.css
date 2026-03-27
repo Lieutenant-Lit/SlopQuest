@@ -1215,6 +1215,16 @@ textarea {
   flex-shrink: 0;
 }
 
+@media (max-width: 480px) {
+  .setup-inline-groups-stacked .setup-inline-group {
+    flex-wrap: wrap;
+  }
+
+  .setup-inline-label-title {
+    min-width: 100%;
+  }
+}
+
 /* Secondary input (subdued styling) */
 .setup-input-secondary {
   font-size: 0.85rem;
