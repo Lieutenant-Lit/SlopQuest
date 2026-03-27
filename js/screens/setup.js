@@ -401,6 +401,44 @@
       btn.textContent = 'Generate Story';
     },
 
+    _suggestionThemes: [
+      'spaghetti western', 'deep sea exploration', 'courtroom drama',
+      'competitive cooking', 'space trucking', 'noir detective',
+      'jungle expedition', 'arctic survival', 'heist',
+      'underground racing', 'haunted carnival', 'pirate adventure',
+      'time loop', 'kaiju attack', 'train mystery',
+      'prison break', 'gladiatorial combat', 'ghost hunting',
+      'treasure hunting', 'political intrigue', 'alien first contact',
+      'zombie survival', 'fairy tale remix', 'cyberpunk hacking',
+      'desert caravan', 'volcanic island', 'submarine warfare',
+      'sky pirates', 'witch academy', 'robot uprising',
+      'dinosaur safari', 'spelunking', 'post-apocalyptic road trip',
+      'necromancy gone wrong', 'magical heist', 'interdimensional tourism',
+      'monster hunting', 'merchant trading', 'rebellion against an empire',
+      'dreamworld exploration', 'plague doctor', 'samurai revenge',
+      'solarpunk utopia', 'eldritch fishing village', 'battle royale',
+      'archaeological dig', 'wild west bank robbery', 'mech pilot',
+      'Victorian séance', 'Olympic-style tournament', 'lost colony'
+    ],
+
+    _suggestionIPCategories: [
+      'a classic anime or manga', 'a 90s or 2000s video game',
+      'a fantasy novel series', 'a sci-fi movie',
+      'a horror film', 'a TV drama series',
+      'a Studio Ghibli film', 'a comic book or graphic novel',
+      'a tabletop RPG setting', 'a children\'s cartoon (played seriously)',
+      'a historical drama', 'a crime or thriller novel',
+      'a JRPG', 'a survival horror game',
+      'a Shakespearean play', 'a mythology or folklore tradition',
+      'a mecha anime', 'a western movie',
+      'a musical or stage play', 'a noir film',
+      'a platformer or adventure game', 'a dystopian novel',
+      'a sitcom (played straight)', 'a fighting game',
+      'a space opera franchise', 'a monster-of-the-week show',
+      'a stealth or espionage game', 'a romantic drama',
+      'a board game universe', 'a documentary subject'
+    ],
+
     generateSuggestion: function () {
       var link = document.getElementById('btn-suggest-game');
       var spinner = document.getElementById('suggest-spinner');
@@ -411,11 +449,14 @@
       var model = SQ.PlayerConfig.getModel('gamemaster');
       var useIP = Math.random() < 0.5;
 
+      var theme = this._suggestionThemes[Math.floor(Math.random() * this._suggestionThemes.length)];
+      var ipCategory = this._suggestionIPCategories[Math.floor(Math.random() * this._suggestionIPCategories.length)];
+
       var userPrompt = useIP
-        ? 'Suggest an adventure setup based on a well-known IP — a popular game, book, movie, anime, or TV show. ' +
+        ? 'Suggest an adventure setup based on ' + ipCategory + '. ' +
           'Set it in that universe with a character that fits naturally. Pick something unexpected, not the most obvious choice.\n\n'
-        : 'Suggest a completely original adventure setup. Invent a unique world and concept. ' +
-          'Mix genres freely, be creative and surprising.\n\n';
+        : 'Suggest a completely original adventure setup themed around: ' + theme + '. ' +
+          'Put a unique spin on it. Be creative and surprising.\n\n';
 
       var messages = [
         {
