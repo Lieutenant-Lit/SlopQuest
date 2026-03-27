@@ -43,6 +43,66 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       });
+
+      document.getElementById('btn-push-report').addEventListener('click', function () {
+        var report = SQ.Playtester && SQ.Playtester.getReport();
+        if (!report) return;
+
+        var token = SQ.PlayerConfig.getGithubToken();
+        if (!token) {
+          alert('No GitHub token set. Add one in Settings > Developer.');
+          return;
+        }
+
+        var btn = document.getElementById('btn-push-report');
+        btn.disabled = true;
+        btn.textContent = 'Pushing...';
+
+        var ts = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+        var baseUrl = 'https://api.github.com/repos/Lieutenant-Lit/SlopQuest/contents/';
+        var headers = {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        };
+
+        var reportFilename = 'reports/playtest-report-' + ts + '.md';
+        var logsFilename = 'reports/playtest-logs-' + ts + '.json';
+
+        var reportContent = btoa(unescape(encodeURIComponent(report)));
+        var logsContent = btoa(unescape(encodeURIComponent(SQ.Logger.exportJSON())));
+
+        Promise.all([
+          fetch(baseUrl + reportFilename, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify({ message: 'playtest report ' + ts, content: reportContent, branch: 'logs' })
+          }),
+          fetch(baseUrl + logsFilename, {
+            method: 'PUT',
+            headers: headers,
+            body: JSON.stringify({ message: 'playtest logs ' + ts, content: logsContent, branch: 'logs' })
+          })
+        ])
+          .then(function (responses) {
+            var failed = responses.filter(function (r) { return !r.ok; });
+            if (failed.length > 0) {
+              return failed[0].json().then(function (data) {
+                throw new Error('HTTP ' + failed[0].status + ': ' + (data.message || 'Unknown error'));
+              });
+            }
+            btn.textContent = 'Pushed!';
+            setTimeout(function () {
+              btn.disabled = false;
+              btn.textContent = 'Push to GitHub';
+            }, 2000);
+          })
+          .catch(function (err) {
+            alert('Push failed: ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Push to GitHub';
+          });
+      });
     },
 
     onShow: function () {
