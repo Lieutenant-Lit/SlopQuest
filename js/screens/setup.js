@@ -265,14 +265,16 @@
       // Disable button and show loading overlay
       btn.disabled = true;
       btn.textContent = 'Generating...';
-      if (loadingStatus) loadingStatus.textContent = 'Generating story skeleton...';
+      if (loadingStatus) loadingStatus.textContent = 'Generating story outline...';
       loadingOverlay.classList.remove('hidden');
 
       // Create new game state and clear stale audio caches
       SQ.GameState.create(setupConfig);
       SQ.HistoryStack.clear();
       SQ.AudioDirector.clearRegistry();
-      SQ.AudioDirector.refreshVoices();
+      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.PlayerConfig.hasElevenLabsApiKey()) {
+        SQ.AudioDirector.refreshVoices().catch(function () {});
+      }
 
       // Clear previous theme before generating new one
       if (SQ.UIDesigner) {

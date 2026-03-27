@@ -5,41 +5,8 @@
  * After the playtest ends, generates a structured quality report.
  */
 (function () {
-  // Pricing per million tokens (input/output) from OpenRouter
-  var MODEL_PRICING = {
-    'anthropic/claude-sonnet-4':      { input: 3, output: 15 },
-    'anthropic/claude-sonnet-4.5':    { input: 3, output: 15 },
-    'anthropic/claude-opus-4':        { input: 15, output: 75 },
-    'anthropic/claude-opus-4.5':      { input: 15, output: 75 },
-    'anthropic/claude-haiku-4.5':     { input: 0.80, output: 4 },
-    'google/gemini-2.5-pro':          { input: 1.25, output: 10 },
-    'google/gemini-2.5-flash':        { input: 0.15, output: 0.60 },
-    'google/gemini-2.0-flash-001':    { input: 0.10, output: 0.40 },
-    'openai/gpt-4o':                  { input: 2.50, output: 10 },
-    'openai/gpt-4o-mini':             { input: 0.15, output: 0.60 },
-    'openai/o3-mini':                 { input: 1.10, output: 4.40 },
-    'deepseek/deepseek-chat':         { input: 0.27, output: 1.10 },
-    'deepseek/deepseek-r1':           { input: 0.55, output: 2.19 },
-    'meta-llama/llama-4-maverick':    { input: 0.50, output: 1.50 },
-    'meta-llama/llama-4-scout':       { input: 0.15, output: 0.40 },
-    'mistralai/mistral-large-2512':   { input: 2, output: 6 },
-    'mistralai/mistral-small-creative-20251216': { input: 0.10, output: 0.30 },
-    'mistralai/mistral-small-3.1-24b-instruct-2503': { input: 0.10, output: 0.30 },
-    'x-ai/grok-3':                    { input: 3, output: 15 },
-    'x-ai/grok-3-mini':              { input: 0.30, output: 0.50 },
-    'qwen/qwen3-235b-a22b-07-25':    { input: 0.50, output: 1.50 },
-    'qwen/qwen3-32b-04-28':          { input: 0.10, output: 0.30 },
-    'cohere/command-r-plus':          { input: 2.50, output: 10 }
-  };
-  var DEFAULT_PRICING = { input: 3, output: 15 };
-  var ELEVENLABS_COST_PER_CHAR = 0.00030; // ~$0.30 per 1K characters
-
-  function calcCost(modelId, promptTokens, completionTokens) {
-    var pricing = MODEL_PRICING[modelId] || DEFAULT_PRICING;
-    return (promptTokens * pricing.input + completionTokens * pricing.output) / 1000000;
-  }
-
   function formatCost(dollars) {
+    if (dollars === null || dollars === undefined) return '?';
     if (dollars < 0.001) return '<$0.001';
     if (dollars < 0.01) return '$' + dollars.toFixed(4);
     return '$' + dollars.toFixed(3);
@@ -86,7 +53,7 @@
 
       // Subscribe to API usage events
       var self = this;
-      SQ.API.onUsage = function (modelId, usage, source) {
+      this._usageListener = function (modelId, usage, source) {
         if (!self._costTracker) return;
         var pt = usage.prompt_tokens || 0;
         var ct = usage.completion_tokens || 0;
@@ -107,6 +74,7 @@
         bucket.prompt_tokens += pt;
         bucket.completion_tokens += ct;
       };
+      SQ.API.addUsageListener(this._usageListener);
 
       SQ.Logger.info('Playtester', 'Playtest started', {
         maxTurns: this._maxTurns,
@@ -135,7 +103,10 @@
       this._active = false;
 
       // Unsubscribe from usage events (but keep tracker data for the report)
-      SQ.API.onUsage = null;
+      if (this._usageListener) {
+        SQ.API.removeUsageListener(this._usageListener);
+        this._usageListener = null;
+      }
 
       var stopReason = reason || 'manual_stop';
       opts = opts || {};
@@ -308,7 +279,10 @@
       if (this._stopped) return;
       this._active = false;
       this._stopped = true;
-      SQ.API.onUsage = null;
+      if (this._usageListener) {
+        SQ.API.removeUsageListener(this._usageListener);
+        this._usageListener = null;
+      }
 
       SQ.Logger.info('Playtester', 'Game ended naturally', {
         reason: reason,
@@ -442,8 +416,8 @@
       var rows = [];
 
       function addRow(label, bucket) {
-        var cost = calcCost(bucket.model, bucket.prompt_tokens, bucket.completion_tokens);
-        totalCost += cost;
+        var cost = SQ.Pricing ? SQ.Pricing.getCost(bucket.model, bucket.prompt_tokens, bucket.completion_tokens) : null;
+        totalCost += cost || 0;
         totalInput += bucket.prompt_tokens;
         totalOutput += bucket.completion_tokens;
         totalCalls += bucket.calls;
@@ -459,12 +433,12 @@
 
       if (t.writer.calls > 0) addRow('Writer', t.writer);
       if (t.gamemaster.calls > 0) addRow('Game Master', t.gamemaster);
-      if (t.skeleton.calls > 0) addRow('Skeleton', t.skeleton);
+      if (t.skeleton.calls > 0) addRow('Story Outline', t.skeleton);
       if (t.playtester.calls > 0) addRow('Playtester', t.playtester);
       if (t.image.calls > 0) addRow('Image', t.image);
 
       if (t.voice.calls > 0) {
-        var voiceCost = t.voice.characters * ELEVENLABS_COST_PER_CHAR;
+        var voiceCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(t.voice.characters) : 0;
         totalCost += voiceCost;
         rows.push({
           label: 'Voice (TTS)',

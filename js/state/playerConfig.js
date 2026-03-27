@@ -22,6 +22,7 @@
     audio_debug_enabled: false,
     game_state_debug_enabled: false,
     disable_default_voices: false,
+    api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
     ui_designer_enabled: true,
@@ -208,6 +209,17 @@
     setDisableDefaultVoicesEnabled: function (enabled) {
       var config = this.load();
       config.disable_default_voices = !!enabled;
+      this.save(config);
+    },
+
+    isApiNotificationsEnabled: function () {
+      var config = this.load();
+      return config.api_notifications_enabled === true;
+    },
+
+    setApiNotificationsEnabled: function (enabled) {
+      var config = this.load();
+      config.api_notifications_enabled = !!enabled;
       this.save(config);
     },
 

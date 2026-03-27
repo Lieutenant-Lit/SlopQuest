@@ -117,6 +117,26 @@
         self.validateKey();
       });
 
+      // Story Outline model selection
+      document.getElementById('outline-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('outline-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('skeleton', this.value);
+        }
+        updateModelDesc('outline-model-desc', this.value);
+      });
+
+      document.getElementById('outline-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('skeleton', this.value.trim());
+          updateModelDesc('outline-model-desc', this.value.trim());
+        }
+      });
+
       // Writer model selection
       document.getElementById('writer-model-select').addEventListener('change', function () {
         var customInput = document.getElementById('writer-model-custom-input');
@@ -145,7 +165,6 @@
           customInput.focus();
         } else {
           customInput.classList.add('hidden');
-          SQ.PlayerConfig.setModel('skeleton', this.value);
           SQ.PlayerConfig.setModel('gamemaster', this.value);
         }
         updateModelDesc('gm-model-desc', this.value);
@@ -153,7 +172,6 @@
 
       document.getElementById('gm-model-custom-input').addEventListener('change', function () {
         if (this.value.trim()) {
-          SQ.PlayerConfig.setModel('skeleton', this.value.trim());
           SQ.PlayerConfig.setModel('gamemaster', this.value.trim());
           updateModelDesc('gm-model-desc', this.value.trim());
         }
@@ -206,6 +224,11 @@
       // UI Designer debug toggle
       document.getElementById('settings-uidesigner-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setUiDesignerDebugEnabled(this.checked);
+      });
+
+      // API notifications toggle
+      document.getElementById('settings-api-notifications-toggle').addEventListener('change', function () {
+        SQ.PlayerConfig.setApiNotificationsEnabled(this.checked);
       });
 
       // Logging toggle
@@ -303,6 +326,11 @@
         keyInput.value = apiKey;
       }
 
+      // Set story outline model selector to current value
+      var outlineModel = SQ.PlayerConfig.getModel('skeleton');
+      this._syncModelSelect('outline-model-select', 'outline-model-custom-input', outlineModel);
+      updateModelDesc('outline-model-desc', outlineModel);
+
       // Set writer model selector to current value
       var writerModel = SQ.PlayerConfig.getModel('passage');
       this._syncModelSelect('writer-model-select', 'writer-model-custom-input', writerModel);
@@ -347,6 +375,10 @@
 
       document.getElementById('settings-uidesigner-debug-toggle').checked =
         SQ.PlayerConfig.isUiDesignerDebugEnabled();
+
+      // Set API notifications toggle state
+      document.getElementById('settings-api-notifications-toggle').checked =
+        SQ.PlayerConfig.isApiNotificationsEnabled();
 
       // Set logging toggle state
       document.getElementById('settings-log-toggle').checked =
