@@ -1223,6 +1223,12 @@ textarea {
   .setup-inline-label-title {
     min-width: 100%;
   }
+
+  .setup-option {
+    padding: var(--spacing-sm) var(--spacing-sm);
+    font-size: 0.8rem;
+    min-height: 38px;
+  }
 }
 
 /* Secondary input (subdued styling) */
