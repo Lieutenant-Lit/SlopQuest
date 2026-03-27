@@ -421,6 +421,7 @@
         {
           role: 'system',
           content: 'You are a creative game designer who suggests imaginative adventure setups for a text-based RPG. ' +
+            'Be concise and punchy — this is an elevator pitch, not a synopsis. ' +
             'Respond with ONLY a JSON object, no code fences or extra text.'
         },
         {
@@ -428,16 +429,16 @@
           content: userPrompt +
             'Respond with this exact JSON structure:\n' +
             '{\n' +
-            '  "setting": "A 2-4 sentence vivid description of the world/universe",\n' +
-            '  "character": "A 1-2 sentence description of the player character",\n' +
-            '  "writingStyle": "A short description of the writing style and tone"\n' +
+            '  "setting": "1-2 punchy sentences",\n' +
+            '  "character": "One sentence",\n' +
+            '  "writingStyle": "A few words, like a style mashup e.g. Cormac McCarthy meets Miyazaki"\n' +
             '}'
         }
       ];
 
       SQ.API.call(model, messages, {
         temperature: 0.95,
-        max_tokens: 500,
+        max_tokens: 250,
         source: 'suggestion'
       })
         .then(function (raw) {
