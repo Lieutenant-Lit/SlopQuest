@@ -92,6 +92,26 @@
         })
         .then(function (segments) {
           if (!segments) return false;
+
+          // Dry run mode: skip TTS, fire debug event immediately
+          if (SQ.PlayerConfig.isNarrationDryRunEnabled()) {
+            _lastAnalysis = {
+              segments: _lastAnalysisSegments,
+              ttsSegments: (_lastAnalysisSegments || []).map(function (s, i) {
+                return { text: s.text, speaker: s.speaker === 'narrator' ? 'Narrator' : s.speaker, index: i };
+              }),
+              registry: self._loadRegistry(),
+              availableVoices: _availableVoices || [],
+              dryRun: true
+            };
+            document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
+            _lastAnalysisSegments = null;
+            self._setGeneratingState(false);
+            self.hideControls();
+            SQ.Logger.info('Audio', 'Dry run complete', { segments: segments.length });
+            return true;
+          }
+
           // Step 3: Generate TTS for all segments
           return self._generateAllSegments(segments, gameState);
         })

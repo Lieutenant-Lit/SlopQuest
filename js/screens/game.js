@@ -58,9 +58,9 @@
         SQ.AudioDirector.replay();
       });
 
-      // Audio debug overlay
+      // Audio debug overlay — show on debug toggle OR dry-run mode
       document.addEventListener('audiodebug', function (e) {
-        if (SQ.PlayerConfig.isAudioDebugEnabled()) {
+        if (SQ.PlayerConfig.isAudioDebugEnabled() || SQ.PlayerConfig.isNarrationDryRunEnabled()) {
           self._renderAudioDebug(e.detail);
         }
       });
@@ -1395,7 +1395,13 @@
       var speakers = [];
       var seen = {};
       segments.forEach(function (seg) {
-        var name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        // Support both old format (type+speaker) and new format (speaker only)
+        var name;
+        if (seg.speaker) {
+          name = (seg.speaker === 'narrator') ? 'Narrator' : seg.speaker;
+        } else {
+          name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        }
         if (!seen[name]) {
           seen[name] = true;
           speakers.push(name);
@@ -1509,7 +1515,7 @@
       ttsSegments.forEach(function (seg) {
         var needle = (seg.text || '').trim();
         if (!needle) return;
-        var speaker = (seg.speaker === 'Narrator') ? null : seg.speaker;
+        var speaker = (seg.speaker === 'Narrator' || seg.speaker === 'narrator') ? null : seg.speaker;
         var match = self._findSegmentInText(needle, fullText, cursor);
         if (match) {
           ranges.push({ start: match.start, end: match.end, speaker: speaker });

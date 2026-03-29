@@ -23,6 +23,7 @@
     audio_debug_enabled: false,
     game_state_debug_enabled: false,
     disable_default_voices: false,
+    narration_dry_run: false,
     api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
@@ -166,6 +167,17 @@
     setNarrationEnabled: function (enabled) {
       var config = this.load();
       config.narration_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isNarrationDryRunEnabled: function () {
+      var config = this.load();
+      return config.narration_dry_run === true;
+    },
+
+    setNarrationDryRunEnabled: function (enabled) {
+      var config = this.load();
+      config.narration_dry_run = !!enabled;
       this.save(config);
     },
 
