@@ -1498,6 +1498,74 @@
         castEl.appendChild(row);
       });
 
+      // Render segment list
+      var segEl = document.getElementById('audio-debug-segments');
+      if (segEl) {
+        segEl.innerHTML = '';
+        var segTitle = document.createElement('div');
+        segTitle.className = 'audio-debug-segments-title';
+        segTitle.textContent = 'Segments (' + segments.length + ')';
+        segEl.appendChild(segTitle);
+
+        var TRUNCATE_LEN = 200;
+
+        segments.forEach(function (seg, i) {
+          var segSpeaker;
+          if (seg.speaker) {
+            segSpeaker = (seg.speaker === 'narrator') ? 'Narrator' : seg.speaker;
+          } else {
+            segSpeaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+          }
+          var segText = (seg.text || '').trim();
+          var segColor = self._getDebugColor(segSpeaker === 'Narrator' ? null : segSpeaker);
+
+          var row = document.createElement('div');
+          row.className = 'audio-debug-segment-row';
+
+          var header = document.createElement('div');
+          header.className = 'audio-debug-segment-header';
+
+          var indexSpan = document.createElement('span');
+          indexSpan.className = 'audio-debug-segment-index';
+          indexSpan.textContent = '[' + i + ']';
+          header.appendChild(indexSpan);
+
+          var nameSpan = document.createElement('span');
+          nameSpan.style.color = segColor;
+          nameSpan.textContent = segSpeaker;
+          header.appendChild(nameSpan);
+
+          var charsSpan = document.createElement('span');
+          charsSpan.className = 'audio-debug-segment-chars';
+          charsSpan.textContent = '(' + segText.length + ' chars)';
+          header.appendChild(charsSpan);
+
+          row.appendChild(header);
+
+          var textEl = document.createElement('div');
+          textEl.className = 'audio-debug-segment-text';
+          var isTruncated = segText.length > TRUNCATE_LEN;
+          textEl.textContent = isTruncated ? segText.substring(0, TRUNCATE_LEN) + '...' : segText;
+          if (isTruncated) {
+            textEl.classList.add('truncated');
+            textEl.addEventListener('click', (function (fullText, el) {
+              return function () {
+                if (el.classList.contains('truncated')) {
+                  el.textContent = fullText;
+                  el.classList.remove('truncated');
+                } else {
+                  el.textContent = fullText.substring(0, TRUNCATE_LEN) + '...';
+                  el.classList.add('truncated');
+                }
+              };
+            })(segText, textEl));
+          }
+          row.appendChild(textEl);
+
+          segEl.appendChild(row);
+        });
+      }
+
       panel.classList.remove('hidden');
       this._highlightPassage(detail.ttsSegments || []);
     },

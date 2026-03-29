@@ -558,6 +558,69 @@ textarea {
   font-style: italic;
 }
 
+.audio-debug-segments {
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.audio-debug-segments-title {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-xs);
+}
+
+.audio-debug-segment-row {
+  padding: 4px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.audio-debug-segment-row:last-child {
+  border-bottom: none;
+}
+
+.audio-debug-segment-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.audio-debug-segment-index {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-debug-segment-chars {
+  font-weight: 400;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.audio-debug-segment-text {
+  font-size: 0.6875rem;
+  font-family: var(--font-mono, 'SF Mono', 'Fira Code', monospace);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+}
+
+.audio-debug-segment-text.truncated::after {
+  content: ' [click to expand]';
+  font-style: italic;
+  opacity: 0.5;
+}
+
+.audio-debug-panel.collapsed .audio-debug-segments {
+  display: none;
+}
+
 /* --- Game State Debug Panel --- */
 .gamestate-debug-panel {
   background: var(--color-surface);
