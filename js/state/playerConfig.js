@@ -14,7 +14,8 @@
       gamemaster: 'anthropic/claude-sonnet-4',
       image: 'google/gemini-3.1-flash-image-preview',
       playtester: 'anthropic/claude-sonnet-4',
-      ui_designer: 'anthropic/claude-haiku-4.5'
+      ui_designer: 'anthropic/claude-haiku-4.5',
+      voice_director: 'anthropic/claude-haiku-4.5'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,

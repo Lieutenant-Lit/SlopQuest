@@ -203,6 +203,30 @@
       // Narration toggle
       document.getElementById('settings-narration-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
+        var modelSection = document.getElementById('voice-director-model-section');
+        if (this.checked) {
+          modelSection.classList.remove('hidden');
+        } else {
+          modelSection.classList.add('hidden');
+        }
+      });
+
+      // Voice Director model selection
+      document.getElementById('voice-director-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('voice-director-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('voice_director', this.value);
+        }
+      });
+
+      document.getElementById('voice-director-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('voice_director', this.value.trim());
+        }
       });
 
       // Disable default voices toggle
@@ -358,9 +382,16 @@
       // Set image model selector to current value
       this._syncModelSelect('image-model-select', 'image-model-custom-input', SQ.PlayerConfig.getModel('image'));
 
-      // Set narration toggle state
-      document.getElementById('settings-narration-toggle').checked =
-        SQ.PlayerConfig.isNarrationEnabled();
+      // Set narration toggle state and model selector
+      var narrationEnabled = SQ.PlayerConfig.isNarrationEnabled();
+      document.getElementById('settings-narration-toggle').checked = narrationEnabled;
+      var voiceDirectorModelSection = document.getElementById('voice-director-model-section');
+      if (narrationEnabled) {
+        voiceDirectorModelSection.classList.remove('hidden');
+      } else {
+        voiceDirectorModelSection.classList.add('hidden');
+      }
+      this._syncModelSelect('voice-director-model-select', 'voice-director-model-custom-input', SQ.PlayerConfig.getModel('voice_director'));
 
       // Set disable default voices toggle state
       document.getElementById('settings-disable-default-voices').checked =
