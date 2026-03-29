@@ -618,14 +618,19 @@
       }
 
       p += 'EXAMPLE:\n';
-      p += 'Input: The captain rose from his chair. "Stand down," he growled, slamming his fist on the table. "I won\'t say it again." The room fell silent.\n';
+      p += 'Input:\n';
+      p += 'The captain rose from his chair. "Stand down," he growled, slamming his fist on the table.\n\n';
+      p += '"I won\'t say it again."\n\n';
+      p += 'The room fell silent. Nobody dared to breathe.\n\n';
+      p += 'After a long moment, the tension broke.\n';
       p += 'Output: {"segments": [\n';
       p += '  {"speaker": "narrator", "text": "The captain rose from his chair."},\n';
       p += '  {"speaker": "Captain", "text": "\\"Stand down,\\""},\n';
       p += '  {"speaker": "narrator", "text": "he growled, slamming his fist on the table."},\n';
       p += '  {"speaker": "Captain", "text": "\\"I won\'t say it again.\\""},\n';
-      p += '  {"speaker": "narrator", "text": "The room fell silent."}\n';
-      p += ']}\n\n';
+      p += '  {"speaker": "narrator", "text": "The room fell silent. Nobody dared to breathe.\\n\\nAfter a long moment, the tension broke."}\n';
+      p += ']}\n';
+      p += 'NOTE: The last two narrator paragraphs are ONE segment because the speaker did not change.\n\n';
 
       p += 'Return ONLY valid JSON: {"segments": [{"speaker": "...", "text": "..."}, ...]}\n';
 
@@ -644,12 +649,25 @@
           // Normalize: ensure every segment has a speaker field
           if (result && result.segments) {
             result.segments = result.segments.map(function (seg) {
-              // Handle old-style type:narration segments without speaker
               if (!seg.speaker) {
                 seg.speaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'narrator';
               }
               return seg;
             });
+
+            // Merge adjacent segments with the same speaker
+            if (result.segments.length > 1) {
+              var merged = [result.segments[0]];
+              for (var mi = 1; mi < result.segments.length; mi++) {
+                var prev = merged[merged.length - 1];
+                if (result.segments[mi].speaker === prev.speaker) {
+                  prev.text = (prev.text || '') + '\n\n' + (result.segments[mi].text || '');
+                } else {
+                  merged.push(result.segments[mi]);
+                }
+              }
+              result.segments = merged;
+            }
           }
           return result;
         } catch (e) {
