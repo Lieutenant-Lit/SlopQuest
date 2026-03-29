@@ -1581,14 +1581,20 @@
       var ranges = [];
       var cursor = 0;
       ttsSegments.forEach(function (seg) {
-        var needle = (seg.text || '').trim();
-        if (!needle) return;
+        var text = (seg.text || '').trim();
+        if (!text) return;
         var speaker = (seg.speaker === 'Narrator' || seg.speaker === 'narrator') ? null : seg.speaker;
-        var match = self._findSegmentInText(needle, fullText, cursor);
-        if (match) {
-          ranges.push({ start: match.start, end: match.end, speaker: speaker });
-          cursor = match.end;
-        }
+        // Split merged segments on paragraph breaks to match each part individually
+        var parts = text.split(/\n\n+/);
+        parts.forEach(function (part) {
+          var needle = part.trim();
+          if (!needle) return;
+          var match = self._findSegmentInText(needle, fullText, cursor);
+          if (match) {
+            ranges.push({ start: match.start, end: match.end, speaker: speaker });
+            cursor = match.end;
+          }
+        });
       });
 
       // Build the full highlighted HTML

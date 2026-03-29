@@ -600,6 +600,8 @@
       p += '- When the passage says "you say" / "you reply" / "you call out" the speaker is "' + playerName + '".\n';
       p += '- Adjacent narration lines with no voice change between them = merge into ONE narrator segment.\n';
       p += '- Adjacent dialogue lines by the SAME character = merge into ONE segment.\n';
+      p += '- When a paragraph mixes dialogue and narration (e.g. "\'Hello,\' she said, stepping forward. \'How are you?\'"),\n';
+      p += '  split it: dialogue goes to the character, action beats / attribution go to narrator.\n';
       p += '- Use EXACT text from the passage. Do not skip, reword, or omit anything.\n';
       p += '- Every word in the passage must appear in exactly one segment.\n\n';
 
