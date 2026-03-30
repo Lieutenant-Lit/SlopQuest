@@ -115,7 +115,7 @@
                 voiceId: resolved.voiceId || '(none)',
                 mode: ttsMode
               };
-              if (ttsMode === 'flash') {
+              if (ttsMode !== 'dialogue') {
                 var context = self._buildSegmentContext(segments, i, injectionOn, dryRunParaNums);
                 preview.previousText = context.previousText || '';
                 preview.nextText = context.nextText || '';
@@ -166,7 +166,7 @@
                 voiceId: resolved.voiceId || '(none)',
                 mode: debugMode
               };
-              if (debugMode === 'flash') {
+              if (debugMode !== 'dialogue') {
                 var context = self._buildSegmentContext(debugSegments, i, debugInjection, debugParaNums);
                 preview.previousText = context.previousText || '';
                 preview.nextText = context.nextText || '';
