@@ -203,12 +203,63 @@
       // Narration toggle
       document.getElementById('settings-narration-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setNarrationEnabled(this.checked);
+        var modelSection = document.getElementById('voice-director-model-section');
+        if (this.checked) {
+          modelSection.classList.remove('hidden');
+        } else {
+          modelSection.classList.add('hidden');
+        }
+      });
+
+      // Voice Director model selection
+      document.getElementById('voice-director-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('voice-director-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('voice_director', this.value);
+        }
+      });
+
+      document.getElementById('voice-director-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('voice_director', this.value.trim());
+        }
       });
 
       // Disable default voices toggle
       document.getElementById('settings-disable-default-voices').addEventListener('change', function () {
         SQ.PlayerConfig.setDisableDefaultVoicesEnabled(this.checked);
         SQ.AudioDirector.refreshVoices();
+      });
+
+      // Narration dry run toggle
+      document.getElementById('settings-narration-dry-run').addEventListener('change', function () {
+        SQ.PlayerConfig.setNarrationDryRunEnabled(this.checked);
+      });
+
+      // TTS mode selection
+      document.getElementById('settings-tts-mode').addEventListener('change', function () {
+        SQ.PlayerConfig.setTtsMode(this.value);
+      });
+
+      // Prosody injection toggle
+      document.getElementById('settings-prosody-injection').addEventListener('change', function () {
+        SQ.PlayerConfig.setProsodyInjectionEnabled(this.checked);
+      });
+
+      // Playback speed slider
+      document.getElementById('settings-playback-speed').addEventListener('input', function () {
+        document.getElementById('playback-speed-value').textContent = parseFloat(this.value).toFixed(1) + 'x';
+        SQ.PlayerConfig.setPlaybackSpeed(this.value);
+      });
+
+      // Segment pause slider
+      document.getElementById('settings-segment-pause').addEventListener('input', function () {
+        document.getElementById('segment-pause-value').textContent = this.value + 'ms';
+        SQ.PlayerConfig.setSegmentPause(this.value);
       });
 
       // Audio debug toggle
@@ -358,13 +409,38 @@
       // Set image model selector to current value
       this._syncModelSelect('image-model-select', 'image-model-custom-input', SQ.PlayerConfig.getModel('image'));
 
-      // Set narration toggle state
-      document.getElementById('settings-narration-toggle').checked =
-        SQ.PlayerConfig.isNarrationEnabled();
+      // Set narration toggle state and model selector
+      var narrationEnabled = SQ.PlayerConfig.isNarrationEnabled();
+      document.getElementById('settings-narration-toggle').checked = narrationEnabled;
+      var voiceDirectorModelSection = document.getElementById('voice-director-model-section');
+      if (narrationEnabled) {
+        voiceDirectorModelSection.classList.remove('hidden');
+      } else {
+        voiceDirectorModelSection.classList.add('hidden');
+      }
+      this._syncModelSelect('voice-director-model-select', 'voice-director-model-custom-input', SQ.PlayerConfig.getModel('voice_director'));
 
       // Set disable default voices toggle state
       document.getElementById('settings-disable-default-voices').checked =
         SQ.PlayerConfig.isDisableDefaultVoicesEnabled();
+
+      // Set narration dry run toggle state
+      document.getElementById('settings-narration-dry-run').checked =
+        SQ.PlayerConfig.isNarrationDryRunEnabled();
+
+      // Set TTS mode selector and prosody injection toggle
+      document.getElementById('settings-tts-mode').value = SQ.PlayerConfig.getTtsMode();
+      document.getElementById('settings-prosody-injection').checked =
+        SQ.PlayerConfig.isProsodyInjectionEnabled();
+
+      // Set playback speed and segment pause sliders
+      var speed = SQ.PlayerConfig.getPlaybackSpeed();
+      document.getElementById('settings-playback-speed').value = speed;
+      document.getElementById('playback-speed-value').textContent = parseFloat(speed).toFixed(1) + 'x';
+
+      var pause = SQ.PlayerConfig.getSegmentPause();
+      document.getElementById('settings-segment-pause').value = pause;
+      document.getElementById('segment-pause-value').textContent = pause + 'ms';
 
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =

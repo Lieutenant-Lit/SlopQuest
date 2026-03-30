@@ -58,9 +58,9 @@
         SQ.AudioDirector.replay();
       });
 
-      // Audio debug overlay
+      // Audio debug overlay — show on debug toggle OR dry-run mode
       document.addEventListener('audiodebug', function (e) {
-        if (SQ.PlayerConfig.isAudioDebugEnabled()) {
+        if (SQ.PlayerConfig.isAudioDebugEnabled() || SQ.PlayerConfig.isNarrationDryRunEnabled()) {
           self._renderAudioDebug(e.detail);
         }
       });
@@ -137,9 +137,15 @@
       // Illustrations temporarily disabled
       this._hideIllustration();
 
-      // Audio controls — show if narration is enabled and audio is pending or active
-      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
-        SQ.AudioDirector.showControls();
+      // Audio controls — show if narration is enabled
+      if (SQ.PlayerConfig.isNarrationEnabled()) {
+        if (!SQ.AudioDirector.hasPendingOrActive() && state.last_passage) {
+          // Re-queue passage for narration on game resume
+          SQ.AudioDirector.prepareForPassage(state.last_passage, state);
+        }
+        if (SQ.AudioDirector.hasPendingOrActive()) {
+          SQ.AudioDirector.showControls();
+        }
       } else {
         SQ.AudioDirector.hideControls();
       }
@@ -1395,7 +1401,13 @@
       var speakers = [];
       var seen = {};
       segments.forEach(function (seg) {
-        var name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        // Support both old format (type+speaker) and new format (speaker only)
+        var name;
+        if (seg.speaker) {
+          name = (seg.speaker === 'narrator') ? 'Narrator' : seg.speaker;
+        } else {
+          name = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+        }
         if (!seen[name]) {
           seen[name] = true;
           speakers.push(name);
@@ -1492,6 +1504,98 @@
         castEl.appendChild(row);
       });
 
+      // Render segment list
+      var segEl = document.getElementById('audio-debug-segments');
+      if (segEl) {
+        segEl.innerHTML = '';
+        var segTitle = document.createElement('div');
+        segTitle.className = 'audio-debug-segments-title';
+        segTitle.textContent = 'Segments (' + segments.length + ')';
+        segEl.appendChild(segTitle);
+
+        var TRUNCATE_LEN = 200;
+
+        segments.forEach(function (seg, i) {
+          var segSpeaker;
+          if (seg.speaker) {
+            segSpeaker = (seg.speaker === 'narrator') ? 'Narrator' : seg.speaker;
+          } else {
+            segSpeaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'Narrator';
+          }
+          var segText = (seg.text || '').trim();
+          var segColor = self._getDebugColor(segSpeaker === 'Narrator' ? null : segSpeaker);
+
+          var row = document.createElement('div');
+          row.className = 'audio-debug-segment-row';
+
+          var header = document.createElement('div');
+          header.className = 'audio-debug-segment-header';
+
+          var indexSpan = document.createElement('span');
+          indexSpan.className = 'audio-debug-segment-index';
+          indexSpan.textContent = '[' + i + ']';
+          header.appendChild(indexSpan);
+
+          var nameSpan = document.createElement('span');
+          nameSpan.style.color = segColor;
+          nameSpan.textContent = segSpeaker;
+          header.appendChild(nameSpan);
+
+          var charsSpan = document.createElement('span');
+          charsSpan.className = 'audio-debug-segment-chars';
+          charsSpan.textContent = '(' + segText.length + ' chars)';
+          header.appendChild(charsSpan);
+
+          row.appendChild(header);
+
+          var textEl = document.createElement('div');
+          textEl.className = 'audio-debug-segment-text';
+          var isTruncated = segText.length > TRUNCATE_LEN;
+          textEl.textContent = isTruncated ? segText.substring(0, TRUNCATE_LEN) + '...' : segText;
+          if (isTruncated) {
+            textEl.classList.add('truncated');
+            textEl.addEventListener('click', (function (fullText, el) {
+              return function () {
+                if (el.classList.contains('truncated')) {
+                  el.textContent = fullText;
+                  el.classList.remove('truncated');
+                } else {
+                  el.textContent = fullText.substring(0, TRUNCATE_LEN) + '...';
+                  el.classList.add('truncated');
+                }
+              };
+            })(segText, textEl));
+          }
+          row.appendChild(textEl);
+
+          // Render TTS call preview if available
+          if (detail.ttsPreview && detail.ttsPreview[i]) {
+            var preview = detail.ttsPreview[i];
+
+            var voiceLine = document.createElement('div');
+            voiceLine.className = 'audio-debug-voice-desc';
+            voiceLine.textContent = 'Voice: ' + preview.voiceName + ' | Mode: ' + preview.mode;
+            row.appendChild(voiceLine);
+
+            if (preview.previousText) {
+              var prevLine = document.createElement('div');
+              prevLine.className = 'audio-debug-voice-desc';
+              prevLine.textContent = 'previous_text: ' + preview.previousText;
+              row.appendChild(prevLine);
+            }
+
+            if (preview.nextText) {
+              var nextLine = document.createElement('div');
+              nextLine.className = 'audio-debug-voice-desc';
+              nextLine.textContent = 'next_text: ' + preview.nextText;
+              row.appendChild(nextLine);
+            }
+          }
+
+          segEl.appendChild(row);
+        });
+      }
+
       panel.classList.remove('hidden');
       this._highlightPassage(detail.ttsSegments || []);
     },
@@ -1507,14 +1611,20 @@
       var ranges = [];
       var cursor = 0;
       ttsSegments.forEach(function (seg) {
-        var needle = (seg.text || '').trim();
-        if (!needle) return;
-        var speaker = (seg.speaker === 'Narrator') ? null : seg.speaker;
-        var match = self._findSegmentInText(needle, fullText, cursor);
-        if (match) {
-          ranges.push({ start: match.start, end: match.end, speaker: speaker });
-          cursor = match.end;
-        }
+        var text = (seg.text || '').trim();
+        if (!text) return;
+        var speaker = (seg.speaker === 'Narrator' || seg.speaker === 'narrator') ? null : seg.speaker;
+        // Split merged segments on paragraph breaks to match each part individually
+        var parts = text.split(/\n\n+/);
+        parts.forEach(function (part) {
+          var needle = part.trim();
+          if (!needle) return;
+          var match = self._findSegmentInText(needle, fullText, cursor);
+          if (match) {
+            ranges.push({ start: match.start, end: match.end, speaker: speaker });
+            cursor = match.end;
+          }
+        });
       });
 
       // Build the full highlighted HTML

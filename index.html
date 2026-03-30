@@ -209,6 +209,73 @@
           <input type="checkbox" id="settings-disable-default-voices">
           <span>Disable default voices</span>
         </label>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-narration-dry-run">
+          <span>Dry run (skip TTS, show debug only)</span>
+        </label>
+        <label class="card-label">TTS Mode</label>
+        <select id="settings-tts-mode">
+          <option value="flash">Flash v2.5 — fastest (~$0.10-0.20/passage)</option>
+          <option value="turbo">Turbo v2.5 — balanced (~$0.10-0.20/passage)</option>
+          <option value="dialogue">Dialogue v3 — best quality (~$0.20-0.40/passage)</option>
+        </select>
+        <label class="setup-toggle">
+          <input type="checkbox" id="settings-prosody-injection">
+          <span>Prosody injection (include narrator/character context in Flash TTS calls)</span>
+        </label>
+        <div class="range-setting">
+          <label class="card-label">Playback Speed <span id="playback-speed-value">1.0x</span></label>
+          <input type="range" id="settings-playback-speed" min="0.7" max="2.0" step="0.1" value="1.0">
+        </div>
+        <div class="range-setting">
+          <label class="card-label">Pause Between Lines <span id="segment-pause-value">300ms</span></label>
+          <input type="range" id="settings-segment-pause" min="0" max="2000" step="50" value="300">
+        </div>
+        <div id="voice-director-model-section" class="hidden">
+          <label class="card-label">Voice Director Model</label>
+          <select id="voice-director-model-select">
+            <optgroup label="Anthropic">
+              <option value="anthropic/claude-sonnet-4">Claude Sonnet 4</option>
+              <option value="anthropic/claude-sonnet-4.5">Claude Sonnet 4.5</option>
+              <option value="anthropic/claude-opus-4">Claude Opus 4</option>
+              <option value="anthropic/claude-opus-4.5">Claude Opus 4.5</option>
+              <option value="anthropic/claude-haiku-4.5" selected>Claude Haiku 4.5 (default)</option>
+            </optgroup>
+            <optgroup label="Google">
+              <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+              <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash</option>
+            </optgroup>
+            <optgroup label="OpenAI">
+              <option value="openai/gpt-4o">GPT-4o</option>
+              <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+              <option value="openai/o3-mini">o3-mini</option>
+            </optgroup>
+            <optgroup label="DeepSeek">
+              <option value="deepseek/deepseek-chat">DeepSeek V3</option>
+              <option value="deepseek/deepseek-r1">DeepSeek R1</option>
+            </optgroup>
+            <optgroup label="Meta">
+              <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+              <option value="meta-llama/llama-4-scout">Llama 4 Scout</option>
+            </optgroup>
+            <optgroup label="Mistral">
+              <option value="mistralai/mistral-large-2512">Mistral Large</option>
+              <option value="mistralai/mistral-small-3.1-24b-instruct-2503">Mistral Small</option>
+            </optgroup>
+            <optgroup label="xAI">
+              <option value="x-ai/grok-3">Grok 3</option>
+              <option value="x-ai/grok-3-mini">Grok 3 Mini</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="qwen/qwen3-235b-a22b-07-25">Qwen 3 235B</option>
+              <option value="qwen/qwen3-32b-04-28">Qwen 3 32B</option>
+              <option value="cohere/command-r-plus">Command R+</option>
+              <option value="custom">Custom model...</option>
+            </optgroup>
+          </select>
+          <input type="text" id="voice-director-model-custom-input" class="hidden" placeholder="org/model-name">
+        </div>
       </div>
 
       <div class="card">
@@ -506,6 +573,7 @@
           <span class="audio-debug-collapse">&#9660;</span>
         </div>
         <div id="audio-debug-cast" class="audio-debug-cast"></div>
+        <div id="audio-debug-segments" class="audio-debug-segments"></div>
       </div>
       <div id="gamestate-debug-panel" class="gamestate-debug-panel hidden">
         <div class="gamestate-debug-header" id="gamestate-debug-header">

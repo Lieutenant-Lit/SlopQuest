@@ -14,7 +14,8 @@
       gamemaster: 'anthropic/claude-sonnet-4',
       image: 'google/gemini-3.1-flash-image-preview',
       playtester: 'anthropic/claude-sonnet-4',
-      ui_designer: 'anthropic/claude-haiku-4.5'
+      ui_designer: 'anthropic/claude-haiku-4.5',
+      voice_director: 'anthropic/claude-haiku-4.5'
     },
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
@@ -22,6 +23,11 @@
     audio_debug_enabled: false,
     game_state_debug_enabled: false,
     disable_default_voices: false,
+    narration_dry_run: false,
+    narration_tts_mode: 'flash',
+    narration_prosody_injection: false,
+    narration_playback_speed: 1.0,
+    narration_segment_pause: 300,
     api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
@@ -165,6 +171,62 @@
     setNarrationEnabled: function (enabled) {
       var config = this.load();
       config.narration_enabled = !!enabled;
+      this.save(config);
+    },
+
+    isNarrationDryRunEnabled: function () {
+      var config = this.load();
+      return config.narration_dry_run === true;
+    },
+
+    setNarrationDryRunEnabled: function (enabled) {
+      var config = this.load();
+      config.narration_dry_run = !!enabled;
+      this.save(config);
+    },
+
+    getTtsMode: function () {
+      var config = this.load();
+      return config.narration_tts_mode || 'flash';
+    },
+
+    setTtsMode: function (mode) {
+      var config = this.load();
+      config.narration_tts_mode = mode;
+      this.save(config);
+    },
+
+    isProsodyInjectionEnabled: function () {
+      var config = this.load();
+      return config.narration_prosody_injection === true;
+    },
+
+    setProsodyInjectionEnabled: function (enabled) {
+      var config = this.load();
+      config.narration_prosody_injection = !!enabled;
+      this.save(config);
+    },
+
+    getPlaybackSpeed: function () {
+      var config = this.load();
+      return config.narration_playback_speed || 1.0;
+    },
+
+    setPlaybackSpeed: function (speed) {
+      var config = this.load();
+      config.narration_playback_speed = parseFloat(speed) || 1.0;
+      this.save(config);
+    },
+
+    getSegmentPause: function () {
+      var config = this.load();
+      var val = config.narration_segment_pause;
+      return (val !== undefined && val !== null) ? val : 300;
+    },
+
+    setSegmentPause: function (ms) {
+      var config = this.load();
+      config.narration_segment_pause = parseInt(ms, 10) || 0;
       this.save(config);
     },
 

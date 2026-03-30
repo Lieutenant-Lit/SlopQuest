@@ -1,23 +1,17 @@
 /**
  * SQ.AudioDirector — Full-cast audio play engine using ElevenLabs.
  *
- * Replaces the old SQ.AudioGenerator (GPT-4o Audio via OpenRouter).
- * When narration is enabled, the Audio Director:
- *   1. Sends the passage + game state to Claude Sonnet for analysis
- *   2. Gets back a structured "audio script" (narration vs dialogue segments)
- *   3. Assigns unique ElevenLabs voices to each character (persistent across turns)
- *   4. Generates TTS audio for each segment via ElevenLabs API
- *   5. Plays segments sequentially for a full-cast audio play experience
+ * Pipeline:
+ *   1. _analyzePassage: Regex splits quoted spans, LLM classifies who speaks each (Haiku-compatible)
+ *   2. _castVoicesForSpeakers: Assigns ElevenLabs voices to speakers from step 1 (LLM call, sequential)
+ *   3. Progressive TTS: Generates audio per segment, starts playback after first segment completes
  *
- * Voice registry is persisted to localStorage so characters keep their voices
- * across sessions. Even unnamed NPCs ("a guard") get unique voices.
- *
+ * Voice registry persisted to localStorage — characters keep voices across turns.
  * Only makes API calls when narration is enabled (SQ.PlayerConfig.isNarrationEnabled()).
  */
 (function () {
   var ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1';
   var ELEVENLABS_TIMEOUT_MS = 30000;
-  var ANALYSIS_MODEL = 'anthropic/claude-sonnet-4';
   var VOICE_REGISTRY_KEY = 'slopquest_voice_registry';
   var VOICE_CACHE_KEY = 'slopquest_elevenlabs_voices';
 
@@ -29,6 +23,15 @@
   var _currentIndex = 0;
   var _isPlaying = false;
   var _isPaused = false;
+
+  /** Progressive generation state (Flash mode). */
+  var _generationComplete = false;
+  var _totalExpectedSegments = 0;
+  var _segmentReadyResolvers = {};  // index -> resolve callback for _waitForSegment
+
+  /** Dialogue mode state (single audio element). */
+  var _dialogueAudio = null;
+  var _dialogueAudioUrl = null;
 
   /** Abort controller for in-flight generation. */
   var _abortController = null;
@@ -71,43 +74,120 @@
 
       return this._ensureVoicesLoaded()
         .then(function () {
-          // Run segmentation and voice casting in parallel
-          return Promise.all([
-            self._segmentPassage(passage, gameState),
-            self._castVoices(passage, gameState)
-          ]);
+          // Step 1: Segment passage (single LLM call — source of truth for speaker names)
+          return self._analyzePassage(passage, gameState);
         })
-        .then(function (results) {
-          var segmentResult = results[0];
-          // results[1] = casting (already applied to registry via _validateAndApplyVoiceAssignments)
-
+        .then(function (segmentResult) {
           if (!segmentResult || !segmentResult.segments || segmentResult.segments.length === 0) {
             SQ.Logger.info('Audio', 'LLM returned empty audio script');
             return false;
           }
           _lastAnalysisSegments = segmentResult.segments;
-          return self._generateAllSegments(segmentResult.segments, gameState);
+
+          // Step 2: Cast voices for speakers identified by segmentation
+          var speakers = [];
+          segmentResult.segments.forEach(function (seg) {
+            if (seg.speaker && seg.speaker !== 'narrator' && speakers.indexOf(seg.speaker) === -1) {
+              speakers.push(seg.speaker);
+            }
+          });
+          return self._castVoicesForSpeakers(speakers, gameState)
+            .then(function () { return segmentResult.segments; });
         })
-        .then(function (success) {
-          // Fire debug event AFTER voice assignment so registry has actual voices
-          if (_lastAnalysisSegments) {
+        .then(function (segments) {
+          if (!segments) return false;
+
+          // Dry run mode: skip TTS, fire debug event immediately
+          if (SQ.PlayerConfig.isNarrationDryRunEnabled()) {
+            var dryRunRegistry = self._loadRegistry();
+            var dryRunNarratorEntry = dryRunRegistry['__narrator__'];
+            var dryRunNarratorVoiceId = dryRunNarratorEntry ? dryRunNarratorEntry.voice_id : null;
+            var ttsMode = SQ.PlayerConfig.getTtsMode();
+            var injectionOn = SQ.PlayerConfig.isProsodyInjectionEnabled();
+
+            // Build TTS preview for each segment
+            var dryRunParaNums = self._mapSegmentParagraphs(segments, passage);
+            var ttsPreview = segments.map(function (seg, i) {
+              var resolved = self._resolveSegmentVoice(seg, dryRunRegistry, dryRunNarratorVoiceId);
+              var voiceEntry = dryRunRegistry[resolved.speaker === 'narrator' ? '__narrator__' : resolved.speaker] || {};
+              var preview = {
+                voiceName: voiceEntry.voice_name || resolved.speaker,
+                voiceId: resolved.voiceId || '(none)',
+                mode: ttsMode
+              };
+              if (ttsMode !== 'dialogue') {
+                var context = self._buildSegmentContext(segments, i, injectionOn, dryRunParaNums);
+                preview.previousText = context.previousText || '';
+                preview.nextText = context.nextText || '';
+              }
+              return preview;
+            });
+
             _lastAnalysis = {
               segments: _lastAnalysisSegments,
-              ttsSegments: _segments.map(function (s) {
+              ttsSegments: (_lastAnalysisSegments || []).map(function (s, i) {
+                return { text: s.text, speaker: s.speaker === 'narrator' ? 'Narrator' : s.speaker, index: i };
+              }),
+              registry: dryRunRegistry,
+              availableVoices: _availableVoices || [],
+              ttsPreview: ttsPreview,
+              dryRun: true
+            };
+            document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
+            _lastAnalysisSegments = null;
+            self._setGeneratingState(false);
+            self.hideControls();
+            SQ.Logger.info('Audio', 'Dry run complete', { segments: segments.length });
+            return true;
+          }
+
+          // Step 3: Generate TTS
+          if (SQ.PlayerConfig.getTtsMode() === 'dialogue') {
+            return self._generateDialogueAudio(segments);
+          }
+          return self._generateAllSegments(segments, gameState, passage);
+        })
+        .then(function (success) {
+          // Fire debug event AFTER all generation completes
+          if (_lastAnalysisSegments) {
+            var debugRegistry = self._loadRegistry();
+            var debugNarratorEntry = debugRegistry['__narrator__'];
+            var debugNarratorVoiceId = debugNarratorEntry ? debugNarratorEntry.voice_id : null;
+            var debugSegments = _lastAnalysisSegments;
+            var debugParaNums = self._mapSegmentParagraphs(debugSegments, passage);
+            var debugInjection = SQ.PlayerConfig.isProsodyInjectionEnabled();
+            var debugMode = SQ.PlayerConfig.getTtsMode();
+
+            var ttsPreview = debugSegments.map(function (seg, i) {
+              var resolved = self._resolveSegmentVoice(seg, debugRegistry, debugNarratorVoiceId);
+              var voiceEntry = debugRegistry[resolved.speaker === 'narrator' ? '__narrator__' : resolved.speaker] || {};
+              var preview = {
+                voiceName: voiceEntry.voice_name || resolved.speaker,
+                voiceId: resolved.voiceId || '(none)',
+                mode: debugMode
+              };
+              if (debugMode !== 'dialogue') {
+                var context = self._buildSegmentContext(debugSegments, i, debugInjection, debugParaNums);
+                preview.previousText = context.previousText || '';
+                preview.nextText = context.nextText || '';
+              }
+              return preview;
+            });
+
+            _lastAnalysis = {
+              segments: _lastAnalysisSegments,
+              ttsSegments: _segments.filter(Boolean).map(function (s) {
                 return { text: s.text, speaker: s.speaker, index: s.index };
               }),
-              registry: self._loadRegistry(),
-              availableVoices: _availableVoices || []
+              registry: debugRegistry,
+              availableVoices: _availableVoices || [],
+              ttsPreview: ttsPreview
             };
             document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
             _lastAnalysisSegments = null;
           }
-          if (success && _segments.length > 0) {
-            self.showControls();
-            self._playSegment(0);
-            return true;
-          }
-          return false;
+          // Playback was already started by _generateAllSegments (progressive)
+          return success;
         })
         .catch(function (err) {
           if (err.name === 'AbortError') return false;
@@ -136,7 +216,7 @@
     },
 
     hasPendingOrActive: function () {
-      return !!_pendingPassage || _segments.length > 0;
+      return !!_pendingPassage || _segments.length > 0 || !!_dialogueAudio;
     },
 
     // ========================================================
@@ -232,248 +312,53 @@
     },
 
     /**
-     * Validate and apply voice assignments from LLM response to the registry.
-     * Falls back to keyword matching if the LLM returns invalid voice IDs.
+     * Cast voices for speakers identified by segmentation.
+     * Uses a single LLM call with the voice catalog, receiving exact speaker names
+     * from _analyzePassage (no independent re-analysis of the passage).
+     * Skips the LLM call entirely if all speakers are already in the registry.
+     * @param {string[]} speakerNames - Unique speaker names from segmentation (excluding "narrator")
+     * @param {object} gameState - Full game state for context
+     * @returns {Promise}
      * @private
      */
-    _validateAndApplyVoiceAssignments: function (audioScript, gameState) {
-      var registry = this._loadRegistry();
-
-      // Build lookup of valid voice IDs and reverse name-to-ID map
-      var validVoiceIds = {};
-      var voiceNameMap = {};
-      var nameToVoiceId = {};
-      var normalizedNameToVoiceId = {};
-      if (_availableVoices) {
-        _availableVoices.forEach(function (v) {
-          validVoiceIds[v.voice_id] = v;
-          voiceNameMap[v.voice_id] = v.name;
-          nameToVoiceId[v.name.toLowerCase()] = v.voice_id;
-          // Normalized: strip all non-alphanumeric for fuzzy matching
-          var norm = v.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-          normalizedNameToVoiceId[norm] = v.voice_id;
-        });
-      }
-
-      // Build set of already-used voice IDs for fallback dedup
-      var usedVoiceIds = {};
-      for (var key in registry) {
-        if (registry.hasOwnProperty(key) && registry[key].voice_id) {
-          usedVoiceIds[registry[key].voice_id] = true;
-        }
-      }
-
-      var changed = false;
+    _castVoicesForSpeakers: function (speakerNames, gameState) {
       var self = this;
-
-      // Helper: assign a voice by ID, with fallback to keyword matching
-      var applyAssignment = function (characterKey, voiceId, description, justification) {
-        // Skip if already in registry
-        if (registry[characterKey] && registry[characterKey].voice_id) {
-          var cachedId = registry[characterKey].voice_id;
-          var stillAvailable = !_availableVoices || validVoiceIds[cachedId];
-          if (stillAvailable) return;
-        }
-
-        // If voiceId is actually a name, resolve it to the real ID
-        if (voiceId && !validVoiceIds[voiceId]) {
-          var lower = voiceId.toLowerCase();
-          // Try exact name match first
-          var resolved = nameToVoiceId[lower];
-          // Try normalized match (strips dashes, spaces, punctuation)
-          if (!resolved) {
-            var norm = lower.replace(/[^a-z0-9]/g, '');
-            resolved = normalizedNameToVoiceId[norm];
-          }
-          // Try matching just the first word (e.g. "Valory" from "Valory - Intimate, Warm...")
-          if (!resolved) {
-            var firstWord = lower.split(/[\s\-\u2013\u2014,]+/)[0];
-            if (firstWord && firstWord.length > 2) {
-              for (var nm in nameToVoiceId) {
-                if (nm.split(/[\s\-\u2013\u2014,]+/)[0] === firstWord) {
-                  resolved = nameToVoiceId[nm];
-                  break;
-                }
-              }
-            }
-          }
-          if (resolved) {
-            SQ.Logger.info('Audio', 'Resolved voice name', { voiceName: voiceId, resolvedId: resolved });
-            voiceId = resolved;
-          }
-        }
-
-        if (voiceId && validVoiceIds[voiceId]) {
-          registry[characterKey] = {
-            voice_id: voiceId,
-            voice_name: voiceNameMap[voiceId] || '',
-            description: description || '',
-            justification: justification || ''
-          };
-          usedVoiceIds[voiceId] = true;
-          changed = true;
-          SQ.Logger.info('Audio', 'Voice cast', { character: characterKey, voice: voiceNameMap[voiceId] || voiceId, justification: justification });
-        } else {
-          // Fallback to keyword matching
-          if (voiceId) {
-            SQ.Logger.warn('Audio', 'Fallback: invalid voice_id from LLM', { character: characterKey, voiceId: voiceId });
-          } else {
-            SQ.Logger.warn('Audio', 'Fallback: no voice_id from LLM', { character: characterKey });
-          }
-          var bestVoice = self._fallbackMatchVoice(description || '', usedVoiceIds);
-          if (bestVoice) {
-            registry[characterKey] = {
-              voice_id: bestVoice.voice_id,
-              voice_name: bestVoice.name,
-              description: description || '',
-              justification: '(FALLBACK: keyword matching — LLM did not provide a valid voice_id)'
-            };
-            usedVoiceIds[bestVoice.voice_id] = true;
-            changed = true;
-            SQ.Logger.warn('Audio', 'Fallback voice assigned', { character: characterKey, voice: bestVoice.name });
-          }
-        }
-      };
-
-      // Apply narrator voice (support both object and bare ID formats)
-      var narratorVoice = audioScript.narrator_voice || {};
-      var narratorVoiceId = narratorVoice.voice_id || audioScript.narrator_voice_id;
-      var narratorGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
-      var narratorDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
-      var narratorFallbackDesc = [narratorGender, narratorDirection, 'narrator, storytelling'].filter(Boolean).join(', ');
-      var narratorDesc = narratorVoice.voice_description || narratorFallbackDesc;
-      applyAssignment('__narrator__', narratorVoiceId, narratorDesc, narratorVoice.justification);
-
-      // Apply player character voice (support both object and bare ID formats)
+      var registry = this._loadRegistry();
       var playerName = (gameState && gameState.player && gameState.player.name) || '';
-      if (playerName) {
-        var playerVoice = audioScript.player_voice || {};
-        var playerVoiceId = playerVoice.voice_id || audioScript.player_voice_id;
-        var playerGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
-        var playerDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
-        var playerFallbackDesc = [playerGender, playerDirection, 'protagonist'].filter(Boolean).join(', ');
-        var playerDesc = playerVoice.voice_description || playerFallbackDesc;
-        applyAssignment(playerName, playerVoiceId, playerDesc, playerVoice.justification);
-      }
 
-      // Apply NPC voice assignments
-      var assignments = audioScript.voice_assignments || {};
-      for (var charName in assignments) {
-        if (assignments.hasOwnProperty(charName)) {
-          var entry = assignments[charName];
-          applyAssignment(charName, entry.voice_id, entry.voice_description || '', entry.justification || '');
-        }
-      }
+      // Determine what needs casting
+      var needsNarrator = !registry['__narrator__'] || !registry['__narrator__'].voice_id;
+      var needsPlayer = playerName && (!registry[playerName] || !registry[playerName].voice_id);
 
-      if (changed) {
-        this._saveRegistry(registry);
-      }
-
-      return audioScript;
-    },
-
-    /**
-     * Segment a passage into narration and dialogue chunks.
-     * This is a focused, lean LLM call — no voice casting, no catalog.
-     * @private
-     */
-    _segmentPassage: function (passage, gameState) {
-      var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
-
-      // Build known character names from registry for speaker identification
-      var registry = this._loadRegistry();
-      var knownNames = Object.keys(registry).filter(function (k) {
-        return k !== '__narrator__';
+      // Filter speakers to only those not already in registry
+      var newSpeakers = speakerNames.filter(function (name) {
+        return !registry[name] || !registry[name].voice_id;
       });
 
-      var p = '';
-      p += 'You are an Audio Director for an interactive narrative game.\n';
-      p += 'Your ONLY job is to break a story passage into audio segments for a full-cast audio play.\n';
-      p += 'You do NOT assign voices — only segment the text.\n\n';
-
-      p += 'SEGMENT RULES:\n';
-      p += '- Break the passage into "narration" (descriptive text) and "dialogue" (spoken lines) segments.\n';
-      p += '- EVERY sentence MUST appear in exactly one segment. Do NOT skip or omit any text.\n';
-      p += '- Action beats and narrative between dialogue (e.g., "she says", "he mutters",\n';
-      p += '  "you call out cheerfully") are NARRATION segments. NEVER merge them into dialogue.\n';
-      p += '- Preserve the EXACT text from the passage. Do not paraphrase or alter wording.\n';
-      p += '- For dialogue, include the EXACT text INCLUDING quotation marks.\n';
-      p += '- Action beats between dialogue lines MUST be their own narration segments.\n';
-      p += '  Do NOT merge them into the preceding or following dialogue segment.\n';
-      p += '- Attribution phrases like "he said" or "she whispered" are NARRATION, not dialogue.\n\n';
-
-      p += 'The PLAYER CHARACTER is named "' + playerName + '". When the passage describes the player\n';
-      p += 'speaking (e.g., "you say", "you call out", "you reply"), use speaker name "' + playerName + '".\n';
-      p += 'For unnamed characters use descriptive identifiers like "Gate Guard" or "Bartender".\n\n';
-
-      if (knownNames.length > 0) {
-        p += 'KNOWN CHARACTERS (use these exact names if they appear): ' + knownNames.join(', ') + '\n\n';
+      // If everything is already cast, skip the LLM call entirely
+      if (!needsNarrator && !needsPlayer && newSpeakers.length === 0) {
+        SQ.Logger.info('Audio', 'All speakers already cast, skipping voice casting');
+        return Promise.resolve();
       }
 
-      // Minimal scene context for speaker identification
-      var cur = (gameState && gameState.current) || {};
-      if (cur.location || cur.scene_context) {
-        p += 'SCENE CONTEXT: ';
-        if (cur.location) p += 'Location: ' + cur.location + '. ';
-        if (cur.scene_context) p += cur.scene_context;
-        p += '\n\n';
+      var voiceCatalog = this._buildVoiceCatalog();
+      if (!voiceCatalog) {
+        SQ.Logger.warn('Audio', 'No voice catalog available for casting');
+        return Promise.resolve();
       }
 
-      p += 'Respond with ONLY valid JSON in this format:\n';
-      p += '{\n';
-      p += '  "segments": [\n';
-      p += '    { "type": "narration", "text": "The guard stepped forward." },\n';
-      p += '    { "type": "dialogue", "speaker": "Gate Guard", "text": "\\"Halt! Who goes there?\\"" },\n';
-      p += '    { "type": "narration", "text": "he barked, gripping his spear." }\n';
-      p += '  ]\n';
-      p += '}\n';
-
-      var userPrompt = 'Break this passage into audio segments:\n\n' + passage;
-
-      return SQ.API.call(ANALYSIS_MODEL, [
-        { role: 'system', content: p },
-        { role: 'user', content: userPrompt }
-      ], {
-        temperature: 0.3,
-        max_tokens: 2000,
-        source: 'voice_director'
-      }).then(function (response) {
-        try {
-          return SQ.API.parseJSON(response);
-        } catch (e) {
-          SQ.Logger.warn('Audio', 'Failed to parse segmentation JSON', { error: e.message });
-          return { segments: [{ type: 'narration', text: passage }] };
-        }
-      });
-    },
-
-    /**
-     * Cast voices for characters in a passage.
-     * This is a focused LLM call — no segmentation, only voice assignment.
-     * Runs in parallel with _segmentPassage.
-     * @private
-     */
-    _castVoices: function (passage, gameState) {
-      var self = this;
-      var registry = this._loadRegistry();
-      var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
-
+      // Build the casting prompt
       var p = '';
       p += 'You are a Casting Director for an interactive narrative audio play.\n';
-      p += 'Your ONLY job is to assign ElevenLabs voices to characters. You do NOT segment text.\n\n';
+      p += 'Your job is to assign ElevenLabs voices to the characters listed below.\n\n';
 
-      // Game context for intelligent casting
       var gameContext = this._buildGameContext(gameState);
       if (gameContext) {
         p += 'GAME CONTEXT:\n' + gameContext + '\n\n';
       }
 
-      // Voice catalog
-      var voiceCatalog = this._buildVoiceCatalog();
-      if (voiceCatalog) {
-        p += 'AVAILABLE ELEVENLABS VOICES (you MUST select from these only):\n';
-        p += voiceCatalog + '\n\n';
-      }
+      p += 'AVAILABLE ELEVENLABS VOICES (you MUST select from these only):\n';
+      p += voiceCatalog + '\n\n';
 
       // Already-assigned voices
       var assignedLines = [];
@@ -487,53 +372,57 @@
       });
 
       if (assignedLines.length > 0) {
-        p += 'ALREADY ASSIGNED VOICES (locked — do NOT reassign or change these):\n';
+        p += 'ALREADY ASSIGNED VOICES (locked — do NOT reassign these):\n';
         p += assignedLines.join('\n') + '\n\n';
       }
 
-      // Assignment instructions
-      var needsNarrator = !registry['__narrator__'] || !registry['__narrator__'].voice_id;
-      var needsPlayer = !registry[playerName] || !registry[playerName].voice_id;
+      p += 'CHARACTERS THAT NEED VOICES:\n';
 
-      p += 'VOICE ASSIGNMENT INSTRUCTIONS:\n';
       if (needsNarrator) {
         var nGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
         var nDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
-        p += '- SELECT a narrator voice. User preference: gender="' + nGender + '", direction="' + nDirection + '".\n';
-        p += '  RESPECT the user\'s accent/style preferences. Return as "narrator_voice" object.\n';
+        p += '- Narrator' + (nGender || nDirection ? ' (user preference: ' + [nGender, nDirection].filter(Boolean).join(', ') + ')' : '') + '\n';
       }
       if (needsPlayer) {
         var pGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
         var pDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
         var pArchetype = (gameState && gameState.player && gameState.player.archetype) || '';
-        p += '- SELECT a voice for player character "' + playerName + '". User preference: gender="' + pGender + '", direction="' + pDirection + '", archetype="' + pArchetype + '".\n';
-        p += '  RESPECT the user\'s accent/style preferences. Return as "player_voice" object.\n';
+        p += '- "' + playerName + '" (player character' + (pGender || pDirection || pArchetype ? ', user preference: ' + [pGender, pDirection, pArchetype].filter(Boolean).join(', ') : '') + ')\n';
       }
-      p += '- For any NEW speaking character in the passage not already assigned above, select a voice_id from the catalog.\n';
-      p += '- For unnamed characters, use descriptive identifiers like "Gate Guard" or "Bartender" as the character key in voice_assignments.\n';
-      p += '- Use the game\'s genre, tone, setting, and each character\'s role/personality to make intelligent casting decisions.\n';
-      p += '- STRONGLY prefer voice diversity — avoid reusing voice IDs already assigned to other characters.\n';
-      p += '- For EVERY voice assignment, provide:\n';
-      p += '  - voice_description: brief description of the voice qualities\n';
-      p += '  - justification: explain WHY you chose this specific voice over alternatives,\n';
-      p += '    referencing the voice\'s catalog description, the character/role, and user preferences if applicable.\n\n';
 
-      // Response schema — voice assignments only
-      p += 'Respond with ONLY valid JSON in this format:\n';
+      // Add NPC context for new speakers from the roster
+      var npcs = (SQ.GameState && SQ.GameState.getNpcRoster) ? SQ.GameState.getNpcRoster() : [];
+      newSpeakers.forEach(function (name) {
+        var npcInfo = '';
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].name === name) {
+            var bits = [];
+            if (npcs[i].role) bits.push(npcs[i].role);
+            if (npcs[i].motivation) bits.push(npcs[i].motivation);
+            npcInfo = bits.length > 0 ? ' (' + bits.join(', ') + ')' : '';
+            break;
+          }
+        }
+        p += '- "' + name + '"' + npcInfo + '\n';
+      });
+
+      p += '\nINSTRUCTIONS:\n';
+      p += '- Use the game\'s genre, tone, setting, and each character\'s role to make intelligent casting decisions.\n';
+      p += '- STRONGLY prefer voice diversity — avoid reusing voice IDs already assigned.\n';
+      p += '- RESPECT user preferences for narrator/player gender, accent, and style.\n\n';
+
+      p += 'Respond with ONLY valid JSON:\n';
       p += '{\n';
       p += '  "voice_assignments": {\n';
-      p += '    "Character Name": { "voice_id": "<id>", "voice_description": "gruff male, middle-aged, stern", "justification": "why this voice fits" }\n';
+      p += '    "Character Name": { "voice_id": "<id>", "voice_description": "brief description", "justification": "why this voice fits" }\n';
       p += '  }';
-      if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the narrator, referencing user preferences" }';
-      if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "why this voice fits the player character" }';
+      if (needsNarrator) p += ',\n  "narrator_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "..." }';
+      if (needsPlayer) p += ',\n  "player_voice": { "voice_id": "<id>", "voice_description": "...", "justification": "..." }';
       p += '\n}\n';
-      p += 'voice_assignments should ONLY contain NEW characters not in the already-assigned list.\n';
 
-      var userPrompt = 'Read this passage and assign voices for any characters who speak:\n\n' + passage;
-
-      return SQ.API.call(ANALYSIS_MODEL, [
+      return SQ.API.call(SQ.PlayerConfig.getModel('voice_director'), [
         { role: 'system', content: p },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: 'Assign voices for the characters listed above.' }
       ], {
         temperature: 0.3,
         max_tokens: 2000,
@@ -541,13 +430,440 @@
       }).then(function (response) {
         try {
           var castResult = SQ.API.parseJSON(response);
-          // Validate and apply voice assignments to registry
-          self._validateAndApplyVoiceAssignments(castResult, gameState);
-          return castResult;
+          self._applyVoiceAssignments(castResult, gameState, newSpeakers);
         } catch (e) {
-          SQ.Logger.warn('Audio', 'Failed to parse casting JSON', { error: e.message });
-          return { voice_assignments: {} };
+          SQ.Logger.warn('Audio', 'Failed to parse casting JSON, using fallback', { error: e.message });
+          self._fallbackCastAll(needsNarrator, needsPlayer, newSpeakers, gameState);
         }
+      }).catch(function (err) {
+        SQ.Logger.warn('Audio', 'Voice casting LLM call failed, using fallback', { error: err.message || String(err) });
+        self._fallbackCastAll(needsNarrator, needsPlayer, newSpeakers, gameState);
+      });
+    },
+
+    /**
+     * Apply voice assignments from LLM casting response to the registry.
+     * Falls back to keyword matching for any invalid voice IDs.
+     * @private
+     */
+    _applyVoiceAssignments: function (castResult, gameState, newSpeakers) {
+      var registry = this._loadRegistry();
+      var self = this;
+
+      // Build lookup maps
+      var validVoiceIds = {};
+      var voiceNameMap = {};
+      var nameToVoiceId = {};
+      var normalizedNameToVoiceId = {};
+      if (_availableVoices) {
+        _availableVoices.forEach(function (v) {
+          validVoiceIds[v.voice_id] = v;
+          voiceNameMap[v.voice_id] = v.name;
+          nameToVoiceId[v.name.toLowerCase()] = v.voice_id;
+          var norm = v.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          normalizedNameToVoiceId[norm] = v.voice_id;
+        });
+      }
+
+      // Track used voice IDs for dedup
+      var usedVoiceIds = {};
+      for (var key in registry) {
+        if (registry.hasOwnProperty(key) && registry[key].voice_id) {
+          usedVoiceIds[registry[key].voice_id] = true;
+        }
+      }
+
+      var changed = false;
+
+      // Helper: resolve a voice ID (may be name or ID)
+      var resolveVoiceId = function (voiceId) {
+        if (!voiceId) return null;
+        if (validVoiceIds[voiceId]) return voiceId;
+        // Try name resolution
+        var lower = voiceId.toLowerCase();
+        var resolved = nameToVoiceId[lower];
+        if (!resolved) {
+          var norm = lower.replace(/[^a-z0-9]/g, '');
+          resolved = normalizedNameToVoiceId[norm];
+        }
+        if (!resolved) {
+          var firstWord = lower.split(/[\s\-\u2013\u2014,]+/)[0];
+          if (firstWord && firstWord.length > 2) {
+            for (var nm in nameToVoiceId) {
+              if (nm.split(/[\s\-\u2013\u2014,]+/)[0] === firstWord) {
+                resolved = nameToVoiceId[nm];
+                break;
+              }
+            }
+          }
+        }
+        return resolved || null;
+      };
+
+      // Helper: assign voice to registry
+      var assign = function (characterKey, voiceId, description, justification) {
+        if (registry[characterKey] && registry[characterKey].voice_id) return; // already assigned
+
+        var resolved = resolveVoiceId(voiceId);
+        if (resolved) {
+          registry[characterKey] = {
+            voice_id: resolved,
+            voice_name: voiceNameMap[resolved] || '',
+            description: description || '',
+            justification: justification || ''
+          };
+          usedVoiceIds[resolved] = true;
+          changed = true;
+          SQ.Logger.info('Audio', 'Voice cast', { character: characterKey, voice: voiceNameMap[resolved] || resolved });
+        } else {
+          // Fallback to keyword matching
+          SQ.Logger.warn('Audio', 'Fallback: invalid voice_id from LLM', { character: characterKey, voiceId: voiceId });
+          var bestVoice = self._fallbackMatchVoice(description || '', usedVoiceIds);
+          if (bestVoice) {
+            registry[characterKey] = {
+              voice_id: bestVoice.voice_id,
+              voice_name: bestVoice.name,
+              description: description || '',
+              justification: '(FALLBACK: keyword matching)'
+            };
+            usedVoiceIds[bestVoice.voice_id] = true;
+            changed = true;
+            SQ.Logger.warn('Audio', 'Fallback voice assigned', { character: characterKey, voice: bestVoice.name });
+          }
+        }
+      };
+
+      // Apply narrator voice
+      var narratorVoice = castResult.narrator_voice || {};
+      if (narratorVoice.voice_id) {
+        var narratorDesc = narratorVoice.voice_description || '';
+        assign('__narrator__', narratorVoice.voice_id, narratorDesc, narratorVoice.justification);
+      }
+
+      // Apply player character voice
+      var playerName = (gameState && gameState.player && gameState.player.name) || '';
+      var playerVoice = castResult.player_voice || {};
+      if (playerName && playerVoice.voice_id) {
+        assign(playerName, playerVoice.voice_id, playerVoice.voice_description || '', playerVoice.justification);
+      }
+
+      // Apply NPC voice assignments
+      var assignments = castResult.voice_assignments || {};
+      for (var charName in assignments) {
+        if (assignments.hasOwnProperty(charName)) {
+          var entry = assignments[charName];
+          assign(charName, entry.voice_id, entry.voice_description || '', entry.justification || '');
+        }
+      }
+
+      if (changed) {
+        this._saveRegistry(registry);
+      }
+    },
+
+    /**
+     * Fallback: cast all unassigned speakers using keyword matching.
+     * Used when the LLM casting call fails entirely.
+     * @private
+     */
+    _fallbackCastAll: function (needsNarrator, needsPlayer, newSpeakers, gameState) {
+      var registry = this._loadRegistry();
+      var usedVoiceIds = {};
+      for (var key in registry) {
+        if (registry.hasOwnProperty(key) && registry[key].voice_id) {
+          usedVoiceIds[registry[key].voice_id] = true;
+        }
+      }
+      var changed = false;
+
+      var assignFallback = function (characterKey, description) {
+        if (registry[characterKey] && registry[characterKey].voice_id) return;
+        var bestVoice = SQ.AudioDirector._fallbackMatchVoice(description, usedVoiceIds);
+        if (bestVoice) {
+          registry[characterKey] = {
+            voice_id: bestVoice.voice_id,
+            voice_name: bestVoice.name,
+            description: description,
+            justification: '(FALLBACK: LLM casting failed)'
+          };
+          usedVoiceIds[bestVoice.voice_id] = true;
+          changed = true;
+        }
+      };
+
+      if (needsNarrator) {
+        var nGender = (gameState && gameState.narrator && gameState.narrator.voice_gender) || '';
+        var nDirection = (gameState && gameState.narrator && gameState.narrator.voice_direction) || '';
+        assignFallback('__narrator__', [nGender, nDirection, 'narrator, storytelling, audiobook'].filter(Boolean).join(', '));
+      }
+
+      if (needsPlayer) {
+        var playerName = (gameState && gameState.player && gameState.player.name) || '';
+        var pGender = (gameState && gameState.player && gameState.player.voice_gender) || '';
+        var pDirection = (gameState && gameState.player && gameState.player.voice_direction) || '';
+        var pArchetype = (gameState && gameState.player && gameState.player.archetype) || '';
+        if (playerName) {
+          assignFallback(playerName, [pGender, pDirection, pArchetype, 'protagonist, character'].filter(Boolean).join(', '));
+        }
+      }
+
+      var npcs = (SQ.GameState && SQ.GameState.getNpcRoster) ? SQ.GameState.getNpcRoster() : [];
+      newSpeakers.forEach(function (name) {
+        var desc = 'character voice';
+        for (var i = 0; i < npcs.length; i++) {
+          if (npcs[i].name === name) {
+            var bits = [npcs[i].role, npcs[i].motivation].filter(Boolean);
+            if (bits.length > 0) desc = bits.join(', ');
+            break;
+          }
+        }
+        assignFallback(name, desc);
+      });
+
+      if (changed) {
+        this._saveRegistry(registry);
+      }
+    },
+
+    /**
+     * Split a passage into quoted spans and unquoted text using a state machine.
+     * Handles: "...", '...', \u201c...\u201d, \u2018...\u2019
+     * Returns array of {type: 'unquoted'|'quoted', text, start, end} in passage order.
+     * @private
+     */
+    _splitQuotedSpans: function (passage) {
+      var chunks = [];
+      var i = 0;
+      var len = passage.length;
+      var unquotedStart = 0;
+
+      while (i < len) {
+        var ch = passage[i];
+        var openQuote = null;
+        var closeQuote = null;
+
+        // Detect opening quotes
+        if (ch === '"' || ch === '\u201c') {
+          // Double quote (straight or smart left)
+          openQuote = ch;
+          closeQuote = (ch === '\u201c') ? '\u201d' : '"';
+        } else if (ch === '\u2018') {
+          // Smart single left quote — unambiguous
+          openQuote = ch;
+          closeQuote = '\u2019';
+        } else if (ch === "'") {
+          // Straight single quote — only opening if preceded by whitespace/punctuation/start
+          if (i === 0 || /[\s\n\r\(\[\{\u2014\u2013\-,;:!?.]/.test(passage[i - 1])) {
+            openQuote = "'";
+            closeQuote = "'";
+          }
+        }
+
+        if (openQuote) {
+          // Flush unquoted text before this quote
+          if (i > unquotedStart) {
+            var utext = passage.substring(unquotedStart, i);
+            if (utext.trim()) {
+              chunks.push({ type: 'unquoted', text: utext, start: unquotedStart, end: i });
+            }
+          }
+
+          // Find the closing quote
+          var quoteStart = i;
+          i++; // skip opening quote
+          var found = false;
+
+          while (i < len) {
+            if (passage[i] === '\\') {
+              i += 2; // skip escaped char
+              continue;
+            }
+
+            if (closeQuote === '"' && (passage[i] === '"' || passage[i] === '\u201d')) {
+              found = true;
+              i++; // include closing quote
+              break;
+            } else if (closeQuote === '\u201d' && passage[i] === '\u201d') {
+              found = true;
+              i++;
+              break;
+            } else if (closeQuote === '\u2019' && passage[i] === '\u2019') {
+              found = true;
+              i++;
+              break;
+            } else if (closeQuote === "'" && passage[i] === "'") {
+              // Straight single close: only if followed by whitespace/punctuation/end
+              var next = (i + 1 < len) ? passage[i + 1] : ' ';
+              if (/[\s\n\r,;:!?.\)\]\}\u2014\u2013\-]/.test(next) || i + 1 >= len) {
+                found = true;
+                i++;
+                break;
+              }
+            }
+            i++;
+          }
+
+          if (found) {
+            chunks.push({ type: 'quoted', text: passage.substring(quoteStart, i), start: quoteStart, end: i });
+          } else {
+            // Unclosed quote — treat as unquoted, rewind
+            i = quoteStart + 1;
+          }
+          unquotedStart = i;
+        } else {
+          i++;
+        }
+      }
+
+      // Flush remaining unquoted text
+      if (unquotedStart < len) {
+        var remaining = passage.substring(unquotedStart, len);
+        if (remaining.trim()) {
+          chunks.push({ type: 'unquoted', text: remaining, start: unquotedStart, end: len });
+        }
+      }
+
+      return chunks;
+    },
+
+    /**
+     * Merge adjacent segments with the same speaker.
+     * @private
+     */
+    _mergeAdjacentSegments: function (segments) {
+      if (!segments || segments.length <= 1) return segments;
+      var merged = [segments[0]];
+      for (var i = 1; i < segments.length; i++) {
+        var prev = merged[merged.length - 1];
+        if (segments[i].speaker === prev.speaker) {
+          prev.text = (prev.text || '') + '\n\n' + (segments[i].text || '');
+        } else {
+          merged.push(segments[i]);
+        }
+      }
+      return merged;
+    },
+
+    /**
+     * Analyze a passage: regex pre-splits quoted spans, LLM classifies who speaks each.
+     * Unquoted text is always narrator. Quoted spans the LLM omits are also narrator.
+     * @private
+     */
+    _analyzePassage: function (passage, gameState) {
+      var self = this;
+      var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
+
+      // Step 1: Regex pre-split
+      var chunks = this._splitQuotedSpans(passage);
+      var quotedChunks = chunks.filter(function (c) { return c.type === 'quoted'; });
+
+      // If no quoted spans, skip LLM — everything is narrator
+      if (quotedChunks.length === 0) {
+        return Promise.resolve({
+          segments: this._mergeAdjacentSegments(
+            chunks.map(function (c) { return { speaker: 'narrator', text: c.text }; })
+          )
+        });
+      }
+
+      // Step 2: Build LLM classification prompt
+      var registry = this._loadRegistry();
+      var knownNames = Object.keys(registry).filter(function (k) {
+        return k !== '__narrator__';
+      });
+      var npcs = (SQ.GameState && SQ.GameState.getNpcRoster) ? SQ.GameState.getNpcRoster() : [];
+      npcs.forEach(function (npc) {
+        if (npc.name && knownNames.indexOf(npc.name) === -1) {
+          knownNames.push(npc.name);
+        }
+      });
+
+      var p = '';
+      p += 'You identify who speaks each quoted line in a story passage.\n\n';
+      p += 'RULES:\n';
+      p += '- For each numbered quote below, respond with the character name who SPEAKS it aloud.\n';
+      p += '- If a quote is NOT spoken dialogue (signs, thoughts, written text, sound effects, titles), OMIT it from your response.\n';
+      p += '- When the passage says "you say" / "you reply" / "you call out", the speaker is "' + playerName + '".\n';
+
+      if (knownNames.length > 0) {
+        p += '- KNOWN CHARACTERS (use these exact names): ' + knownNames.join(', ') + '\n';
+      }
+      p += '- For unnamed speakers, use short descriptive names like "Gate Guard" or "Bartender".\n\n';
+
+      // Scene context for speaker identification
+      var cur = (gameState && gameState.current) || {};
+      if (cur.location || cur.scene_context) {
+        p += 'SCENE CONTEXT: ';
+        if (cur.location) p += 'Location: ' + cur.location + '. ';
+        if (cur.scene_context) p += cur.scene_context;
+        p += '\n\n';
+      }
+
+      p += 'PASSAGE:\n' + passage + '\n\n';
+
+      p += 'QUOTED SPANS:\n';
+      var spanMap = {}; // index in quotedChunks -> chunk
+      quotedChunks.forEach(function (c, idx) {
+        var num = idx + 1;
+        spanMap[num] = c;
+        // Show a preview (first 80 chars) to keep prompt compact
+        var preview = c.text.length > 80 ? c.text.substring(0, 80) + '...' : c.text;
+        p += '[' + num + '] ' + preview + '\n';
+      });
+
+      p += '\nReturn ONLY valid JSON: {"speakers": {"1": "CharName", "3": "CharName"}}\n';
+      p += 'OMIT any span number that is NOT spoken dialogue.\n';
+      p += 'If NO spans are spoken dialogue, return: {"speakers": {}}\n';
+
+      return SQ.API.call(SQ.PlayerConfig.getModel('voice_director'), [
+        { role: 'system', content: p },
+        { role: 'user', content: 'Identify who speaks each quoted span.' }
+      ], {
+        temperature: 0.1,
+        max_tokens: 1000,
+        source: 'voice_director'
+      }).then(function (response) {
+        try {
+          var result = SQ.API.parseJSON(response);
+          var speakers = (result && result.speakers) ? result.speakers : {};
+
+          // Step 3: Build segments from chunks + LLM speaker assignments
+          var segments = [];
+          chunks.forEach(function (chunk) {
+            if (chunk.type === 'unquoted') {
+              segments.push({ speaker: 'narrator', text: chunk.text });
+            } else {
+              // Find this chunk's span number
+              var spanNum = null;
+              for (var key in spanMap) {
+                if (spanMap[key] === chunk) { spanNum = key; break; }
+              }
+              var assignedSpeaker = spanNum ? speakers[String(spanNum)] : null;
+              if (assignedSpeaker) {
+                segments.push({ speaker: assignedSpeaker, text: chunk.text });
+              } else {
+                // Not dialogue or LLM didn't assign — narrator reads it
+                segments.push({ speaker: 'narrator', text: chunk.text });
+              }
+            }
+          });
+
+          // Merge adjacent same-speaker segments
+          segments = self._mergeAdjacentSegments(segments);
+
+          return { segments: segments };
+        } catch (e) {
+          SQ.Logger.warn('Audio', 'Failed to parse speaker classification', { error: e.message });
+          return { segments: [{ speaker: 'narrator', text: passage }] };
+        }
+      }).catch(function (err) {
+        if (err.name === 'AbortError') throw err;
+        SQ.Logger.warn('Audio', 'Speaker classification failed', { error: err.message || String(err) });
+        // Fallback: use regex split with all quotes as narrator
+        var segments = self._mergeAdjacentSegments(
+          chunks.map(function (c) { return { speaker: 'narrator', text: c.text }; })
+        );
+        return { segments: segments };
       });
     },
 
@@ -576,63 +892,6 @@
      */
     _saveRegistry: function (registry) {
       localStorage.setItem(VOICE_REGISTRY_KEY, JSON.stringify(registry));
-    },
-
-    /**
-     * Fuzzy-match a speaker name against registry keys.
-     * Handles name mismatches between parallel segmentation/casting calls
-     * (e.g. "Gate Guard" vs "Guard").
-     * @private
-     */
-    _fuzzyRegistryLookup: function (registry, speaker) {
-      var speakerLower = speaker.toLowerCase();
-      var keys = Object.keys(registry).filter(function (k) {
-        return k !== '__narrator__';
-      });
-
-      // 1. Case-insensitive exact match
-      for (var i = 0; i < keys.length; i++) {
-        if (keys[i].toLowerCase() === speakerLower) {
-          SQ.Logger.info('Audio', 'Fuzzy match (case)', { speaker: speaker, matched: keys[i] });
-          return registry[keys[i]];
-        }
-      }
-
-      // 2. Substring containment (only if exactly 1 match to avoid ambiguity)
-      var substringMatches = [];
-      for (var j = 0; j < keys.length; j++) {
-        var keyLower = keys[j].toLowerCase();
-        if (speakerLower.indexOf(keyLower) !== -1 || keyLower.indexOf(speakerLower) !== -1) {
-          substringMatches.push(keys[j]);
-        }
-      }
-      if (substringMatches.length === 1) {
-        SQ.Logger.info('Audio', 'Fuzzy match (substring)', { speaker: speaker, matched: substringMatches[0] });
-        return registry[substringMatches[0]];
-      }
-
-      // 3. Word overlap scoring (e.g. "Gate Guard" vs "Guard" = 1/2 = 0.5)
-      var speakerWords = speakerLower.split(/\s+/);
-      var bestKey = null;
-      var bestScore = 0;
-      for (var k = 0; k < keys.length; k++) {
-        var keyWords = keys[k].toLowerCase().split(/\s+/);
-        var overlap = 0;
-        for (var w = 0; w < speakerWords.length; w++) {
-          if (keyWords.indexOf(speakerWords[w]) !== -1) overlap++;
-        }
-        var score = overlap / Math.max(speakerWords.length, keyWords.length);
-        if (score > bestScore && score >= 0.5) {
-          bestScore = score;
-          bestKey = keys[k];
-        }
-      }
-      if (bestKey) {
-        SQ.Logger.info('Audio', 'Fuzzy match (word overlap)', { speaker: speaker, matched: bestKey });
-        return registry[bestKey];
-      }
-
-      return null;
     },
 
     /**
@@ -795,14 +1054,16 @@
      * @returns {Promise<string>} Blob URL for audio playback
      * @private
      */
-    _generateSegmentAudio: function (text, voiceId, settings) {
+    _generateSegmentAudio: function (text, voiceId, settings, previousText, nextText) {
       var apiKey = SQ.PlayerConfig.getElevenLabsApiKey();
       if (!apiKey || !voiceId) return Promise.reject(new Error('Missing API key or voice'));
 
       settings = settings || {};
+      var ttsMode = SQ.PlayerConfig.getTtsMode();
+      var ttsModel = (ttsMode === 'turbo') ? 'eleven_turbo_v2_5' : 'eleven_flash_v2_5';
       var body = {
         text: text,
-        model_id: 'eleven_flash_v2_5',
+        model_id: ttsModel,
         voice_settings: {
           stability: settings.stability || 0.5,
           similarity_boost: settings.similarity_boost || 0.75,
@@ -810,6 +1071,10 @@
           use_speaker_boost: false
         }
       };
+
+      // Add context params for prosody continuity (free — not billed)
+      if (previousText) body.previous_text = previousText;
+      if (nextText) body.next_text = nextText;
 
       var controller = _abortController;
       var timeoutId = setTimeout(function () {
@@ -838,11 +1103,8 @@
         })
         .then(function (buffer) {
           var ttsDurationMs = Date.now() - ttsStartTime;
-          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount) : null;
-          SQ.Logger.info('API', 'ElevenLabs TTS', { model: 'eleven_flash_v2_5', source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
-          if (SQ.APIToast) {
-            SQ.APIToast.show({ source: 'elevenlabs_tts', model: 'eleven_flash_v2_5', durationMs: ttsDurationMs, cost: ttsCost });
-          }
+          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount, ttsModel) : null;
+          SQ.Logger.info('API', 'ElevenLabs TTS', { model: ttsModel, source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
@@ -860,80 +1122,415 @@
     },
 
     /**
-     * Generate audio for all segments in the audio script.
-     * Assigns voices, then generates TTS for each segment sequentially
-     * (to avoid hammering the API and to respect rate limits).
+     * Resolve voice ID and settings for a segment.
      * @private
      */
-    _generateAllSegments: function (segments, gameState) {
+    _resolveSegmentVoice: function (seg, registry, narratorVoiceId) {
+      var speaker = seg.speaker || 'narrator';
+      var voiceId;
+      var voiceSettings = {};
+
+      if (speaker === 'narrator') {
+        voiceId = narratorVoiceId;
+        voiceSettings.stability = 0.75;
+        voiceSettings.similarity_boost = 0.75;
+        voiceSettings.style = 0.05;
+      } else {
+        var entry = registry[speaker];
+        // Try case-insensitive match if exact fails
+        if (!entry) {
+          var speakerLower = speaker.toLowerCase();
+          var keys = Object.keys(registry);
+          for (var k = 0; k < keys.length; k++) {
+            if (keys[k].toLowerCase() === speakerLower && keys[k] !== '__narrator__') {
+              entry = registry[keys[k]];
+              break;
+            }
+          }
+        }
+        voiceId = entry ? entry.voice_id : null;
+        voiceSettings.stability = 0.30;
+        voiceSettings.similarity_boost = 0.75;
+        voiceSettings.style = 0.6;
+      }
+
+      // SAFETY NET: never silently skip — fall back to narrator voice
+      if (!voiceId && narratorVoiceId) {
+        SQ.Logger.warn('Audio', 'No voice for speaker, falling back to narrator', { speaker: speaker });
+        voiceId = narratorVoiceId;
+        voiceSettings.stability = 0.75;
+        voiceSettings.similarity_boost = 0.75;
+        voiceSettings.style = 0.05;
+      }
+
+      return { voiceId: voiceId, voiceSettings: voiceSettings, speaker: speaker };
+    },
+
+    /**
+     * Map each segment to a paragraph number in the original passage.
+     * Paragraph boundaries are detected by \n\n in the passage between segments.
+     * @private
+     */
+    _mapSegmentParagraphs: function (segments, passage) {
+      var paraNums = [];
+      var cursor = 0;
+      var paraCounter = 0;
+
+      for (var i = 0; i < segments.length; i++) {
+        var text = (segments[i].text || '').trim();
+        if (!text) { paraNums.push(paraCounter); continue; }
+
+        var idx = passage.indexOf(text, cursor);
+        if (idx === -1 && text.length > 40) {
+          idx = passage.indexOf(text.substring(0, 40), cursor);
+        }
+
+        if (idx !== -1) {
+          var between = passage.substring(cursor, idx);
+          if (between.indexOf('\n\n') !== -1) paraCounter++;
+          cursor = idx + text.length;
+        }
+        paraNums.push(paraCounter);
+      }
+      return paraNums;
+    },
+
+    /**
+     * Build previous_text and next_text context for a Flash mode TTS call.
+     *
+     * Standard mode (injection OFF): only the current speaker's most recent
+     * prior/next line is included, within the same paragraph.
+     *
+     * Injection mode (injection ON): also includes the immediately adjacent
+     * narrator beat (for character calls) or character line (for narrator calls),
+     * within the same paragraph.
+     *
+     * Context stops at paragraph breaks (\n\n in the original passage).
+     * Quotes are preserved. NEVER includes lines from a different character.
+     *
+     * @param {Array} segments - Full segment array
+     * @param {number} index - Current segment index
+     * @param {boolean} injectionEnabled - Whether to include cross-voice context
+     * @param {Array} paraNums - Paragraph number for each segment (from _mapSegmentParagraphs)
+     * @returns {{previousText: string, nextText: string}}
+     * @private
+     */
+    _buildSegmentContext: function (segments, index, injectionEnabled, paraNums) {
+      var currentSpeaker = segments[index].speaker || 'narrator';
+      var isNarrator = (currentSpeaker === 'narrator');
+      var currentPara = paraNums ? paraNums[index] : -1;
+
+      // Build previous_text: walk backward, collect at most 2 relevant segments in same paragraph
+      var prevParts = [];
+      for (var i = index - 1; i >= 0 && prevParts.length < 2; i--) {
+        // Stop at paragraph break
+        if (paraNums && paraNums[i] !== currentPara) break;
+
+        var pSpeaker = segments[i].speaker || 'narrator';
+        var pText = (segments[i].text || '').trim();
+        if (!pText) continue;
+
+        // Different character (not narrator) — always stop
+        if (pSpeaker !== currentSpeaker && pSpeaker !== 'narrator' && !isNarrator) break;
+        if (pSpeaker !== currentSpeaker && pSpeaker !== 'narrator' && isNarrator && !injectionEnabled) break;
+
+        if (pSpeaker === currentSpeaker) {
+          // Same speaker: always include
+          prevParts.unshift(pText);
+        } else if (injectionEnabled) {
+          // Injection on: include cross-voice context
+          prevParts.unshift(pText);
+        }
+        // Injection off + different speaker: skip (don't break), keep looking for same speaker
+      }
+
+      // Build next_text: walk forward, collect at most 2 relevant segments in same paragraph
+      var nextParts = [];
+      for (var j = index + 1; j < segments.length && nextParts.length < 2; j++) {
+        // Stop at paragraph break
+        if (paraNums && paraNums[j] !== currentPara) break;
+
+        var nSpeaker = segments[j].speaker || 'narrator';
+        var nText = (segments[j].text || '').trim();
+        if (!nText) continue;
+
+        // Different character (not narrator) — always stop
+        if (nSpeaker !== currentSpeaker && nSpeaker !== 'narrator' && !isNarrator) break;
+        if (nSpeaker !== currentSpeaker && nSpeaker !== 'narrator' && isNarrator && !injectionEnabled) break;
+
+        if (nSpeaker === currentSpeaker) {
+          // Same speaker: always include
+          nextParts.push(nText);
+        } else if (injectionEnabled) {
+          // Injection on: include cross-voice context
+          nextParts.push(nText);
+        }
+        // Injection off + different speaker: skip (don't break), keep looking for same speaker
+      }
+
+      return {
+        previousText: prevParts.join('\n'),
+        nextText: nextParts.join('\n')
+      };
+    },
+
+    /**
+     * Generate audio using ElevenLabs Text to Dialogue API (eleven_v3).
+     * Sends all segments in one call with multiple voices, returns single audio blob.
+     * @private
+     */
+    _generateDialogueAudio: function (segments) {
+      var self = this;
+      var apiKey = SQ.PlayerConfig.getElevenLabsApiKey();
+      if (!apiKey) return Promise.reject(new Error('No ElevenLabs API key'));
+
+      var registry = this._loadRegistry();
+      var narratorEntry = registry['__narrator__'];
+      var narratorVoiceId = narratorEntry ? narratorEntry.voice_id : null;
+
+      if (!narratorVoiceId) {
+        SQ.Logger.warn('Audio', 'No narrator voice assigned');
+        return Promise.resolve(false);
+      }
+
+      // Build inputs array for the dialogue API
+      var inputs = [];
+      var totalChars = 0;
+      segments.forEach(function (seg) {
+        var text = (seg.text || '').trim();
+        if (!text) return;
+
+        // Strip quotation marks for TTS
+        var ttsText = text.replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
+        if (!ttsText) return;
+
+        // Resolve voice ID
+        var voiceId;
+        var speaker = seg.speaker || 'narrator';
+        if (speaker === 'narrator') {
+          voiceId = narratorVoiceId;
+        } else {
+          var entry = registry[speaker];
+          if (!entry) {
+            var speakerLower = speaker.toLowerCase();
+            var keys = Object.keys(registry);
+            for (var k = 0; k < keys.length; k++) {
+              if (keys[k].toLowerCase() === speakerLower && keys[k] !== '__narrator__') {
+                entry = registry[keys[k]];
+                break;
+              }
+            }
+          }
+          voiceId = entry ? entry.voice_id : narratorVoiceId;
+        }
+
+        inputs.push({ text: ttsText, voice_id: voiceId });
+        totalChars += ttsText.length;
+      });
+
+      if (inputs.length === 0) return Promise.resolve(false);
+
+      var body = {
+        inputs: inputs,
+        model_id: 'eleven_v3',
+        output_format: 'mp3_44100_128'
+      };
+
+      var controller = _abortController;
+      var DIALOGUE_TIMEOUT_MS = 60000;
+      var timeoutId = setTimeout(function () {
+        if (controller) controller.abort();
+      }, DIALOGUE_TIMEOUT_MS);
+      var ttsStartTime = Date.now();
+
+      return fetch(ELEVENLABS_BASE + '/text-to-dialogue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey
+        },
+        body: JSON.stringify(body),
+        signal: controller ? controller.signal : undefined
+      })
+        .then(function (response) {
+          clearTimeout(timeoutId);
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error('ElevenLabs Dialogue failed: HTTP ' + response.status + ' - ' + text.slice(0, 200));
+            });
+          }
+          return response.arrayBuffer();
+        })
+        .then(function (buffer) {
+          var ttsDurationMs = Date.now() - ttsStartTime;
+          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalChars, 'eleven_v3') : null;
+          SQ.Logger.info('API', 'ElevenLabs Dialogue', { model: 'eleven_v3', source: 'elevenlabs_dialogue', charCount: totalChars, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
+          if (SQ.APIToast) {
+            SQ.APIToast.show({ source: 'elevenlabs_dialogue', model: 'eleven_v3', durationMs: ttsDurationMs, cost: ttsCost });
+          }
+          if (buffer.byteLength === 0) {
+            throw new Error('ElevenLabs Dialogue returned empty audio');
+          }
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester.trackVoiceUsage(totalChars);
+          }
+
+          var blob = new Blob([buffer], { type: 'audio/mpeg' });
+          _dialogueAudioUrl = URL.createObjectURL(blob);
+          _dialogueAudio = new Audio(_dialogueAudioUrl);
+          _dialogueAudio.playbackRate = SQ.PlayerConfig.getPlaybackSpeed();
+
+          _dialogueAudio.addEventListener('ended', function () {
+            _isPlaying = false;
+            _isPaused = false;
+            self._updateControls();
+          });
+
+          // Start playback
+          self.showControls();
+          self._setGeneratingState(false);
+          _isPlaying = true;
+          self._updateControls();
+
+          _dialogueAudio.play().catch(function (err) {
+            SQ.Logger.warn('Audio', 'Autoplay blocked', { error: err.message });
+            _isPlaying = false;
+            self._updateControls();
+          });
+
+          return true;
+        })
+        .catch(function (err) {
+          clearTimeout(timeoutId);
+          throw err;
+        });
+    },
+
+    /**
+     * Generate audio for all segments with progressive playback (Flash mode).
+     * Starts playing segment 0 as soon as its TTS completes, generates
+     * remaining segments in the background while earlier ones play.
+     * @private
+     */
+    _generateAllSegments: function (segments, gameState, passage) {
       var self = this;
       _segments = [];
+      _generationComplete = false;
+      _segmentReadyResolvers = {};
+      _totalExpectedSegments = segments.length;
 
-      // Voice assignments are already applied to the registry by
-      // _validateAndApplyVoiceAssignments() during passage analysis.
       var registry = this._loadRegistry();
+      var narratorEntry = registry['__narrator__'];
+      var narratorVoiceId = narratorEntry ? narratorEntry.voice_id : null;
+      var paraNums = passage ? this._mapSegmentParagraphs(segments, passage) : null;
 
-      // Generate segments sequentially to respect rate limits
+      var playbackStarted = false;
+      var totalTtsChars = 0;
+      var ttsGenerationStart = Date.now();
+
+      // Helper: notify waiting playback that a segment is ready
+      var notifySegmentReady = function (index) {
+        if (_segmentReadyResolvers[index]) {
+          _segmentReadyResolvers[index]();
+          delete _segmentReadyResolvers[index];
+        }
+      };
+
+      // Generate segments sequentially, but start playback after first segment
       var chain = Promise.resolve();
       segments.forEach(function (seg, i) {
         chain = chain.then(function () {
-          // Check if aborted
           if (_abortController && _abortController.signal.aborted) {
             throw new DOMException('Aborted', 'AbortError');
           }
 
-          var voiceId;
-          var speaker;
-          var voiceSettings = {};
-
-          if (seg.type === 'dialogue' && seg.speaker) {
-            speaker = seg.speaker;
-            var entry = registry[seg.speaker] || self._fuzzyRegistryLookup(registry, seg.speaker);
-            voiceId = entry ? entry.voice_id : null;
-            // Dialogue: expressive character performance
-            voiceSettings.stability = 0.30;
-            voiceSettings.similarity_boost = 0.75;
-            voiceSettings.style = 0.6;
-          } else {
-            speaker = 'Narrator';
-            var narratorEntry = registry['__narrator__'];
-            voiceId = narratorEntry ? narratorEntry.voice_id : null;
-            // Narrator gets smooth, stable delivery
-            voiceSettings.stability = 0.75;
-            voiceSettings.similarity_boost = 0.75;
-            voiceSettings.style = 0.05;
-          }
-
-          if (!voiceId) {
-            SQ.Logger.warn('Audio', 'No voice assigned', { speaker: speaker });
+          var resolved = self._resolveSegmentVoice(seg, registry, narratorVoiceId);
+          if (!resolved.voiceId) {
+            SQ.Logger.warn('Audio', 'No voice available, skipping segment', { speaker: resolved.speaker });
+            // Push a null placeholder so indices stay aligned
+            _segments.push(null);
+            notifySegmentReady(i);
             return;
           }
 
           var text = (seg.text || '').trim();
-          if (!text) return;
+          if (!text) {
+            _segments.push(null);
+            notifySegmentReady(i);
+            return;
+          }
 
-          // Strip leading/trailing quotation marks for TTS (voices speak directly)
+          // Strip quotation marks for TTS
           var ttsText = text.replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
-          if (!ttsText) return;
+          if (!ttsText) {
+            _segments.push(null);
+            notifySegmentReady(i);
+            return;
+          }
 
-          return self._generateSegmentAudio(ttsText, voiceId, voiceSettings)
+          // Build previous_text/next_text context for prosody
+          var context = self._buildSegmentContext(segments, i, SQ.PlayerConfig.isProsodyInjectionEnabled(), paraNums);
+          totalTtsChars += ttsText.length;
+
+          return self._generateSegmentAudio(ttsText, resolved.voiceId, resolved.voiceSettings, context.previousText, context.nextText)
             .then(function (audioUrl) {
-              _segments.push({
+              _segments[i] = {
                 audioUrl: audioUrl,
-                text: text,  // Original text with quotes (for highlighting)
-                speaker: speaker,
+                text: text,
+                speaker: resolved.speaker,
                 index: i
-              });
+              };
+              notifySegmentReady(i);
+
+              // Start playback as soon as segment 0 is ready
+              if (!playbackStarted) {
+                playbackStarted = true;
+                self.showControls();
+                self._setGeneratingState(false);
+                self._playSegment(0);
+              }
             })
             .catch(function (err) {
-              SQ.Logger.warn('Audio', 'Segment failed', { segment: i, error: err.message });
-              // Skip failed segments, continue with the rest
+              SQ.Logger.warn('Audio', 'Segment TTS failed', { segment: i, speaker: resolved.speaker, error: err.message });
+              _segments[i] = null;
+              notifySegmentReady(i);
             });
         });
       });
 
       return chain.then(function () {
-        return _segments.length > 0;
+        _generationComplete = true;
+
+        // Fire combined API toast for all segments
+        var totalDurationMs = Date.now() - ttsGenerationStart;
+        var combinedModel = (SQ.PlayerConfig.getTtsMode() === 'turbo') ? 'eleven_turbo_v2_5' : 'eleven_flash_v2_5';
+        var totalCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalTtsChars, combinedModel) : null;
+        if (SQ.APIToast && totalTtsChars > 0) {
+          SQ.APIToast.show({ source: 'elevenlabs_tts', model: combinedModel, durationMs: totalDurationMs, cost: totalCost, charCount: totalTtsChars });
+        }
+
+        // Notify any waiting playback that generation is done
+        for (var idx in _segmentReadyResolvers) {
+          if (_segmentReadyResolvers.hasOwnProperty(idx)) {
+            _segmentReadyResolvers[idx]();
+          }
+        }
+        _segmentReadyResolvers = {};
+        return _segments.some(function (s) { return s !== null; });
+      });
+    },
+
+    /**
+     * Wait for a segment to become available (for progressive playback).
+     * Resolves immediately if the segment already exists or generation is complete.
+     * @private
+     */
+    _waitForSegment: function (index) {
+      if (_segments[index] !== undefined || _generationComplete) {
+        return Promise.resolve();
+      }
+      return new Promise(function (resolve) {
+        _segmentReadyResolvers[index] = resolve;
       });
     },
 
@@ -942,12 +1539,33 @@
     // ========================================================
 
     /**
+     * Find the next playable segment index (skipping null/failed segments).
+     * @private
+     */
+    _nextPlayableIndex: function (fromIndex) {
+      for (var i = fromIndex; i < _totalExpectedSegments; i++) {
+        if (_segments[i] && _segments[i].audioUrl) return i;
+        // If segment doesn't exist yet and generation isn't complete, return it
+        // (caller will wait for it)
+        if (_segments[i] === undefined && !_generationComplete) return i;
+      }
+      return -1; // no more segments
+    },
+
+    /**
      * Play a specific segment by index.
-     * When it finishes, automatically advances to the next segment.
+     * Supports progressive playback — waits for the segment if TTS hasn't
+     * finished yet, skips null/failed segments automatically.
      * @private
      */
     _playSegment: function (index) {
-      if (index >= _segments.length) {
+      var self = this;
+
+      // Find next playable segment (skip nulls)
+      var playIndex = this._nextPlayableIndex(index);
+
+      // No more segments to play
+      if (playIndex === -1) {
         _isPlaying = false;
         _isPaused = false;
         _currentIndex = 0;
@@ -955,22 +1573,63 @@
         return;
       }
 
-      var self = this;
-      var seg = _segments[index];
-      _currentIndex = index;
+      _currentIndex = playIndex;
       _isPlaying = true;
       _isPaused = false;
 
+      // If segment isn't ready yet, wait for it (progressive playback)
+      if (!_segments[playIndex] || !_segments[playIndex].audioUrl) {
+        this._updateControls();
+        this._waitForSegment(playIndex).then(function () {
+          // After waiting, the segment may be null (failed) — find next playable
+          if (!_segments[playIndex] || !_segments[playIndex].audioUrl) {
+            self._playSegment(playIndex + 1);
+            return;
+          }
+          self._startSegmentAudio(playIndex);
+        });
+        return;
+      }
+
+      this._startSegmentAudio(playIndex);
+    },
+
+    /**
+     * Actually start audio playback for a ready segment.
+     * @private
+     */
+    _startSegmentAudio: function (index) {
+      var self = this;
+      var seg = _segments[index];
+
+      // Clean up previous segment's audio to prevent overlap
+      _segments.forEach(function (s, si) {
+        if (s && s.audio && si !== index) {
+          s.audio.pause();
+          s.audio.src = '';
+          s.audio = null;
+        }
+      });
+
       var audio = new Audio(seg.audioUrl);
+      audio.playbackRate = SQ.PlayerConfig.getPlaybackSpeed();
       seg.audio = audio;
 
-      // Guard against both 'ended' and 'error' firing and double-advancing
       var advanced = false;
+      var segmentPause = SQ.PlayerConfig.getSegmentPause();
+
+      var advanceToNext = function () {
+        if (segmentPause > 0) {
+          setTimeout(function () { self._playSegment(index + 1); }, segmentPause);
+        } else {
+          self._playSegment(index + 1);
+        }
+      };
 
       audio.addEventListener('ended', function () {
         if (!advanced) {
           advanced = true;
-          self._playSegment(index + 1);
+          advanceToNext();
         }
       });
 
@@ -978,7 +1637,7 @@
         if (!advanced) {
           advanced = true;
           SQ.Logger.warn('Audio', 'Playback error on segment', { segment: index });
-          self._playSegment(index + 1);
+          advanceToNext();
         }
       });
 
@@ -993,9 +1652,15 @@
 
     /**
      * Play audio (starts from current position or beginning).
-     * @param {string} [audioUrl] - Ignored (kept for API compatibility with old AudioGenerator)
      */
-    play: function (audioUrl) {
+    play: function () {
+      if (_dialogueAudio) {
+        _dialogueAudio.play().catch(function () {});
+        _isPlaying = true;
+        _isPaused = false;
+        this._updateControls();
+        return;
+      }
       if (_segments.length === 0) return;
       this._playSegment(_currentIndex);
     },
@@ -1005,9 +1670,13 @@
      */
     pause: function () {
       if (!_isPlaying) return;
-      var seg = _segments[_currentIndex];
-      if (seg && seg.audio) {
-        seg.audio.pause();
+      if (_dialogueAudio) {
+        _dialogueAudio.pause();
+      } else {
+        var seg = _segments[_currentIndex];
+        if (seg && seg.audio) {
+          seg.audio.pause();
+        }
       }
       _isPlaying = false;
       _isPaused = true;
@@ -1019,12 +1688,19 @@
      */
     resume: function () {
       if (!_isPaused) return;
-      var seg = _segments[_currentIndex];
-      if (seg && seg.audio) {
-        seg.audio.play().catch(function () {});
+      if (_dialogueAudio) {
+        _dialogueAudio.play().catch(function () {});
         _isPlaying = true;
         _isPaused = false;
         this._updateControls();
+      } else {
+        var seg = _segments[_currentIndex];
+        if (seg && seg.audio) {
+          seg.audio.play().catch(function () {});
+          _isPlaying = true;
+          _isPaused = false;
+          this._updateControls();
+        }
       }
     },
 
@@ -1047,7 +1723,7 @@
         self.generate(passage, gameState).then(function () {
           self._setGeneratingState(false);
         });
-      } else if (_segments.length > 0) {
+      } else if (_dialogueAudio || _segments.length > 0) {
         this.play();
       }
     },
@@ -1057,9 +1733,17 @@
      */
     replay: function () {
       this._stopCurrentAudio();
-      _currentIndex = 0;
-      if (_segments.length > 0) {
-        this._playSegment(0);
+      if (_dialogueAudio) {
+        _dialogueAudio.currentTime = 0;
+        _dialogueAudio.play().catch(function () {});
+        _isPlaying = true;
+        _isPaused = false;
+        this._updateControls();
+      } else {
+        _currentIndex = 0;
+        if (_segments.length > 0) {
+          this._playSegment(0);
+        }
       }
     },
 
@@ -1072,9 +1756,15 @@
         _abortController = null;
       }
       this._stopCurrentAudio();
-      // Revoke blob URLs to free memory
+      // Clean up dialogue mode
+      if (_dialogueAudioUrl) {
+        try { URL.revokeObjectURL(_dialogueAudioUrl); } catch (e) { /* ignore */ }
+      }
+      _dialogueAudio = null;
+      _dialogueAudioUrl = null;
+      // Clean up flash mode — revoke blob URLs to free memory
       _segments.forEach(function (seg) {
-        if (seg.audioUrl) {
+        if (seg && seg.audioUrl) {
           try { URL.revokeObjectURL(seg.audioUrl); } catch (e) { /* ignore */ }
         }
       });
@@ -1082,6 +1772,14 @@
       _currentIndex = 0;
       _isPlaying = false;
       _isPaused = false;
+      _generationComplete = false;
+      _totalExpectedSegments = 0;
+      for (var idx in _segmentReadyResolvers) {
+        if (_segmentReadyResolvers.hasOwnProperty(idx)) {
+          _segmentReadyResolvers[idx]();
+        }
+      }
+      _segmentReadyResolvers = {};
       this._updateControls();
     },
 
@@ -1090,8 +1788,14 @@
      * @private
      */
     _stopCurrentAudio: function () {
+      // Stop dialogue mode audio
+      if (_dialogueAudio) {
+        _dialogueAudio.pause();
+        _dialogueAudio.src = '';
+      }
+      // Stop flash mode segment audio
       _segments.forEach(function (seg) {
-        if (seg.audio) {
+        if (seg && seg.audio) {
           seg.audio.pause();
           seg.audio.src = '';
           seg.audio = null;
@@ -1177,8 +1881,4 @@
 
   };
 
-  // Backward compatibility: alias AudioGenerator to AudioDirector
-  // so existing code that references SQ.AudioGenerator still works
-  // during the transition.
-  SQ.AudioGenerator = SQ.AudioDirector;
 })();
