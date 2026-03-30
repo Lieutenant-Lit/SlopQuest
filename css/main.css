@@ -475,6 +475,22 @@ textarea {
 }
 
 /* --- Audio Debug Panel --- */
+.range-setting {
+  margin: var(--spacing-xs) 0;
+}
+
+.range-setting .card-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.range-setting input[type="range"] {
+  width: 100%;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
 .audio-debug-panel {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

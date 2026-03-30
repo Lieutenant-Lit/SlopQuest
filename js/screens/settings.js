@@ -250,6 +250,18 @@
         SQ.PlayerConfig.setProsodyInjectionEnabled(this.checked);
       });
 
+      // Playback speed slider
+      document.getElementById('settings-playback-speed').addEventListener('input', function () {
+        document.getElementById('playback-speed-value').textContent = parseFloat(this.value).toFixed(1) + 'x';
+        SQ.PlayerConfig.setPlaybackSpeed(this.value);
+      });
+
+      // Segment pause slider
+      document.getElementById('settings-segment-pause').addEventListener('input', function () {
+        document.getElementById('segment-pause-value').textContent = this.value + 'ms';
+        SQ.PlayerConfig.setSegmentPause(this.value);
+      });
+
       // Audio debug toggle
       document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
@@ -420,6 +432,15 @@
       document.getElementById('settings-tts-mode').value = SQ.PlayerConfig.getTtsMode();
       document.getElementById('settings-prosody-injection').checked =
         SQ.PlayerConfig.isProsodyInjectionEnabled();
+
+      // Set playback speed and segment pause sliders
+      var speed = SQ.PlayerConfig.getPlaybackSpeed();
+      document.getElementById('settings-playback-speed').value = speed;
+      document.getElementById('playback-speed-value').textContent = parseFloat(speed).toFixed(1) + 'x';
+
+      var pause = SQ.PlayerConfig.getSegmentPause();
+      document.getElementById('settings-segment-pause').value = pause;
+      document.getElementById('segment-pause-value').textContent = pause + 'ms';
 
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =

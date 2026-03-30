@@ -26,6 +26,8 @@
     narration_dry_run: false,
     narration_tts_mode: 'flash',
     narration_prosody_injection: false,
+    narration_playback_speed: 1.0,
+    narration_segment_pause: 300,
     api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
@@ -202,6 +204,29 @@
     setProsodyInjectionEnabled: function (enabled) {
       var config = this.load();
       config.narration_prosody_injection = !!enabled;
+      this.save(config);
+    },
+
+    getPlaybackSpeed: function () {
+      var config = this.load();
+      return config.narration_playback_speed || 1.0;
+    },
+
+    setPlaybackSpeed: function (speed) {
+      var config = this.load();
+      config.narration_playback_speed = parseFloat(speed) || 1.0;
+      this.save(config);
+    },
+
+    getSegmentPause: function () {
+      var config = this.load();
+      var val = config.narration_segment_pause;
+      return (val !== undefined && val !== null) ? val : 300;
+    },
+
+    setSegmentPause: function (ms) {
+      var config = this.load();
+      config.narration_segment_pause = parseInt(ms, 10) || 0;
       this.save(config);
     },
 

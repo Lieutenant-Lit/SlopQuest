@@ -222,6 +222,14 @@
           <input type="checkbox" id="settings-prosody-injection">
           <span>Prosody injection (include narrator/character context in Flash TTS calls)</span>
         </label>
+        <div class="range-setting">
+          <label class="card-label">Playback Speed <span id="playback-speed-value">1.0x</span></label>
+          <input type="range" id="settings-playback-speed" min="0.7" max="2.0" step="0.1" value="1.0">
+        </div>
+        <div class="range-setting">
+          <label class="card-label">Pause Between Lines <span id="segment-pause-value">300ms</span></label>
+          <input type="range" id="settings-segment-pause" min="0" max="2000" step="50" value="300">
+        </div>
         <div id="voice-director-model-section" class="hidden">
           <label class="card-label">Voice Director Model</label>
           <select id="voice-director-model-select">

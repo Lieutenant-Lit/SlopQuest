@@ -1370,6 +1370,7 @@
           var blob = new Blob([buffer], { type: 'audio/mpeg' });
           _dialogueAudioUrl = URL.createObjectURL(blob);
           _dialogueAudio = new Audio(_dialogueAudioUrl);
+          _dialogueAudio.playbackRate = SQ.PlayerConfig.getPlaybackSpeed();
 
           _dialogueAudio.addEventListener('ended', function () {
             _isPlaying = false;
@@ -1602,14 +1603,24 @@
       });
 
       var audio = new Audio(seg.audioUrl);
+      audio.playbackRate = SQ.PlayerConfig.getPlaybackSpeed();
       seg.audio = audio;
 
       var advanced = false;
+      var segmentPause = SQ.PlayerConfig.getSegmentPause();
+
+      var advanceToNext = function () {
+        if (segmentPause > 0) {
+          setTimeout(function () { self._playSegment(index + 1); }, segmentPause);
+        } else {
+          self._playSegment(index + 1);
+        }
+      };
 
       audio.addEventListener('ended', function () {
         if (!advanced) {
           advanced = true;
-          self._playSegment(index + 1);
+          advanceToNext();
         }
       });
 
@@ -1617,7 +1628,7 @@
         if (!advanced) {
           advanced = true;
           SQ.Logger.warn('Audio', 'Playback error on segment', { segment: index });
-          self._playSegment(index + 1);
+          advanceToNext();
         }
       });
 
