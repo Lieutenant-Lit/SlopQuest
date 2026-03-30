@@ -1230,15 +1230,18 @@
         var pText = (segments[i].text || '').trim();
         if (!pText) continue;
 
+        // Different character (not narrator) — always stop
+        if (pSpeaker !== currentSpeaker && pSpeaker !== 'narrator' && !isNarrator) break;
+        if (pSpeaker !== currentSpeaker && pSpeaker !== 'narrator' && isNarrator && !injectionEnabled) break;
+
         if (pSpeaker === currentSpeaker) {
+          // Same speaker: always include
           prevParts.unshift(pText);
-        } else if (injectionEnabled && pSpeaker === 'narrator' && !isNarrator) {
+        } else if (injectionEnabled) {
+          // Injection on: include cross-voice context
           prevParts.unshift(pText);
-        } else if (injectionEnabled && pSpeaker !== 'narrator' && isNarrator) {
-          prevParts.unshift(pText);
-        } else {
-          break;
         }
+        // Injection off + different speaker: skip (don't break), keep looking for same speaker
       }
 
       // Build next_text: walk forward, collect at most 2 relevant segments in same paragraph
@@ -1251,15 +1254,18 @@
         var nText = (segments[j].text || '').trim();
         if (!nText) continue;
 
+        // Different character (not narrator) — always stop
+        if (nSpeaker !== currentSpeaker && nSpeaker !== 'narrator' && !isNarrator) break;
+        if (nSpeaker !== currentSpeaker && nSpeaker !== 'narrator' && isNarrator && !injectionEnabled) break;
+
         if (nSpeaker === currentSpeaker) {
+          // Same speaker: always include
           nextParts.push(nText);
-        } else if (injectionEnabled && nSpeaker === 'narrator' && !isNarrator) {
+        } else if (injectionEnabled) {
+          // Injection on: include cross-voice context
           nextParts.push(nText);
-        } else if (injectionEnabled && nSpeaker !== 'narrator' && isNarrator) {
-          nextParts.push(nText);
-        } else {
-          break;
         }
+        // Injection off + different speaker: skip (don't break), keep looking for same speaker
       }
 
       return {
