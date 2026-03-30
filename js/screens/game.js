@@ -1562,6 +1562,30 @@
           }
           row.appendChild(textEl);
 
+          // Render TTS call preview if available
+          if (detail.ttsPreview && detail.ttsPreview[i]) {
+            var preview = detail.ttsPreview[i];
+
+            var voiceLine = document.createElement('div');
+            voiceLine.className = 'audio-debug-voice-desc';
+            voiceLine.textContent = 'Voice: ' + preview.voiceName + ' | Mode: ' + preview.mode;
+            row.appendChild(voiceLine);
+
+            if (preview.previousText) {
+              var prevLine = document.createElement('div');
+              prevLine.className = 'audio-debug-voice-desc';
+              prevLine.textContent = 'previous_text: ' + preview.previousText;
+              row.appendChild(prevLine);
+            }
+
+            if (preview.nextText) {
+              var nextLine = document.createElement('div');
+              nextLine.className = 'audio-debug-voice-desc';
+              nextLine.textContent = 'next_text: ' + preview.nextText;
+              row.appendChild(nextLine);
+            }
+          }
+
           segEl.appendChild(row);
         });
       }

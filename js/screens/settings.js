@@ -245,6 +245,11 @@
         SQ.PlayerConfig.setTtsMode(this.value);
       });
 
+      // Prosody injection toggle
+      document.getElementById('settings-prosody-injection').addEventListener('change', function () {
+        SQ.PlayerConfig.setProsodyInjectionEnabled(this.checked);
+      });
+
       // Audio debug toggle
       document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
@@ -411,8 +416,10 @@
       document.getElementById('settings-narration-dry-run').checked =
         SQ.PlayerConfig.isNarrationDryRunEnabled();
 
-      // Set TTS mode selector
+      // Set TTS mode selector and prosody injection toggle
       document.getElementById('settings-tts-mode').value = SQ.PlayerConfig.getTtsMode();
+      document.getElementById('settings-prosody-injection').checked =
+        SQ.PlayerConfig.isProsodyInjectionEnabled();
 
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =

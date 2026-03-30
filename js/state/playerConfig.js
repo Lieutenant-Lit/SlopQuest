@@ -25,6 +25,7 @@
     disable_default_voices: false,
     narration_dry_run: false,
     narration_tts_mode: 'flash',
+    narration_prosody_injection: false,
     api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
@@ -190,6 +191,17 @@
     setTtsMode: function (mode) {
       var config = this.load();
       config.narration_tts_mode = mode;
+      this.save(config);
+    },
+
+    isProsodyInjectionEnabled: function () {
+      var config = this.load();
+      return config.narration_prosody_injection === true;
+    },
+
+    setProsodyInjectionEnabled: function (enabled) {
+      var config = this.load();
+      config.narration_prosody_injection = !!enabled;
       this.save(config);
     },
 

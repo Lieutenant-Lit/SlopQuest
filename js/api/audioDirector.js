@@ -99,13 +99,37 @@
 
           // Dry run mode: skip TTS, fire debug event immediately
           if (SQ.PlayerConfig.isNarrationDryRunEnabled()) {
+            var dryRunRegistry = self._loadRegistry();
+            var dryRunNarratorEntry = dryRunRegistry['__narrator__'];
+            var dryRunNarratorVoiceId = dryRunNarratorEntry ? dryRunNarratorEntry.voice_id : null;
+            var ttsMode = SQ.PlayerConfig.getTtsMode();
+            var injectionOn = SQ.PlayerConfig.isProsodyInjectionEnabled();
+
+            // Build TTS preview for each segment
+            var ttsPreview = segments.map(function (seg, i) {
+              var resolved = self._resolveSegmentVoice(seg, dryRunRegistry, dryRunNarratorVoiceId);
+              var voiceEntry = dryRunRegistry[resolved.speaker === 'narrator' ? '__narrator__' : resolved.speaker] || {};
+              var preview = {
+                voiceName: voiceEntry.voice_name || resolved.speaker,
+                voiceId: resolved.voiceId || '(none)',
+                mode: ttsMode
+              };
+              if (ttsMode === 'flash') {
+                var context = self._buildSegmentContext(segments, i, injectionOn);
+                preview.previousText = context.previousText || '';
+                preview.nextText = context.nextText || '';
+              }
+              return preview;
+            });
+
             _lastAnalysis = {
               segments: _lastAnalysisSegments,
               ttsSegments: (_lastAnalysisSegments || []).map(function (s, i) {
                 return { text: s.text, speaker: s.speaker === 'narrator' ? 'Narrator' : s.speaker, index: i };
               }),
-              registry: self._loadRegistry(),
+              registry: dryRunRegistry,
               availableVoices: _availableVoices || [],
+              ttsPreview: ttsPreview,
               dryRun: true
             };
             document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
@@ -1004,7 +1028,7 @@
      * @returns {Promise<string>} Blob URL for audio playback
      * @private
      */
-    _generateSegmentAudio: function (text, voiceId, settings) {
+    _generateSegmentAudio: function (text, voiceId, settings, previousText, nextText) {
       var apiKey = SQ.PlayerConfig.getElevenLabsApiKey();
       if (!apiKey || !voiceId) return Promise.reject(new Error('Missing API key or voice'));
 
@@ -1019,6 +1043,10 @@
           use_speaker_boost: false
         }
       };
+
+      // Add context params for prosody continuity (free — not billed)
+      if (previousText) body.previous_text = previousText;
+      if (nextText) body.next_text = nextText;
 
       var controller = _abortController;
       var timeoutId = setTimeout(function () {
@@ -1111,6 +1139,108 @@
       }
 
       return { voiceId: voiceId, voiceSettings: voiceSettings, speaker: speaker };
+    },
+
+    /**
+     * Strip quotation marks from text for TTS context.
+     * @private
+     */
+    _stripQuotes: function (text) {
+      return (text || '').replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
+    },
+
+    /**
+     * Build previous_text and next_text context for a Flash mode TTS call.
+     * Always includes same-voice segments. With injection enabled, also includes
+     * narrator beats (for character calls) and character dialogue (for narrator calls).
+     * NEVER includes lines from a different character.
+     * @param {Array} segments - Full segment array
+     * @param {number} index - Current segment index
+     * @param {boolean} injectionEnabled - Whether to include cross-voice context
+     * @returns {{previousText: string, nextText: string}}
+     * @private
+     */
+    _buildSegmentContext: function (segments, index, injectionEnabled) {
+      var currentSpeaker = segments[index].speaker || 'narrator';
+      var isNarrator = (currentSpeaker === 'narrator');
+      var MAX_CONTEXT = 300;
+      var self = this;
+
+      // Determine if a segment should be included as context
+      var shouldInclude = function (seg) {
+        var speaker = seg.speaker || 'narrator';
+        // Same speaker: always include
+        if (speaker === currentSpeaker) return true;
+        // Injection disabled: only same speaker
+        if (!injectionEnabled) return false;
+        // Injection enabled for character: include narrator segments
+        if (!isNarrator && speaker === 'narrator') return true;
+        // Injection enabled for narrator: include any character adjacent
+        if (isNarrator && speaker !== 'narrator') return true;
+        return false;
+      };
+
+      // Determine if we should stop walking (hit a different character)
+      var shouldStop = function (seg) {
+        var speaker = seg.speaker || 'narrator';
+        if (speaker === currentSpeaker) return false;
+        if (speaker === 'narrator') return false;
+        // For narrator: stop at second different character
+        // For character: stop at any different character
+        if (!isNarrator && speaker !== 'narrator' && speaker !== currentSpeaker) return true;
+        return false;
+      };
+
+      // Build previous_text: walk backward
+      var prevParts = [];
+      var prevLen = 0;
+      for (var i = index - 1; i >= 0; i--) {
+        if (shouldStop(segments[i])) break;
+        if (!shouldInclude(segments[i])) continue;
+        var pText = self._stripQuotes(segments[i].text);
+        if (!pText) continue;
+        if (prevLen + pText.length > MAX_CONTEXT) {
+          var remaining = MAX_CONTEXT - prevLen;
+          if (remaining > 20) {
+            prevParts.unshift(pText.substring(pText.length - remaining));
+          }
+          break;
+        }
+        prevParts.unshift(pText);
+        prevLen += pText.length;
+      }
+
+      // Build next_text: walk forward
+      var nextParts = [];
+      var nextLen = 0;
+      // Track if we've seen a different character (for narrator stop logic)
+      var seenDifferentChar = null;
+      for (var j = index + 1; j < segments.length; j++) {
+        var fSpeaker = segments[j].speaker || 'narrator';
+        // For narrator with injection: stop at second different character
+        if (isNarrator && injectionEnabled && fSpeaker !== 'narrator' && fSpeaker !== currentSpeaker) {
+          if (seenDifferentChar && seenDifferentChar !== fSpeaker) break;
+          seenDifferentChar = fSpeaker;
+        }
+        if (shouldStop(segments[j])) break;
+        if (!shouldInclude(segments[j])) continue;
+        var nText = self._stripQuotes(segments[j].text);
+        if (!nText) continue;
+        if (nextLen + nText.length > MAX_CONTEXT) {
+          var rem = MAX_CONTEXT - nextLen;
+          if (rem > 20) {
+            nextParts.push(nText.substring(0, rem));
+          }
+          break;
+        }
+        nextParts.push(nText);
+        nextLen += nText.length;
+      }
+
+      return {
+        previousText: prevParts.join(' '),
+        nextText: nextParts.join(' ')
+      };
     },
 
     /**
@@ -1303,7 +1433,10 @@
             return;
           }
 
-          return self._generateSegmentAudio(ttsText, resolved.voiceId, resolved.voiceSettings)
+          // Build previous_text/next_text context for prosody
+          var context = self._buildSegmentContext(segments, i, SQ.PlayerConfig.isProsodyInjectionEnabled());
+
+          return self._generateSegmentAudio(ttsText, resolved.voiceId, resolved.voiceSettings, context.previousText, context.nextText)
             .then(function (audioUrl) {
               _segments[i] = {
                 audioUrl: audioUrl,
