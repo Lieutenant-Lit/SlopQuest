@@ -24,6 +24,7 @@
     game_state_debug_enabled: false,
     disable_default_voices: false,
     narration_dry_run: false,
+    narration_tts_mode: 'flash',
     api_notifications_enabled: false,
     logging_enabled: false,
     playtester_enabled: false,
@@ -178,6 +179,17 @@
     setNarrationDryRunEnabled: function (enabled) {
       var config = this.load();
       config.narration_dry_run = !!enabled;
+      this.save(config);
+    },
+
+    getTtsMode: function () {
+      var config = this.load();
+      return config.narration_tts_mode || 'flash';
+    },
+
+    setTtsMode: function (mode) {
+      var config = this.load();
+      config.narration_tts_mode = mode;
       this.save(config);
     },
 

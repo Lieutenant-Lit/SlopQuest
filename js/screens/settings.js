@@ -240,6 +240,11 @@
         SQ.PlayerConfig.setNarrationDryRunEnabled(this.checked);
       });
 
+      // TTS mode selection
+      document.getElementById('settings-tts-mode').addEventListener('change', function () {
+        SQ.PlayerConfig.setTtsMode(this.value);
+      });
+
       // Audio debug toggle
       document.getElementById('settings-audio-debug-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setAudioDebugEnabled(this.checked);
@@ -405,6 +410,9 @@
       // Set narration dry run toggle state
       document.getElementById('settings-narration-dry-run').checked =
         SQ.PlayerConfig.isNarrationDryRunEnabled();
+
+      // Set TTS mode selector
+      document.getElementById('settings-tts-mode').value = SQ.PlayerConfig.getTtsMode();
 
       // Set audio debug toggle state
       document.getElementById('settings-audio-debug-toggle').checked =

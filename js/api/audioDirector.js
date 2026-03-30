@@ -24,10 +24,14 @@
   var _isPlaying = false;
   var _isPaused = false;
 
-  /** Progressive generation state. */
+  /** Progressive generation state (Flash mode). */
   var _generationComplete = false;
   var _totalExpectedSegments = 0;
   var _segmentReadyResolvers = {};  // index -> resolve callback for _waitForSegment
+
+  /** Dialogue mode state (single audio element). */
+  var _dialogueAudio = null;
+  var _dialogueAudioUrl = null;
 
   /** Abort controller for in-flight generation. */
   var _abortController = null;
@@ -112,7 +116,10 @@
             return true;
           }
 
-          // Step 3: Generate TTS for all segments
+          // Step 3: Generate TTS
+          if (SQ.PlayerConfig.getTtsMode() === 'dialogue') {
+            return self._generateDialogueAudio(segments);
+          }
           return self._generateAllSegments(segments, gameState);
         })
         .then(function (success) {
@@ -159,7 +166,7 @@
     },
 
     hasPendingOrActive: function () {
-      return !!_pendingPassage || _segments.length > 0;
+      return !!_pendingPassage || _segments.length > 0 || !!_dialogueAudio;
     },
 
     // ========================================================
@@ -1107,7 +1114,138 @@
     },
 
     /**
-     * Generate audio for all segments with progressive playback.
+     * Generate audio using ElevenLabs Text to Dialogue API (eleven_v3).
+     * Sends all segments in one call with multiple voices, returns single audio blob.
+     * @private
+     */
+    _generateDialogueAudio: function (segments) {
+      var self = this;
+      var apiKey = SQ.PlayerConfig.getElevenLabsApiKey();
+      if (!apiKey) return Promise.reject(new Error('No ElevenLabs API key'));
+
+      var registry = this._loadRegistry();
+      var narratorEntry = registry['__narrator__'];
+      var narratorVoiceId = narratorEntry ? narratorEntry.voice_id : null;
+
+      if (!narratorVoiceId) {
+        SQ.Logger.warn('Audio', 'No narrator voice assigned');
+        return Promise.resolve(false);
+      }
+
+      // Build inputs array for the dialogue API
+      var inputs = [];
+      var totalChars = 0;
+      segments.forEach(function (seg) {
+        var text = (seg.text || '').trim();
+        if (!text) return;
+
+        // Strip quotation marks for TTS
+        var ttsText = text.replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
+        if (!ttsText) return;
+
+        // Resolve voice ID
+        var voiceId;
+        var speaker = seg.speaker || 'narrator';
+        if (speaker === 'narrator') {
+          voiceId = narratorVoiceId;
+        } else {
+          var entry = registry[speaker];
+          if (!entry) {
+            var speakerLower = speaker.toLowerCase();
+            var keys = Object.keys(registry);
+            for (var k = 0; k < keys.length; k++) {
+              if (keys[k].toLowerCase() === speakerLower && keys[k] !== '__narrator__') {
+                entry = registry[keys[k]];
+                break;
+              }
+            }
+          }
+          voiceId = entry ? entry.voice_id : narratorVoiceId;
+        }
+
+        inputs.push({ text: ttsText, voice_id: voiceId });
+        totalChars += ttsText.length;
+      });
+
+      if (inputs.length === 0) return Promise.resolve(false);
+
+      var body = {
+        inputs: inputs,
+        model_id: 'eleven_v3',
+        output_format: 'mp3_44100_128'
+      };
+
+      var controller = _abortController;
+      var DIALOGUE_TIMEOUT_MS = 60000;
+      var timeoutId = setTimeout(function () {
+        if (controller) controller.abort();
+      }, DIALOGUE_TIMEOUT_MS);
+      var ttsStartTime = Date.now();
+
+      return fetch(ELEVENLABS_BASE + '/text-to-dialogue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey
+        },
+        body: JSON.stringify(body),
+        signal: controller ? controller.signal : undefined
+      })
+        .then(function (response) {
+          clearTimeout(timeoutId);
+          if (!response.ok) {
+            return response.text().then(function (text) {
+              throw new Error('ElevenLabs Dialogue failed: HTTP ' + response.status + ' - ' + text.slice(0, 200));
+            });
+          }
+          return response.arrayBuffer();
+        })
+        .then(function (buffer) {
+          var ttsDurationMs = Date.now() - ttsStartTime;
+          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalChars, 'eleven_v3') : null;
+          SQ.Logger.info('API', 'ElevenLabs Dialogue', { model: 'eleven_v3', source: 'elevenlabs_dialogue', charCount: totalChars, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
+          if (SQ.APIToast) {
+            SQ.APIToast.show({ source: 'elevenlabs_dialogue', model: 'eleven_v3', durationMs: ttsDurationMs, cost: ttsCost });
+          }
+          if (buffer.byteLength === 0) {
+            throw new Error('ElevenLabs Dialogue returned empty audio');
+          }
+          if (SQ.Playtester && SQ.Playtester.isActive()) {
+            SQ.Playtester.trackVoiceUsage(totalChars);
+          }
+
+          var blob = new Blob([buffer], { type: 'audio/mpeg' });
+          _dialogueAudioUrl = URL.createObjectURL(blob);
+          _dialogueAudio = new Audio(_dialogueAudioUrl);
+
+          _dialogueAudio.addEventListener('ended', function () {
+            _isPlaying = false;
+            _isPaused = false;
+            self._updateControls();
+          });
+
+          // Start playback
+          self.showControls();
+          self._setGeneratingState(false);
+          _isPlaying = true;
+          self._updateControls();
+
+          _dialogueAudio.play().catch(function (err) {
+            SQ.Logger.warn('Audio', 'Autoplay blocked', { error: err.message });
+            _isPlaying = false;
+            self._updateControls();
+          });
+
+          return true;
+        })
+        .catch(function (err) {
+          clearTimeout(timeoutId);
+          throw err;
+        });
+    },
+
+    /**
+     * Generate audio for all segments with progressive playback (Flash mode).
      * Starts playing segment 0 as soon as its TTS completes, generates
      * remaining segments in the background while earlier ones play.
      * @private
@@ -1318,7 +1456,14 @@
     /**
      * Play audio (starts from current position or beginning).
      */
-    play: function (audioUrl) {
+    play: function () {
+      if (_dialogueAudio) {
+        _dialogueAudio.play().catch(function () {});
+        _isPlaying = true;
+        _isPaused = false;
+        this._updateControls();
+        return;
+      }
       if (_segments.length === 0) return;
       this._playSegment(_currentIndex);
     },
@@ -1328,9 +1473,13 @@
      */
     pause: function () {
       if (!_isPlaying) return;
-      var seg = _segments[_currentIndex];
-      if (seg && seg.audio) {
-        seg.audio.pause();
+      if (_dialogueAudio) {
+        _dialogueAudio.pause();
+      } else {
+        var seg = _segments[_currentIndex];
+        if (seg && seg.audio) {
+          seg.audio.pause();
+        }
       }
       _isPlaying = false;
       _isPaused = true;
@@ -1342,12 +1491,19 @@
      */
     resume: function () {
       if (!_isPaused) return;
-      var seg = _segments[_currentIndex];
-      if (seg && seg.audio) {
-        seg.audio.play().catch(function () {});
+      if (_dialogueAudio) {
+        _dialogueAudio.play().catch(function () {});
         _isPlaying = true;
         _isPaused = false;
         this._updateControls();
+      } else {
+        var seg = _segments[_currentIndex];
+        if (seg && seg.audio) {
+          seg.audio.play().catch(function () {});
+          _isPlaying = true;
+          _isPaused = false;
+          this._updateControls();
+        }
       }
     },
 
@@ -1370,7 +1526,7 @@
         self.generate(passage, gameState).then(function () {
           self._setGeneratingState(false);
         });
-      } else if (_segments.length > 0) {
+      } else if (_dialogueAudio || _segments.length > 0) {
         this.play();
       }
     },
@@ -1380,9 +1536,17 @@
      */
     replay: function () {
       this._stopCurrentAudio();
-      _currentIndex = 0;
-      if (_segments.length > 0) {
-        this._playSegment(0);
+      if (_dialogueAudio) {
+        _dialogueAudio.currentTime = 0;
+        _dialogueAudio.play().catch(function () {});
+        _isPlaying = true;
+        _isPaused = false;
+        this._updateControls();
+      } else {
+        _currentIndex = 0;
+        if (_segments.length > 0) {
+          this._playSegment(0);
+        }
       }
     },
 
@@ -1395,7 +1559,13 @@
         _abortController = null;
       }
       this._stopCurrentAudio();
-      // Revoke blob URLs to free memory
+      // Clean up dialogue mode
+      if (_dialogueAudioUrl) {
+        try { URL.revokeObjectURL(_dialogueAudioUrl); } catch (e) { /* ignore */ }
+      }
+      _dialogueAudio = null;
+      _dialogueAudioUrl = null;
+      // Clean up flash mode — revoke blob URLs to free memory
       _segments.forEach(function (seg) {
         if (seg && seg.audioUrl) {
           try { URL.revokeObjectURL(seg.audioUrl); } catch (e) { /* ignore */ }
@@ -1407,7 +1577,6 @@
       _isPaused = false;
       _generationComplete = false;
       _totalExpectedSegments = 0;
-      // Resolve any waiting playback promises so they don't hang
       for (var idx in _segmentReadyResolvers) {
         if (_segmentReadyResolvers.hasOwnProperty(idx)) {
           _segmentReadyResolvers[idx]();
@@ -1422,6 +1591,12 @@
      * @private
      */
     _stopCurrentAudio: function () {
+      // Stop dialogue mode audio
+      if (_dialogueAudio) {
+        _dialogueAudio.pause();
+        _dialogueAudio.src = '';
+      }
+      // Stop flash mode segment audio
       _segments.forEach(function (seg) {
         if (seg && seg.audio) {
           seg.audio.pause();
