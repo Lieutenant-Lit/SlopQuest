@@ -5,7 +5,12 @@
  */
 (function () {
   var MODELS_URL = 'https://openrouter.ai/api/v1/models';
-  var ELEVENLABS_COST_PER_CHAR = 0.00030; // ~$0.30 per 1K characters
+  // ElevenLabs cost per character by model (Pro plan overage rates as estimate)
+  var ELEVENLABS_RATES = {
+    'eleven_flash_v2_5': 0.00012,   // ~$0.12/1K chars (0.5 credits)
+    'eleven_turbo_v2_5': 0.00012,   // ~$0.12/1K chars (0.5 credits)
+    'eleven_v3': 0.00024            // ~$0.24/1K chars (1 credit)
+  };
 
   // In-memory cache: { modelId: { prompt: costPerToken, completion: costPerToken } }
   var _cache = null;
@@ -71,8 +76,9 @@
      * @param {number} charCount - Number of characters synthesized
      * @returns {number} Dollar cost
      */
-    getElevenLabsCost: function (charCount) {
-      return charCount * ELEVENLABS_COST_PER_CHAR;
+    getElevenLabsCost: function (charCount, model) {
+      var rate = (model && ELEVENLABS_RATES[model]) || ELEVENLABS_RATES['eleven_flash_v2_5'];
+      return charCount * rate;
     },
 
     /**

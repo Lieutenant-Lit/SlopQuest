@@ -1059,9 +1059,11 @@
       if (!apiKey || !voiceId) return Promise.reject(new Error('Missing API key or voice'));
 
       settings = settings || {};
+      var ttsMode = SQ.PlayerConfig.getTtsMode();
+      var ttsModel = (ttsMode === 'turbo') ? 'eleven_turbo_v2_5' : 'eleven_flash_v2_5';
       var body = {
         text: text,
-        model_id: 'eleven_flash_v2_5',
+        model_id: ttsModel,
         voice_settings: {
           stability: settings.stability || 0.5,
           similarity_boost: settings.similarity_boost || 0.75,
@@ -1101,8 +1103,8 @@
         })
         .then(function (buffer) {
           var ttsDurationMs = Date.now() - ttsStartTime;
-          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount) : null;
-          SQ.Logger.info('API', 'ElevenLabs TTS', { model: 'eleven_flash_v2_5', source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
+          var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount, ttsModel) : null;
+          SQ.Logger.info('API', 'ElevenLabs TTS', { model: ttsModel, source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
@@ -1495,9 +1497,10 @@
 
         // Fire combined API toast for all segments
         var totalDurationMs = Date.now() - ttsGenerationStart;
-        var totalCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalTtsChars) : null;
+        var combinedModel = (SQ.PlayerConfig.getTtsMode() === 'turbo') ? 'eleven_turbo_v2_5' : 'eleven_flash_v2_5';
+        var totalCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalTtsChars, combinedModel) : null;
         if (SQ.APIToast && totalTtsChars > 0) {
-          SQ.APIToast.show({ source: 'elevenlabs_tts', model: 'eleven_flash_v2_5', durationMs: totalDurationMs, cost: totalCost, charCount: totalTtsChars });
+          SQ.APIToast.show({ source: 'elevenlabs_tts', model: combinedModel, durationMs: totalDurationMs, cost: totalCost, charCount: totalTtsChars });
         }
 
         // Notify any waiting playback that generation is done
