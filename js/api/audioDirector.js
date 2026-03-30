@@ -1142,18 +1142,20 @@
     },
 
     /**
-     * Strip quotation marks from text for TTS context.
-     * @private
-     */
-    _stripQuotes: function (text) {
-      return (text || '').replace(/^["\u201c\u201d\u2018\u2019']+|["\u201c\u201d\u2018\u2019']+$/g, '').trim();
-    },
-
-    /**
      * Build previous_text and next_text context for a Flash mode TTS call.
-     * Always includes same-voice segments. With injection enabled, also includes
-     * narrator beats (for character calls) and character dialogue (for narrator calls).
+     *
+     * Standard mode (injection OFF): only the current speaker's most recent
+     * prior/next line is included.
+     *
+     * Injection mode (injection ON): also includes the immediately adjacent
+     * narrator beat (for character calls) or character line (for narrator calls).
+     * At most 2 segments of context in each direction: the adjacent segment +
+     * the same-speaker's line beyond it.
+     *
+     * Quotes are preserved in context text so the model can distinguish
+     * dialogue from narration. Line breaks are preserved.
      * NEVER includes lines from a different character.
+     *
      * @param {Array} segments - Full segment array
      * @param {number} index - Current segment index
      * @param {boolean} injectionEnabled - Whether to include cross-voice context
@@ -1163,83 +1165,54 @@
     _buildSegmentContext: function (segments, index, injectionEnabled) {
       var currentSpeaker = segments[index].speaker || 'narrator';
       var isNarrator = (currentSpeaker === 'narrator');
-      var MAX_CONTEXT = 300;
-      var self = this;
 
-      // Determine if a segment should be included as context
-      var shouldInclude = function (seg) {
-        var speaker = seg.speaker || 'narrator';
-        // Same speaker: always include
-        if (speaker === currentSpeaker) return true;
-        // Injection disabled: only same speaker
-        if (!injectionEnabled) return false;
-        // Injection enabled for character: include narrator segments
-        if (!isNarrator && speaker === 'narrator') return true;
-        // Injection enabled for narrator: include any character adjacent
-        if (isNarrator && speaker !== 'narrator') return true;
-        return false;
-      };
-
-      // Determine if we should stop walking (hit a different character)
-      var shouldStop = function (seg) {
-        var speaker = seg.speaker || 'narrator';
-        if (speaker === currentSpeaker) return false;
-        if (speaker === 'narrator') return false;
-        // For narrator: stop at second different character
-        // For character: stop at any different character
-        if (!isNarrator && speaker !== 'narrator' && speaker !== currentSpeaker) return true;
-        return false;
-      };
-
-      // Build previous_text: walk backward
+      // Build previous_text: walk backward, collect at most 2 relevant segments
       var prevParts = [];
-      var prevLen = 0;
-      for (var i = index - 1; i >= 0; i--) {
-        if (shouldStop(segments[i])) break;
-        if (!shouldInclude(segments[i])) continue;
-        var pText = self._stripQuotes(segments[i].text);
+      for (var i = index - 1; i >= 0 && prevParts.length < 2; i--) {
+        var pSpeaker = segments[i].speaker || 'narrator';
+        var pText = (segments[i].text || '').trim();
         if (!pText) continue;
-        if (prevLen + pText.length > MAX_CONTEXT) {
-          var remaining = MAX_CONTEXT - prevLen;
-          if (remaining > 20) {
-            prevParts.unshift(pText.substring(pText.length - remaining));
-          }
+
+        if (pSpeaker === currentSpeaker) {
+          // Same speaker: always include
+          prevParts.unshift(pText);
+        } else if (injectionEnabled && pSpeaker === 'narrator' && !isNarrator) {
+          // Injection: narrator beat before a character line
+          prevParts.unshift(pText);
+        } else if (injectionEnabled && pSpeaker !== 'narrator' && isNarrator) {
+          // Injection: character line before a narrator beat
+          prevParts.unshift(pText);
+        } else {
+          // Different character or injection off — stop
           break;
         }
-        prevParts.unshift(pText);
-        prevLen += pText.length;
       }
 
-      // Build next_text: walk forward
+      // Build next_text: walk forward, collect at most 2 relevant segments
       var nextParts = [];
-      var nextLen = 0;
-      // Track if we've seen a different character (for narrator stop logic)
-      var seenDifferentChar = null;
-      for (var j = index + 1; j < segments.length; j++) {
-        var fSpeaker = segments[j].speaker || 'narrator';
-        // For narrator with injection: stop at second different character
-        if (isNarrator && injectionEnabled && fSpeaker !== 'narrator' && fSpeaker !== currentSpeaker) {
-          if (seenDifferentChar && seenDifferentChar !== fSpeaker) break;
-          seenDifferentChar = fSpeaker;
-        }
-        if (shouldStop(segments[j])) break;
-        if (!shouldInclude(segments[j])) continue;
-        var nText = self._stripQuotes(segments[j].text);
+      for (var j = index + 1; j < segments.length && nextParts.length < 2; j++) {
+        var nSpeaker = segments[j].speaker || 'narrator';
+        var nText = (segments[j].text || '').trim();
         if (!nText) continue;
-        if (nextLen + nText.length > MAX_CONTEXT) {
-          var rem = MAX_CONTEXT - nextLen;
-          if (rem > 20) {
-            nextParts.push(nText.substring(0, rem));
-          }
+
+        if (nSpeaker === currentSpeaker) {
+          // Same speaker: always include
+          nextParts.push(nText);
+        } else if (injectionEnabled && nSpeaker === 'narrator' && !isNarrator) {
+          // Injection: narrator beat after a character line
+          nextParts.push(nText);
+        } else if (injectionEnabled && nSpeaker !== 'narrator' && isNarrator) {
+          // Injection: character line after a narrator beat
+          nextParts.push(nText);
+        } else {
+          // Different character or injection off — stop
           break;
         }
-        nextParts.push(nText);
-        nextLen += nText.length;
       }
 
       return {
-        previousText: prevParts.join(' '),
-        nextText: nextParts.join(' ')
+        previousText: prevParts.join('\n'),
+        nextText: nextParts.join('\n')
       };
     },
 
