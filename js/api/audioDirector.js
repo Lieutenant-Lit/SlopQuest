@@ -150,13 +150,38 @@
         .then(function (success) {
           // Fire debug event AFTER all generation completes
           if (_lastAnalysisSegments) {
+            var debugRegistry = self._loadRegistry();
+            var debugNarratorEntry = debugRegistry['__narrator__'];
+            var debugNarratorVoiceId = debugNarratorEntry ? debugNarratorEntry.voice_id : null;
+            var debugSegments = _lastAnalysisSegments;
+            var debugParaNums = self._mapSegmentParagraphs(debugSegments, passage);
+            var debugInjection = SQ.PlayerConfig.isProsodyInjectionEnabled();
+            var debugMode = SQ.PlayerConfig.getTtsMode();
+
+            var ttsPreview = debugSegments.map(function (seg, i) {
+              var resolved = self._resolveSegmentVoice(seg, debugRegistry, debugNarratorVoiceId);
+              var voiceEntry = debugRegistry[resolved.speaker === 'narrator' ? '__narrator__' : resolved.speaker] || {};
+              var preview = {
+                voiceName: voiceEntry.voice_name || resolved.speaker,
+                voiceId: resolved.voiceId || '(none)',
+                mode: debugMode
+              };
+              if (debugMode === 'flash') {
+                var context = self._buildSegmentContext(debugSegments, i, debugInjection, debugParaNums);
+                preview.previousText = context.previousText || '';
+                preview.nextText = context.nextText || '';
+              }
+              return preview;
+            });
+
             _lastAnalysis = {
               segments: _lastAnalysisSegments,
               ttsSegments: _segments.filter(Boolean).map(function (s) {
                 return { text: s.text, speaker: s.speaker, index: s.index };
               }),
-              registry: self._loadRegistry(),
-              availableVoices: _availableVoices || []
+              registry: debugRegistry,
+              availableVoices: _availableVoices || [],
+              ttsPreview: ttsPreview
             };
             document.dispatchEvent(new CustomEvent('audiodebug', { detail: _lastAnalysis }));
             _lastAnalysisSegments = null;
@@ -1078,9 +1103,6 @@
           var ttsDurationMs = Date.now() - ttsStartTime;
           var ttsCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(ttsCharCount) : null;
           SQ.Logger.info('API', 'ElevenLabs TTS', { model: 'eleven_flash_v2_5', source: 'elevenlabs_tts', charCount: ttsCharCount, durationMs: ttsDurationMs, cost: ttsCost, byteLength: buffer.byteLength });
-          if (SQ.APIToast) {
-            SQ.APIToast.show({ source: 'elevenlabs_tts', model: 'eleven_flash_v2_5', durationMs: ttsDurationMs, cost: ttsCost });
-          }
           if (buffer.byteLength === 0) {
             throw new Error('ElevenLabs returned empty audio');
           }
@@ -1394,6 +1416,8 @@
       var paraNums = passage ? this._mapSegmentParagraphs(segments, passage) : null;
 
       var playbackStarted = false;
+      var totalTtsChars = 0;
+      var ttsGenerationStart = Date.now();
 
       // Helper: notify waiting playback that a segment is ready
       var notifySegmentReady = function (index) {
@@ -1437,6 +1461,7 @@
 
           // Build previous_text/next_text context for prosody
           var context = self._buildSegmentContext(segments, i, SQ.PlayerConfig.isProsodyInjectionEnabled(), paraNums);
+          totalTtsChars += ttsText.length;
 
           return self._generateSegmentAudio(ttsText, resolved.voiceId, resolved.voiceSettings, context.previousText, context.nextText)
             .then(function (audioUrl) {
@@ -1466,6 +1491,14 @@
 
       return chain.then(function () {
         _generationComplete = true;
+
+        // Fire combined API toast for all segments
+        var totalDurationMs = Date.now() - ttsGenerationStart;
+        var totalCost = SQ.Pricing ? SQ.Pricing.getElevenLabsCost(totalTtsChars) : null;
+        if (SQ.APIToast && totalTtsChars > 0) {
+          SQ.APIToast.show({ source: 'elevenlabs_tts', model: 'eleven_flash_v2_5', durationMs: totalDurationMs, cost: totalCost, charCount: totalTtsChars });
+        }
+
         // Notify any waiting playback that generation is done
         for (var idx in _segmentReadyResolvers) {
           if (_segmentReadyResolvers.hasOwnProperty(idx)) {
@@ -1558,6 +1591,15 @@
     _startSegmentAudio: function (index) {
       var self = this;
       var seg = _segments[index];
+
+      // Clean up previous segment's audio to prevent overlap
+      _segments.forEach(function (s, si) {
+        if (s && s.audio && si !== index) {
+          s.audio.pause();
+          s.audio.src = '';
+          s.audio = null;
+        }
+      });
 
       var audio = new Audio(seg.audioUrl);
       seg.audio = audio;
