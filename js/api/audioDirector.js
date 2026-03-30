@@ -106,6 +106,7 @@
             var injectionOn = SQ.PlayerConfig.isProsodyInjectionEnabled();
 
             // Build TTS preview for each segment
+            var dryRunParaNums = self._mapSegmentParagraphs(segments, passage);
             var ttsPreview = segments.map(function (seg, i) {
               var resolved = self._resolveSegmentVoice(seg, dryRunRegistry, dryRunNarratorVoiceId);
               var voiceEntry = dryRunRegistry[resolved.speaker === 'narrator' ? '__narrator__' : resolved.speaker] || {};
@@ -115,7 +116,7 @@
                 mode: ttsMode
               };
               if (ttsMode === 'flash') {
-                var context = self._buildSegmentContext(segments, i, injectionOn);
+                var context = self._buildSegmentContext(segments, i, injectionOn, dryRunParaNums);
                 preview.previousText = context.previousText || '';
                 preview.nextText = context.nextText || '';
               }
@@ -144,7 +145,7 @@
           if (SQ.PlayerConfig.getTtsMode() === 'dialogue') {
             return self._generateDialogueAudio(segments);
           }
-          return self._generateAllSegments(segments, gameState);
+          return self._generateAllSegments(segments, gameState, passage);
         })
         .then(function (success) {
           // Fire debug event AFTER all generation completes
@@ -1142,70 +1143,97 @@
     },
 
     /**
+     * Map each segment to a paragraph number in the original passage.
+     * Paragraph boundaries are detected by \n\n in the passage between segments.
+     * @private
+     */
+    _mapSegmentParagraphs: function (segments, passage) {
+      var paraNums = [];
+      var cursor = 0;
+      var paraCounter = 0;
+
+      for (var i = 0; i < segments.length; i++) {
+        var text = (segments[i].text || '').trim();
+        if (!text) { paraNums.push(paraCounter); continue; }
+
+        var idx = passage.indexOf(text, cursor);
+        if (idx === -1 && text.length > 40) {
+          idx = passage.indexOf(text.substring(0, 40), cursor);
+        }
+
+        if (idx !== -1) {
+          var between = passage.substring(cursor, idx);
+          if (between.indexOf('\n\n') !== -1) paraCounter++;
+          cursor = idx + text.length;
+        }
+        paraNums.push(paraCounter);
+      }
+      return paraNums;
+    },
+
+    /**
      * Build previous_text and next_text context for a Flash mode TTS call.
      *
      * Standard mode (injection OFF): only the current speaker's most recent
-     * prior/next line is included.
+     * prior/next line is included, within the same paragraph.
      *
      * Injection mode (injection ON): also includes the immediately adjacent
-     * narrator beat (for character calls) or character line (for narrator calls).
-     * At most 2 segments of context in each direction: the adjacent segment +
-     * the same-speaker's line beyond it.
+     * narrator beat (for character calls) or character line (for narrator calls),
+     * within the same paragraph.
      *
-     * Quotes are preserved in context text so the model can distinguish
-     * dialogue from narration. Line breaks are preserved.
-     * NEVER includes lines from a different character.
+     * Context stops at paragraph breaks (\n\n in the original passage).
+     * Quotes are preserved. NEVER includes lines from a different character.
      *
      * @param {Array} segments - Full segment array
      * @param {number} index - Current segment index
      * @param {boolean} injectionEnabled - Whether to include cross-voice context
+     * @param {Array} paraNums - Paragraph number for each segment (from _mapSegmentParagraphs)
      * @returns {{previousText: string, nextText: string}}
      * @private
      */
-    _buildSegmentContext: function (segments, index, injectionEnabled) {
+    _buildSegmentContext: function (segments, index, injectionEnabled, paraNums) {
       var currentSpeaker = segments[index].speaker || 'narrator';
       var isNarrator = (currentSpeaker === 'narrator');
+      var currentPara = paraNums ? paraNums[index] : -1;
 
-      // Build previous_text: walk backward, collect at most 2 relevant segments
+      // Build previous_text: walk backward, collect at most 2 relevant segments in same paragraph
       var prevParts = [];
       for (var i = index - 1; i >= 0 && prevParts.length < 2; i--) {
+        // Stop at paragraph break
+        if (paraNums && paraNums[i] !== currentPara) break;
+
         var pSpeaker = segments[i].speaker || 'narrator';
         var pText = (segments[i].text || '').trim();
         if (!pText) continue;
 
         if (pSpeaker === currentSpeaker) {
-          // Same speaker: always include
           prevParts.unshift(pText);
         } else if (injectionEnabled && pSpeaker === 'narrator' && !isNarrator) {
-          // Injection: narrator beat before a character line
           prevParts.unshift(pText);
         } else if (injectionEnabled && pSpeaker !== 'narrator' && isNarrator) {
-          // Injection: character line before a narrator beat
           prevParts.unshift(pText);
         } else {
-          // Different character or injection off — stop
           break;
         }
       }
 
-      // Build next_text: walk forward, collect at most 2 relevant segments
+      // Build next_text: walk forward, collect at most 2 relevant segments in same paragraph
       var nextParts = [];
       for (var j = index + 1; j < segments.length && nextParts.length < 2; j++) {
+        // Stop at paragraph break
+        if (paraNums && paraNums[j] !== currentPara) break;
+
         var nSpeaker = segments[j].speaker || 'narrator';
         var nText = (segments[j].text || '').trim();
         if (!nText) continue;
 
         if (nSpeaker === currentSpeaker) {
-          // Same speaker: always include
           nextParts.push(nText);
         } else if (injectionEnabled && nSpeaker === 'narrator' && !isNarrator) {
-          // Injection: narrator beat after a character line
           nextParts.push(nText);
         } else if (injectionEnabled && nSpeaker !== 'narrator' && isNarrator) {
-          // Injection: character line after a narrator beat
           nextParts.push(nText);
         } else {
-          // Different character or injection off — stop
           break;
         }
       }
@@ -1353,7 +1381,7 @@
      * remaining segments in the background while earlier ones play.
      * @private
      */
-    _generateAllSegments: function (segments, gameState) {
+    _generateAllSegments: function (segments, gameState, passage) {
       var self = this;
       _segments = [];
       _generationComplete = false;
@@ -1363,6 +1391,7 @@
       var registry = this._loadRegistry();
       var narratorEntry = registry['__narrator__'];
       var narratorVoiceId = narratorEntry ? narratorEntry.voice_id : null;
+      var paraNums = passage ? this._mapSegmentParagraphs(segments, passage) : null;
 
       var playbackStarted = false;
 
@@ -1407,7 +1436,7 @@
           }
 
           // Build previous_text/next_text context for prosody
-          var context = self._buildSegmentContext(segments, i, SQ.PlayerConfig.isProsodyInjectionEnabled());
+          var context = self._buildSegmentContext(segments, i, SQ.PlayerConfig.isProsodyInjectionEnabled(), paraNums);
 
           return self._generateSegmentAudio(ttsText, resolved.voiceId, resolved.voiceSettings, context.previousText, context.nextText)
             .then(function (audioUrl) {
