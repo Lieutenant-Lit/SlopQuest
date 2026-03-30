@@ -657,6 +657,9 @@
               return seg;
             });
 
+            // Fill gaps: inject narrator segments for any passage text the LLM skipped
+            result.segments = SQ.AudioDirector._fillGaps(result.segments, passage);
+
             // Merge adjacent segments with the same speaker
             if (result.segments.length > 1) {
               var merged = [result.segments[0]];
@@ -677,6 +680,75 @@
           return { segments: [{ speaker: 'narrator', text: passage }] };
         }
       });
+    },
+
+    /**
+     * Fill gaps in segmentation by diffing segment text against the passage.
+     * Any passage text not covered by any segment is injected as a narrator segment.
+     * Runs BEFORE the same-speaker merge pass so injected gaps get merged naturally.
+     * @private
+     */
+    _fillGaps: function (segments, passage) {
+      if (!passage || !segments || segments.length === 0) {
+        return [{ speaker: 'narrator', text: passage }];
+      }
+
+      var result = [];
+      var cursor = 0;
+      var passageText = passage;
+
+      for (var i = 0; i < segments.length; i++) {
+        var needle = (segments[i].text || '').trim();
+        if (!needle) continue;
+
+        // Find this segment's text in the passage
+        var matchStart = -1;
+        var matchEnd = -1;
+
+        // Try exact match
+        var idx = passageText.indexOf(needle, cursor);
+        if (idx !== -1) {
+          matchStart = idx;
+          matchEnd = idx + needle.length;
+        }
+
+        // Fuzzy fallback: match first 40 chars
+        if (matchStart === -1 && needle.length > 40) {
+          var short = needle.substring(0, 40);
+          idx = passageText.indexOf(short, cursor);
+          if (idx !== -1) {
+            matchStart = idx;
+            matchEnd = Math.min(idx + needle.length, passageText.length);
+          }
+        }
+
+        // If we found a match, check for gap before it
+        if (matchStart !== -1) {
+          if (matchStart > cursor) {
+            var gapText = passageText.substring(cursor, matchStart).trim();
+            if (gapText) {
+              result.push({ speaker: 'narrator', text: gapText });
+              SQ.Logger.info('Audio', 'Gap filled as narrator', { chars: gapText.length, preview: gapText.substring(0, 60) });
+            }
+          }
+          result.push(segments[i]);
+          cursor = matchEnd;
+        } else {
+          // Couldn't find this segment in passage — still include it
+          result.push(segments[i]);
+        }
+      }
+
+      // Fill any remaining text at the end of the passage
+      if (cursor < passageText.length) {
+        var remainder = passageText.substring(cursor).trim();
+        if (remainder) {
+          result.push({ speaker: 'narrator', text: remainder });
+          SQ.Logger.info('Audio', 'Trailing gap filled as narrator', { chars: remainder.length });
+        }
+      }
+
+      return result;
     },
 
     // ========================================================
