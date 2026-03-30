@@ -2,7 +2,7 @@
  * SQ.AudioDirector — Full-cast audio play engine using ElevenLabs.
  *
  * Pipeline:
- *   1. _analyzePassage: Segments passage into coarse speaker blocks (LLM call, Haiku-compatible)
+ *   1. _analyzePassage: Regex splits quoted spans, LLM classifies who speaks each (Haiku-compatible)
  *   2. _castVoicesForSpeakers: Assigns ElevenLabs voices to speakers from step 1 (LLM call, sequential)
  *   3. Progressive TTS: Generates audio per segment, starts playback after first segment completes
  *
@@ -569,15 +569,147 @@
     },
 
     /**
-     * Analyze a passage into coarse audio segments with speaker identification.
-     * Optimized for Haiku — simple prompt, minimal schema, few-shot example.
-     * Splits ONLY when the voice changes (narrator↔character, or character↔character).
+     * Split a passage into quoted spans and unquoted text using a state machine.
+     * Handles: "...", '...', \u201c...\u201d, \u2018...\u2019
+     * Returns array of {type: 'unquoted'|'quoted', text, start, end} in passage order.
+     * @private
+     */
+    _splitQuotedSpans: function (passage) {
+      var chunks = [];
+      var i = 0;
+      var len = passage.length;
+      var unquotedStart = 0;
+
+      while (i < len) {
+        var ch = passage[i];
+        var openQuote = null;
+        var closeQuote = null;
+
+        // Detect opening quotes
+        if (ch === '"' || ch === '\u201c') {
+          // Double quote (straight or smart left)
+          openQuote = ch;
+          closeQuote = (ch === '\u201c') ? '\u201d' : '"';
+        } else if (ch === '\u2018') {
+          // Smart single left quote — unambiguous
+          openQuote = ch;
+          closeQuote = '\u2019';
+        } else if (ch === "'") {
+          // Straight single quote — only opening if preceded by whitespace/punctuation/start
+          if (i === 0 || /[\s\n\r\(\[\{\u2014\u2013\-,;:!?.]/.test(passage[i - 1])) {
+            openQuote = "'";
+            closeQuote = "'";
+          }
+        }
+
+        if (openQuote) {
+          // Flush unquoted text before this quote
+          if (i > unquotedStart) {
+            var utext = passage.substring(unquotedStart, i);
+            if (utext.trim()) {
+              chunks.push({ type: 'unquoted', text: utext, start: unquotedStart, end: i });
+            }
+          }
+
+          // Find the closing quote
+          var quoteStart = i;
+          i++; // skip opening quote
+          var found = false;
+
+          while (i < len) {
+            if (passage[i] === '\\') {
+              i += 2; // skip escaped char
+              continue;
+            }
+
+            if (closeQuote === '"' && (passage[i] === '"' || passage[i] === '\u201d')) {
+              found = true;
+              i++; // include closing quote
+              break;
+            } else if (closeQuote === '\u201d' && passage[i] === '\u201d') {
+              found = true;
+              i++;
+              break;
+            } else if (closeQuote === '\u2019' && passage[i] === '\u2019') {
+              found = true;
+              i++;
+              break;
+            } else if (closeQuote === "'" && passage[i] === "'") {
+              // Straight single close: only if followed by whitespace/punctuation/end
+              var next = (i + 1 < len) ? passage[i + 1] : ' ';
+              if (/[\s\n\r,;:!?.\)\]\}\u2014\u2013\-]/.test(next) || i + 1 >= len) {
+                found = true;
+                i++;
+                break;
+              }
+            }
+            i++;
+          }
+
+          if (found) {
+            chunks.push({ type: 'quoted', text: passage.substring(quoteStart, i), start: quoteStart, end: i });
+          } else {
+            // Unclosed quote — treat as unquoted, rewind
+            i = quoteStart + 1;
+          }
+          unquotedStart = i;
+        } else {
+          i++;
+        }
+      }
+
+      // Flush remaining unquoted text
+      if (unquotedStart < len) {
+        var remaining = passage.substring(unquotedStart, len);
+        if (remaining.trim()) {
+          chunks.push({ type: 'unquoted', text: remaining, start: unquotedStart, end: len });
+        }
+      }
+
+      return chunks;
+    },
+
+    /**
+     * Merge adjacent segments with the same speaker.
+     * @private
+     */
+    _mergeAdjacentSegments: function (segments) {
+      if (!segments || segments.length <= 1) return segments;
+      var merged = [segments[0]];
+      for (var i = 1; i < segments.length; i++) {
+        var prev = merged[merged.length - 1];
+        if (segments[i].speaker === prev.speaker) {
+          prev.text = (prev.text || '') + '\n\n' + (segments[i].text || '');
+        } else {
+          merged.push(segments[i]);
+        }
+      }
+      return merged;
+    },
+
+    /**
+     * Analyze a passage: regex pre-splits quoted spans, LLM classifies who speaks each.
+     * Unquoted text is always narrator. Quoted spans the LLM omits are also narrator.
      * @private
      */
     _analyzePassage: function (passage, gameState) {
+      var self = this;
       var playerName = (gameState && gameState.player && gameState.player.name) || 'The Wanderer';
 
-      // Build known character names from registry AND NPC roster
+      // Step 1: Regex pre-split
+      var chunks = this._splitQuotedSpans(passage);
+      var quotedChunks = chunks.filter(function (c) { return c.type === 'quoted'; });
+
+      // If no quoted spans, skip LLM — everything is narrator
+      if (quotedChunks.length === 0) {
+        return Promise.resolve({
+          segments: this._mergeAdjacentSegments(
+            chunks.map(function (c) { return { speaker: 'narrator', text: c.text }; })
+          )
+        });
+      }
+
+      // Step 2: Build LLM classification prompt
       var registry = this._loadRegistry();
       var knownNames = Object.keys(registry).filter(function (k) {
         return k !== '__narrator__';
@@ -590,27 +722,18 @@
       });
 
       var p = '';
-      p += 'You split story text into audio segments for a full-cast audiobook.\n';
-      p += 'Each segment is read aloud by ONE speaker continuously.\n\n';
-
+      p += 'You identify who speaks each quoted line in a story passage.\n\n';
       p += 'RULES:\n';
-      p += '- Split ONLY when the voice changes (narrator to character, or character to character).\n';
-      p += '- Narration, description, and action beats (e.g. "he said, slamming his fist") = speaker "narrator".\n';
-      p += '- Dialogue (words inside quotation marks) = speaker is the character speaking.\n';
-      p += '- When the passage says "you say" / "you reply" / "you call out" the speaker is "' + playerName + '".\n';
-      p += '- Adjacent narration lines with no voice change between them = merge into ONE narrator segment.\n';
-      p += '- Adjacent dialogue lines by the SAME character = merge into ONE segment.\n';
-      p += '- When a paragraph mixes dialogue and narration (e.g. "\'Hello,\' she said, stepping forward. \'How are you?\'"),\n';
-      p += '  split it: dialogue goes to the character, action beats / attribution go to narrator.\n';
-      p += '- Use EXACT text from the passage. Do not skip, reword, or omit anything.\n';
-      p += '- Every word in the passage must appear in exactly one segment.\n\n';
+      p += '- For each numbered quote below, respond with the character name who SPEAKS it aloud.\n';
+      p += '- If a quote is NOT spoken dialogue (signs, thoughts, written text, sound effects, titles), OMIT it from your response.\n';
+      p += '- When the passage says "you say" / "you reply" / "you call out", the speaker is "' + playerName + '".\n';
 
       if (knownNames.length > 0) {
-        p += 'KNOWN CHARACTERS (use these exact names): ' + knownNames.join(', ') + '\n';
+        p += '- KNOWN CHARACTERS (use these exact names): ' + knownNames.join(', ') + '\n';
       }
-      p += 'For unnamed speakers, use short descriptive names like "Gate Guard" or "Bartender".\n\n';
+      p += '- For unnamed speakers, use short descriptive names like "Gate Guard" or "Bartender".\n\n';
 
-      // Minimal scene context for speaker identification
+      // Scene context for speaker identification
       var cur = (gameState && gameState.current) || {};
       if (cur.location || cur.scene_context) {
         p += 'SCENE CONTEXT: ';
@@ -619,136 +742,72 @@
         p += '\n\n';
       }
 
-      p += 'EXAMPLE:\n';
-      p += 'Input:\n';
-      p += 'The captain rose from his chair. "Stand down," he growled, slamming his fist on the table.\n\n';
-      p += '"I won\'t say it again."\n\n';
-      p += 'The room fell silent. Nobody dared to breathe.\n\n';
-      p += 'After a long moment, the tension broke.\n';
-      p += 'Output: {"segments": [\n';
-      p += '  {"speaker": "narrator", "text": "The captain rose from his chair."},\n';
-      p += '  {"speaker": "Captain", "text": "\\"Stand down,\\""},\n';
-      p += '  {"speaker": "narrator", "text": "he growled, slamming his fist on the table."},\n';
-      p += '  {"speaker": "Captain", "text": "\\"I won\'t say it again.\\""},\n';
-      p += '  {"speaker": "narrator", "text": "The room fell silent. Nobody dared to breathe.\\n\\nAfter a long moment, the tension broke."}\n';
-      p += ']}\n';
-      p += 'NOTE: The last two narrator paragraphs are ONE segment because the speaker did not change.\n\n';
+      p += 'PASSAGE:\n' + passage + '\n\n';
 
-      p += 'Return ONLY valid JSON: {"segments": [{"speaker": "...", "text": "..."}, ...]}\n';
+      p += 'QUOTED SPANS:\n';
+      var spanMap = {}; // index in quotedChunks -> chunk
+      quotedChunks.forEach(function (c, idx) {
+        var num = idx + 1;
+        spanMap[num] = c;
+        // Show a preview (first 80 chars) to keep prompt compact
+        var preview = c.text.length > 80 ? c.text.substring(0, 80) + '...' : c.text;
+        p += '[' + num + '] ' + preview + '\n';
+      });
 
-      var userPrompt = 'Split this passage into audio segments:\n\n' + passage;
+      p += '\nReturn ONLY valid JSON: {"speakers": {"1": "CharName", "3": "CharName"}}\n';
+      p += 'OMIT any span number that is NOT spoken dialogue.\n';
+      p += 'If NO spans are spoken dialogue, return: {"speakers": {}}\n';
 
       return SQ.API.call(SQ.PlayerConfig.getModel('voice_director'), [
         { role: 'system', content: p },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: 'Identify who speaks each quoted span.' }
       ], {
-        temperature: 0.3,
-        max_tokens: 4000,
+        temperature: 0.1,
+        max_tokens: 1000,
         source: 'voice_director'
       }).then(function (response) {
         try {
           var result = SQ.API.parseJSON(response);
-          // Normalize: ensure every segment has a speaker field
-          if (result && result.segments) {
-            result.segments = result.segments.map(function (seg) {
-              if (!seg.speaker) {
-                seg.speaker = (seg.type === 'dialogue' && seg.speaker) ? seg.speaker : 'narrator';
-              }
-              return seg;
-            });
+          var speakers = (result && result.speakers) ? result.speakers : {};
 
-            // Fill gaps: inject narrator segments for any passage text the LLM skipped
-            result.segments = SQ.AudioDirector._fillGaps(result.segments, passage);
-
-            // Merge adjacent segments with the same speaker
-            if (result.segments.length > 1) {
-              var merged = [result.segments[0]];
-              for (var mi = 1; mi < result.segments.length; mi++) {
-                var prev = merged[merged.length - 1];
-                if (result.segments[mi].speaker === prev.speaker) {
-                  prev.text = (prev.text || '') + '\n\n' + (result.segments[mi].text || '');
-                } else {
-                  merged.push(result.segments[mi]);
-                }
+          // Step 3: Build segments from chunks + LLM speaker assignments
+          var segments = [];
+          chunks.forEach(function (chunk) {
+            if (chunk.type === 'unquoted') {
+              segments.push({ speaker: 'narrator', text: chunk.text });
+            } else {
+              // Find this chunk's span number
+              var spanNum = null;
+              for (var key in spanMap) {
+                if (spanMap[key] === chunk) { spanNum = key; break; }
               }
-              result.segments = merged;
+              var assignedSpeaker = spanNum ? speakers[String(spanNum)] : null;
+              if (assignedSpeaker) {
+                segments.push({ speaker: assignedSpeaker, text: chunk.text });
+              } else {
+                // Not dialogue or LLM didn't assign — narrator reads it
+                segments.push({ speaker: 'narrator', text: chunk.text });
+              }
             }
-          }
-          return result;
+          });
+
+          // Merge adjacent same-speaker segments
+          segments = self._mergeAdjacentSegments(segments);
+
+          return { segments: segments };
         } catch (e) {
-          SQ.Logger.warn('Audio', 'Failed to parse segmentation JSON', { error: e.message });
+          SQ.Logger.warn('Audio', 'Failed to parse speaker classification', { error: e.message });
           return { segments: [{ speaker: 'narrator', text: passage }] };
         }
+      }).catch(function (err) {
+        if (err.name === 'AbortError') throw err;
+        SQ.Logger.warn('Audio', 'Speaker classification failed', { error: err.message || String(err) });
+        // Fallback: use regex split with all quotes as narrator
+        var segments = self._mergeAdjacentSegments(
+          chunks.map(function (c) { return { speaker: 'narrator', text: c.text }; })
+        );
+        return { segments: segments };
       });
-    },
-
-    /**
-     * Fill gaps in segmentation by diffing segment text against the passage.
-     * Any passage text not covered by any segment is injected as a narrator segment.
-     * Runs BEFORE the same-speaker merge pass so injected gaps get merged naturally.
-     * @private
-     */
-    _fillGaps: function (segments, passage) {
-      if (!passage || !segments || segments.length === 0) {
-        return [{ speaker: 'narrator', text: passage }];
-      }
-
-      var result = [];
-      var cursor = 0;
-      var passageText = passage;
-
-      for (var i = 0; i < segments.length; i++) {
-        var needle = (segments[i].text || '').trim();
-        if (!needle) continue;
-
-        // Find this segment's text in the passage
-        var matchStart = -1;
-        var matchEnd = -1;
-
-        // Try exact match
-        var idx = passageText.indexOf(needle, cursor);
-        if (idx !== -1) {
-          matchStart = idx;
-          matchEnd = idx + needle.length;
-        }
-
-        // Fuzzy fallback: match first 40 chars
-        if (matchStart === -1 && needle.length > 40) {
-          var short = needle.substring(0, 40);
-          idx = passageText.indexOf(short, cursor);
-          if (idx !== -1) {
-            matchStart = idx;
-            matchEnd = Math.min(idx + needle.length, passageText.length);
-          }
-        }
-
-        // If we found a match, check for gap before it
-        if (matchStart !== -1) {
-          if (matchStart > cursor) {
-            var gapText = passageText.substring(cursor, matchStart).trim();
-            if (gapText) {
-              result.push({ speaker: 'narrator', text: gapText });
-              SQ.Logger.info('Audio', 'Gap filled as narrator', { chars: gapText.length, preview: gapText.substring(0, 60) });
-            }
-          }
-          result.push(segments[i]);
-          cursor = matchEnd;
-        } else {
-          // Couldn't find this segment in passage — still include it
-          result.push(segments[i]);
-        }
-      }
-
-      // Fill any remaining text at the end of the passage
-      if (cursor < passageText.length) {
-        var remainder = passageText.substring(cursor).trim();
-        if (remainder) {
-          result.push({ speaker: 'narrator', text: remainder });
-          SQ.Logger.info('Audio', 'Trailing gap filled as narrator', { chars: remainder.length });
-        }
-      }
-
-      return result;
     },
 
     // ========================================================
