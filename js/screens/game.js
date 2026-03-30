@@ -137,9 +137,15 @@
       // Illustrations temporarily disabled
       this._hideIllustration();
 
-      // Audio controls — show if narration is enabled and audio is pending or active
-      if (SQ.PlayerConfig.isNarrationEnabled() && SQ.AudioDirector.hasPendingOrActive()) {
-        SQ.AudioDirector.showControls();
+      // Audio controls — show if narration is enabled
+      if (SQ.PlayerConfig.isNarrationEnabled()) {
+        if (!SQ.AudioDirector.hasPendingOrActive() && state.last_passage) {
+          // Re-queue passage for narration on game resume
+          SQ.AudioDirector.prepareForPassage(state.last_passage, state);
+        }
+        if (SQ.AudioDirector.hasPendingOrActive()) {
+          SQ.AudioDirector.showControls();
+        }
       } else {
         SQ.AudioDirector.hideControls();
       }
