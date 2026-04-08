@@ -485,6 +485,7 @@
       } else {
         var flavor = this._suggestionFlavors[Math.floor(Math.random() * this._suggestionFlavors.length)];
         var plot = this._suggestionPlots[Math.floor(Math.random() * this._suggestionPlots.length)];
+        console.log('[Suggest] Rolled:', flavor, '×', plot);
         userPrompt = 'Suggest a completely original adventure setup that fuses these two elements:\n' +
           '- Flavor: ' + flavor + '\n' +
           '- Plot: ' + plot + '\n\n' +
