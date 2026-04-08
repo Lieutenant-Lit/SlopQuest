@@ -403,24 +403,29 @@
       btn.textContent = 'Generate Story';
     },
 
-    _suggestionThemes: [
-      'spaghetti western', 'deep sea exploration', 'courtroom drama',
-      'competitive cooking', 'space trucking', 'noir detective',
-      'jungle expedition', 'arctic survival', 'heist',
-      'underground racing', 'haunted carnival', 'pirate adventure',
-      'time loop', 'kaiju attack', 'train mystery',
-      'prison break', 'gladiatorial combat', 'ghost hunting',
-      'treasure hunting', 'political intrigue', 'alien first contact',
-      'zombie survival', 'fairy tale remix', 'cyberpunk hacking',
-      'desert caravan', 'volcanic island', 'submarine warfare',
-      'sky pirates', 'witch academy', 'robot uprising',
-      'dinosaur safari', 'spelunking', 'post-apocalyptic road trip',
-      'necromancy gone wrong', 'magical heist', 'interdimensional tourism',
-      'monster hunting', 'merchant trading', 'rebellion against an empire',
-      'dreamworld exploration', 'plague doctor', 'samurai revenge',
-      'solarpunk utopia', 'eldritch fishing village', 'battle royale',
-      'archaeological dig', 'wild west bank robbery', 'mech pilot',
-      'Victorian séance', 'Olympic-style tournament', 'lost colony'
+    _suggestionFlavors: [
+      'arctic tundra', 'amazon jungle', 'deep sea trench', 'volcanic island',
+      'desert caravan route', 'neon megacity', 'cyberpunk underground', 'solarpunk utopia',
+      'post-apocalyptic wasteland', 'Victorian London', 'feudal Japan', '1920s prohibition',
+      'wild west frontier', 'Roman coliseum era', 'medieval kingdom', 'renaissance city-state',
+      'ancient Egypt', 'noir 1940s city', 'dieselpunk metropolis', 'floating sky islands',
+      'generation ship', 'lunar colony', 'Mars frontier', 'sunken city',
+      'eldritch fishing village', 'haunted carnival', 'isolated arctic research station',
+      'witch academy', 'plague-stricken city', 'dreamworld', 'underground fungal kingdom',
+      'steampunk airship fleet', 'lost island colony', 'far-future dyson sphere',
+      'interdimensional bazaar', 'fairy tale forest', 'robot wasteland', 'deep cave system',
+      'prison colony', 'samurai-era coastal village'
+    ],
+
+    _suggestionPlots: [
+      'heist', 'prison escape', 'rescue mission', 'murder investigation', 'treasure hunt',
+      'revenge quest', 'coming-of-age', 'political uprising', 'tournament', 'pilgrimage',
+      'first contact', 'courtroom trial', 'siege', 'exploration of the unknown',
+      'rebellion against tyranny', 'race against time', 'wedding gone wrong', 'cooking competition',
+      'monster hunt', 'inheritance dispute', 'haunting', 'disaster survival',
+      'undercover infiltration', 'archaeological discovery', 'road trip', 'forbidden romance',
+      'manhunt', 'merchant caravan run', 'protection contract', 'uneasy truce',
+      'time loop', 'cursed transformation'
     ],
 
     generateSuggestion: function () {
@@ -439,9 +444,13 @@
           'This may be a universe/franchise, a genre, a tone, a mood, or a stylistic reference — interpret it liberally and build the setup around it. ' +
           'Pick a specific, interesting angle rather than the most obvious one. Surprise the player.\n\n';
       } else {
-        var theme = this._suggestionThemes[Math.floor(Math.random() * this._suggestionThemes.length)];
-        userPrompt = 'Suggest a completely original adventure setup themed around: ' + theme + '. ' +
-          'Put a unique spin on it. Be creative and surprising. Do not base it on any existing franchise or IP.\n\n';
+        var flavor = this._suggestionFlavors[Math.floor(Math.random() * this._suggestionFlavors.length)];
+        var plot = this._suggestionPlots[Math.floor(Math.random() * this._suggestionPlots.length)];
+        userPrompt = 'Suggest a completely original adventure setup that fuses these two elements:\n' +
+          '- Flavor: ' + flavor + '\n' +
+          '- Plot: ' + plot + '\n\n' +
+          'Both elements must be meaningfully present in the pitch. Commit to the unexpected juxtaposition — don\'t default to the obvious reading. ' +
+          'Be creative and surprising. Do not base it on any existing franchise or IP.\n\n';
       }
 
       var messages = [
