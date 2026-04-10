@@ -403,42 +403,68 @@
       btn.textContent = 'Generate Story';
     },
 
-    _suggestionThemes: [
-      'spaghetti western', 'deep sea exploration', 'courtroom drama',
-      'competitive cooking', 'space trucking', 'noir detective',
-      'jungle expedition', 'arctic survival', 'heist',
-      'underground racing', 'haunted carnival', 'pirate adventure',
-      'time loop', 'kaiju attack', 'train mystery',
-      'prison break', 'gladiatorial combat', 'ghost hunting',
-      'treasure hunting', 'political intrigue', 'alien first contact',
-      'zombie survival', 'fairy tale remix', 'cyberpunk hacking',
-      'desert caravan', 'volcanic island', 'submarine warfare',
-      'sky pirates', 'witch academy', 'robot uprising',
-      'dinosaur safari', 'spelunking', 'post-apocalyptic road trip',
-      'necromancy gone wrong', 'magical heist', 'interdimensional tourism',
-      'monster hunting', 'merchant trading', 'rebellion against an empire',
-      'dreamworld exploration', 'plague doctor', 'samurai revenge',
-      'solarpunk utopia', 'eldritch fishing village', 'battle royale',
-      'archaeological dig', 'wild west bank robbery', 'mech pilot',
-      'Victorian séance', 'Olympic-style tournament', 'lost colony'
+    _suggestionFlavors: [
+      'arctic tundra', 'amazon jungle', 'deep sea trench', 'volcanic island',
+      'desert caravan route', 'neon megacity', 'cyberpunk underground', 'solarpunk utopia',
+      'post-apocalyptic wasteland', 'Victorian London', 'feudal Japan', '1920s prohibition',
+      'wild west frontier', 'Roman coliseum era', 'medieval kingdom', 'renaissance city-state',
+      'ancient Egypt', 'noir 1940s city', 'dieselpunk metropolis', 'floating sky islands',
+      'generation ship', 'lunar colony', 'Mars frontier', 'sunken city',
+      'eldritch fishing village', 'haunted carnival', 'isolated arctic research station',
+      'witch academy', 'plague-stricken city', 'dreamworld', 'underground fungal kingdom',
+      'steampunk airship fleet', 'lost island colony', 'far-future dyson sphere',
+      'interdimensional bazaar', 'fairy tale forest', 'robot wasteland', 'deep cave system',
+      'prison colony', 'samurai-era coastal village',
+      'orbital space station', 'asteroid belt mining rig', 'crashed starship',
+      'gas giant cloud harvester', 'derelict battlestation', 'wormhole gate outpost',
+      'terraforming colony', 'rogue planet drifter', 'orbital elevator',
+      'sleeper-ship colony vault', 'Mongol steppe khanate', 'imperial Chinese court',
+      'Mughal palace city', 'Byzantine Constantinople', 'Ottoman bazaar-city',
+      'Aztec ceremonial capital', 'Mayan temple complex', 'Incan mountain citadel',
+      'Mesopotamian ziggurat', 'Viking coastal longhouse', 'Polynesian voyaging fleet',
+      'Silk Road oasis', 'West African trading empire', 'Iron Age hillfort',
+      'neolithic ritual henge', 'Cold War spy capital', '1970s rustbelt town',
+      '1980s neon coast', 'climate refugee flotilla', 'occupied resistance enclave',
+      'WWII submarine', '1960s space race launch site', '90s internet underground',
+      'alchemist\'s tower', 'wizard\'s wandering tower', 'dragon-patrolled mountain pass',
+      'necromancer\'s kingdom', 'astral plane', 'fae court', 'underworld of the dead',
+      'elemental plane of fire', 'drifting iceberg city', 'desert necropolis',
+      'vampire aristocrat\'s estate', 'werewolf border village', 'giant\'s bone castle',
+      'cursed monastery', 'auction house of forbidden relics', 'trans-continental luxury train',
+      'traveling circus troupe', 'offshore oil rig', 'remote island lighthouse',
+      'abandoned asylum', 'Himalayan high-altitude valley', 'salt flats',
+      'rainforest canopy village', 'savanna trading post', 'mangrove delta',
+      'city inside a giant creature', 'library outside of time'
     ],
 
-    _suggestionIPCategories: [
-      'a classic anime or manga', 'a 90s or 2000s video game',
-      'a fantasy novel series', 'a sci-fi movie',
-      'a horror film', 'a TV drama series',
-      'a Studio Ghibli film', 'a comic book or graphic novel',
-      'a tabletop RPG setting', 'a children\'s cartoon (played seriously)',
-      'a historical drama', 'a crime or thriller novel',
-      'a JRPG', 'a survival horror game',
-      'a Shakespearean play', 'a mythology or folklore tradition',
-      'a mecha anime', 'a western movie',
-      'a musical or stage play', 'a noir film',
-      'a platformer or adventure game', 'a dystopian novel',
-      'a sitcom (played straight)', 'a fighting game',
-      'a space opera franchise', 'a monster-of-the-week show',
-      'a stealth or espionage game', 'a romantic drama',
-      'a board game universe', 'a documentary subject'
+    _suggestionPlots: [
+      'heist', 'prison escape', 'rescue mission', 'murder investigation', 'treasure hunt',
+      'revenge quest', 'coming-of-age', 'political uprising', 'tournament', 'pilgrimage',
+      'first contact', 'courtroom trial', 'siege', 'exploration of the unknown',
+      'rebellion against tyranny', 'race against time', 'wedding gone wrong', 'cooking competition',
+      'monster hunt', 'inheritance dispute', 'haunting', 'disaster survival',
+      'undercover infiltration', 'archaeological discovery', 'road trip', 'forbidden romance',
+      'manhunt', 'merchant caravan run', 'protection contract', 'uneasy truce',
+      'time loop', 'cursed transformation',
+      'assassination contract', 'long con', 'smuggling run', 'gang turf war', 'kidnapping plot',
+      'diplomatic mission', 'treaty negotiation', 'succession crisis', 'hostage standoff',
+      'defection gone wrong', 'coup d\'état', 'arranged marriage', 'love triangle',
+      'mistaken identity', 'reunion with old comrades', 'body swap', 'amnesia arc',
+      'breaking an ancestral curse', 'clearing one\'s name', 'confronting the past',
+      'trial of initiation', 'dungeon crawl', 'labyrinth navigation', 'lost artifact retrieval',
+      'voyage across unknown seas', 'scientific expedition', 'perilous delivery', 'bounty hunt',
+      'tracking a mythical creature', 'reclaiming a birthright', 'quest for a cure',
+      'crossing cursed wilds', 'scaling an impossible peak', 'exorcism', 'stopping a summoning',
+      'completing a forbidden ritual', 'deal with a dark power', 'prophecy fulfillment',
+      'prophecy denial', 'communing with the dead', 'purifying cursed ground',
+      'negotiating with a trickster spirit', 'awakening an ancient being', 'bodyguarding a ruler',
+      'outrunning a natural disaster', 'surviving a contagion', 'weathering a famine',
+      'evading a pursuing army', 'sheltering refugees', 'rooting out a traitor',
+      'mutiny on the high seas', 'sabotage mission', 'raising an army', 'missing person case',
+      'uncovering a conspiracy', 'decoding an ancient text', 'locked-room mystery',
+      'tracing a strange signal', 'vouching for an accused friend', 'detective rivalry',
+      'chasing a hoax', 'gambling night gone wrong', 'grand performance opening', 'magical duel',
+      'confronting a doppelganger', 'infiltrating a cult', 'escaping a cult', 'trial by combat'
     ],
 
     generateSuggestion: function () {
@@ -448,17 +474,24 @@
       link.classList.add('disabled');
       spinner.classList.remove('hidden');
 
-      var model = SQ.PlayerConfig.getModel('gamemaster');
-      var useIP = Math.random() < 0.5;
+      var model = SQ.PlayerConfig.getModel('suggestion');
+      var hint = SQ.PlayerConfig.getSuggestionHint();
 
-      var theme = this._suggestionThemes[Math.floor(Math.random() * this._suggestionThemes.length)];
-      var ipCategory = this._suggestionIPCategories[Math.floor(Math.random() * this._suggestionIPCategories.length)];
-
-      var userPrompt = useIP
-        ? 'Suggest an adventure setup based on ' + ipCategory + '. ' +
-          'Set it in that universe with a character that fits naturally. Pick something unexpected, not the most obvious choice.\n\n'
-        : 'Suggest a completely original adventure setup themed around: ' + theme + '. ' +
-          'Put a unique spin on it. Be creative and surprising.\n\n';
+      var userPrompt;
+      if (hint) {
+        userPrompt = 'Suggest an adventure setup guided by this player preference: "' + hint + '". ' +
+          'This may be a universe/franchise, a genre, a tone, a mood, or a stylistic reference — interpret it liberally and build the setup around it. ' +
+          'Pick a specific, interesting angle rather than the most obvious one. Surprise the player.\n\n';
+      } else {
+        var flavor = this._suggestionFlavors[Math.floor(Math.random() * this._suggestionFlavors.length)];
+        var plot = this._suggestionPlots[Math.floor(Math.random() * this._suggestionPlots.length)];
+        console.log('[Suggest] Rolled:', flavor, '×', plot);
+        userPrompt = 'Suggest a completely original adventure setup that fuses these two elements:\n' +
+          '- Flavor: ' + flavor + '\n' +
+          '- Plot: ' + plot + '\n\n' +
+          'Both elements must be meaningfully present in the pitch. Commit to the unexpected juxtaposition — don\'t default to the obvious reading. ' +
+          'Be creative and surprising. Do not base it on any existing franchise or IP.\n\n';
+      }
 
       var messages = [
         {

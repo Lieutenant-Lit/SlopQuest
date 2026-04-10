@@ -177,6 +177,31 @@
         }
       });
 
+      // Suggestion model selection
+      document.getElementById('suggestion-model-select').addEventListener('change', function () {
+        var customInput = document.getElementById('suggestion-model-custom-input');
+        if (this.value === 'custom') {
+          customInput.classList.remove('hidden');
+          customInput.focus();
+        } else {
+          customInput.classList.add('hidden');
+          SQ.PlayerConfig.setModel('suggestion', this.value);
+        }
+        updateModelDesc('suggestion-model-desc', this.value);
+      });
+
+      document.getElementById('suggestion-model-custom-input').addEventListener('change', function () {
+        if (this.value.trim()) {
+          SQ.PlayerConfig.setModel('suggestion', this.value.trim());
+          updateModelDesc('suggestion-model-desc', this.value.trim());
+        }
+      });
+
+      // Suggestion hint (freeform bias for the "generate a suggestion" link)
+      document.getElementById('suggestion-hint-input').addEventListener('change', function () {
+        SQ.PlayerConfig.setSuggestionHint(this.value);
+      });
+
       // Illustrations toggle
       document.getElementById('settings-illustrations-toggle').addEventListener('change', function () {
         SQ.PlayerConfig.setIllustrationsEnabled(this.checked);
@@ -391,6 +416,12 @@
       var gmModel = SQ.PlayerConfig.getModel('gamemaster');
       this._syncModelSelect('gm-model-select', 'gm-model-custom-input', gmModel);
       updateModelDesc('gm-model-desc', gmModel);
+
+      // Set suggestion model selector + hint field to current values
+      var suggestionModel = SQ.PlayerConfig.getModel('suggestion');
+      this._syncModelSelect('suggestion-model-select', 'suggestion-model-custom-input', suggestionModel);
+      updateModelDesc('suggestion-model-desc', suggestionModel);
+      document.getElementById('suggestion-hint-input').value = SQ.PlayerConfig.getSuggestionHint();
 
       // Hide back button if no API key yet and no previous screen (first-time user)
       var backBtn = document.getElementById('btn-settings-back');

@@ -15,8 +15,10 @@
       image: 'google/gemini-3.1-flash-image-preview',
       playtester: 'anthropic/claude-sonnet-4',
       ui_designer: 'anthropic/claude-haiku-4.5',
-      voice_director: 'anthropic/claude-haiku-4.5'
+      voice_director: 'anthropic/claude-haiku-4.5',
+      suggestion: 'anthropic/claude-haiku-4.5'
     },
+    suggestion_hint: '',
     visual_style_prefix: 'dark ink illustration, crosshatched, monochrome, woodcut style',
     illustrations_enabled: false,
     narration_enabled: false,
@@ -137,6 +139,25 @@
     setVisualStylePrefix: function (prefix) {
       var config = this.load();
       config.visual_style_prefix = prefix;
+      this.save(config);
+    },
+
+    /**
+     * Get the freeform hint used to bias "generate a suggestion" output.
+     * May be an IP/universe, genre, tone, mood, or style reference.
+     * Empty string when unset (default suggestion behavior).
+     */
+    getSuggestionHint: function () {
+      var config = this.load();
+      return (config.suggestion_hint || '').trim();
+    },
+
+    /**
+     * Set the suggestion hint.
+     */
+    setSuggestionHint: function (value) {
+      var config = this.load();
+      config.suggestion_hint = (value || '').trim();
       this.save(config);
     },
 
