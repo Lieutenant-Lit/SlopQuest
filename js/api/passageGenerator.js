@@ -55,12 +55,12 @@
     },
 
     /**
-     * Generate a finale turn for a terminal choice (game_over, advances_act, conclusion).
+     * Generate a finale turn for a terminal choice (game_over or conclusion).
      * Flow is reversed: GM-first (resolve state), then Writer (conclusive passage, no choices).
      *
      * @param {object} gameState - Full game state object
      * @param {string} choiceId - The terminal choice selected (A/B/C/D)
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @returns {Promise<{ gmResponse: object, writerResponse: object, terminalType: string }>}
      */
     generateFinale: function (gameState, choiceId, terminalType) {

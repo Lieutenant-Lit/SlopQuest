@@ -129,18 +129,18 @@
       p += '- Set proximity_to_climax = (scenes_in_act / target_scenes), clamped to [0.0, 1.0]. Include this in state_updates EVERY turn.\n';
       p += '- MINIMUM SCENES PER ACT: The client enforces that acts cannot advance until scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)). Do not offer advances_act choices before this threshold.\n';
       p += '- CRITICAL: You MUST play through ALL THREE ACTS (1, 2, 3) in order. Never skip from Act 1 directly to Act 3. Act 2 contains the rising action and character development that makes the climax meaningful.\n';
-      p += '- Do NOT set advance_act or story_complete to true on normal turns. Act advancement and story completion are now triggered by the TERMINAL CHOICE system below. Always set advance_act to false on normal turns.\n';
+      p += '- Do NOT set advance_act or story_complete to true on normal turns. When a player selects an advances_act choice, set advance_act to true in state_updates for that turn. Always set advance_act to false on all other turns.\n';
       p += '- If scenes_in_act exceeds target_scenes by 3 or more, you SHOULD offer an advances_act choice — the act has gone on too long.\n';
       p += '- When proximity_to_climax >= 0.7, your choice_metadata should steer toward the act\'s end_condition — offer choices that could trigger it, including advances_act choices.\n\n';
 
       // Terminal outcomes rules
       p += 'TERMINAL OUTCOMES — CHOICE PRE-CLASSIFICATION:\n';
-      p += '- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act\'s end_condition. At most ONE advances_act choice per set of four.\n';
+      p += '- advances_act: Use when scenes_in_act >= MAX(3, CEIL(target_scenes * 0.5)) AND the choice would resolve the act\'s end_condition. At most ONE advances_act choice per set of four. When selected, the turn proceeds normally (passage + choices) — set advance_act to true in state_updates.\n';
       p += '- conclusion: Only valid in Act 3. Use when the choice would resolve Act 3\'s end_condition and complete the story. At most ONE conclusion choice per set of four.\n';
       if (diffConfig.allow_game_over) {
         p += '- game_over: Use when the choice leads to an irreversible failure appropriate to the tone (see STYLE & TONE above). At most ONE game_over choice per set of four.\n';
       }
-      p += '- When a player selects a terminal choice, the client runs a special finale flow (GM-first, then Writer). The Writer will write a conclusive passage with NO forward-looking choices. Your choice_metadata pre-classification is the trigger.\n';
+      p += '- When a player selects a conclusion or game_over choice, the client runs a special finale flow (GM-first, then Writer) that produces a conclusive passage with NO forward-looking choices.\n';
       p += '- IMPORTANT: At most ONE terminal outcome (advances_act, conclusion, or game_over) per set of four choices. The other three choices must use normal outcomes.\n\n';
 
       // Time elapsed rules
@@ -253,10 +253,10 @@
 
     /**
      * Build the system prompt for a finale GM call.
-     * Called when a player selects a terminal choice (game_over, advances_act, conclusion).
+     * Called when a player selects a terminal choice (game_over or conclusion).
      * Returns state_updates only — no choice_metadata.
      * @param {object} gameState - Full game state
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @returns {string} System prompt
      */
     buildFinaleSystem: function (gameState, terminalType) {
@@ -328,9 +328,6 @@
       if (terminalType === 'game_over') {
         p += '- This is a GAME OVER. The character has failed irreversibly.\n';
         p += '- Apply the consequences of the failure. The event_log_entry should describe the failure clearly — it will be displayed as the game over reason.\n';
-      } else if (terminalType === 'advances_act') {
-        p += '- This COMPLETES the current act. The act\'s end_condition has been triggered.\n';
-        p += '- The event_log_entry should summarize the act\'s resolution.\n';
       } else if (terminalType === 'conclusion') {
         p += '- This CONCLUDES the entire story. The Act 3 end_condition has been met.\n';
         p += '- The event_log_entry should summarize the story\'s conclusion.\n';
@@ -343,7 +340,7 @@
      * Build the user prompt for a finale GM call.
      * @param {object} gameState - Full game state
      * @param {string} choiceId - Which choice was selected (A/B/C/D)
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @returns {string} User prompt
      */
     buildFinaleUser: function (gameState, choiceId, terminalType) {

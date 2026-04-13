@@ -162,18 +162,13 @@
       if (state.game_over || state.story_complete) {
         document.getElementById('choices-container').classList.add('hidden');
       } else if (!state.current_choices) {
-        // Terminal passage with no choices (e.g. mid-act-transition resume)
-        document.getElementById('choices-container').classList.remove('hidden');
-        document.querySelectorAll('.btn-choice').forEach(function (btn) {
-          btn.classList.add('hidden');
-        });
-        this._showActTransition(state);
+        // Legacy: saved game with no choices (e.g. old act-transition save) — regenerate
+        this.makeChoice(null);
       } else {
         document.getElementById('choices-container').classList.remove('hidden');
         document.querySelectorAll('.btn-choice').forEach(function (btn) {
           btn.classList.remove('hidden');
         });
-        document.getElementById('btn-act-continue').classList.add('hidden');
         this.renderChoices(state.current_choices, !this._isInitialRender);
         this._hideChoiceStatus();
       }
@@ -313,7 +308,7 @@
         historyDepth: SQ.HistoryStack.length()
       });
 
-      // Check for terminal choice (game_over, advances_act, conclusion)
+      // Check for terminal choice (game_over, conclusion)
       var terminalType = self._getTerminalType(choiceId, state);
       if (terminalType) {
         self._handleTerminalChoice(choiceId, state, terminalType);
@@ -750,7 +745,7 @@
       var choice = state.current_choices && state.current_choices[choiceId];
       if (!choice || !choice.outcome) return null;
       var outcome = choice.outcome;
-      if (outcome === 'game_over' || outcome === 'advances_act' || outcome === 'conclusion') {
+      if (outcome === 'game_over' || outcome === 'conclusion') {
         return outcome;
       }
       return null;
@@ -760,7 +755,7 @@
      * Handle a terminal choice: GM-finale then Writer-finale, no forward choices.
      * @param {string} choiceId - A/B/C/D
      * @param {object} state - Game state
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @private
      */
     _handleTerminalChoice: function (choiceId, state, terminalType) {
@@ -815,21 +810,6 @@
           // Navigate to gameover after reading delay handled by gameover screen
           SQ.showScreen('gameover');
 
-        } else if (terminalType === 'advances_act') {
-          // Explicitly advance the act (finale GM doesn't set advance_act)
-          state.current.act = Math.min((state.current.act || 1) + 1, 3);
-          state.current.proximity_to_climax = 0.0;
-          state.current.act_start_scene = state.current.scene_number;
-          if (state.skeleton && Array.isArray(state.skeleton.acts)) {
-            var newAct = state.skeleton.acts[state.current.act - 1];
-            if (newAct && Array.isArray(newAct.locked_constraints)) {
-              state.current.active_constraints = newAct.locked_constraints.slice();
-            }
-          }
-          SQ.Logger.info('Game', 'Act advanced via terminal choice', { newAct: state.current.act });
-          SQ.GameState.save();
-          self._showActTransition(state);
-
         } else if (terminalType === 'conclusion') {
           state.story_complete = true;
           SQ.GameState.save();
@@ -846,104 +826,6 @@
         SQ.ErrorOverlay.show(err, {
           onRetry: function () {
             self._handleTerminalChoice(choiceId, state, terminalType);
-          }
-        });
-      });
-    },
-
-    /**
-     * Show a "Continue to Act X" button after an act-completing finale passage.
-     * @param {object} state - Game state
-     * @private
-     */
-    _showActTransition: function (state) {
-      var container = document.getElementById('choices-container');
-      container.classList.remove('hidden');
-
-      var continueBtn = document.getElementById('btn-act-continue');
-      continueBtn.querySelector('.choice-text').textContent = 'Continue to Act ' + (state.current.act || 2);
-      continueBtn.disabled = false;
-      continueBtn.classList.remove('hidden');
-
-      var self = this;
-      continueBtn.onclick = function () {
-        continueBtn.classList.add('hidden');
-        self._startNewAct(state);
-      };
-
-      // Playtester auto-play: auto-click continue
-      if (SQ.Playtester && SQ.Playtester.isActive()) {
-        setTimeout(function () {
-          continueBtn.click();
-        }, 500);
-      }
-    },
-
-    /**
-     * Start the first turn of a new act via the normal generate flow.
-     * @param {object} state - Game state
-     * @private
-     */
-    _startNewAct: function (state) {
-      var self = this;
-
-      SQ.Logger.info('Game', 'Starting new act', { act: state.current.act });
-
-      self.showLoading();
-
-      SQ.PassageGenerator.generate(state, null).then(function (result) {
-        var writerResponse = result.writerResponse;
-        self.hideLoading();
-
-        // Apply Writer response (passage + choices + scene number)
-        self.applyWriterResponse(state, writerResponse);
-
-        // Render passage
-        self._renderPassage(state.last_passage, true);
-
-        // Restore choice buttons visibility (but hide the Continue button)
-        document.querySelectorAll('.btn-choice').forEach(function (btn) {
-          btn.classList.remove('hidden');
-        });
-        document.getElementById('btn-act-continue').classList.add('hidden');
-
-        // Show choices disabled while waiting for GM
-        self.renderChoices(state.current_choices, true);
-        self._disableChoicesWithStatus('Updating game state...');
-        self._renderStatusBar(state);
-        self._renderGameStateDebug(state);
-
-        // Audio
-        if (SQ.PlayerConfig.isNarrationEnabled() && writerResponse.passage) {
-          SQ.AudioDirector.prepareForPassage(writerResponse.passage, state);
-        }
-
-        // Wait for GM response
-        result.gameMasterPromise.then(function (gmResponse) {
-          self.applyGameMasterResponse(state, gmResponse);
-          self._renderStatusBar(state);
-          self._renderGameStateDebug(state);
-          if (state.game_over || state.story_complete) return;
-          self._enableChoices();
-          self._hideChoiceStatus();
-
-          if (SQ.Playtester && SQ.Playtester.isActive()) {
-            SQ.Playtester.onTurnComplete();
-          }
-        }).catch(function (err) {
-          SQ.Logger.error('GameMaster', 'New act GM failed', { error: err.message });
-          SQ.ErrorOverlay.show(err, {
-            onRetry: function () {
-              self._startNewAct(state);
-            }
-          });
-        });
-      }).catch(function (err) {
-        self.hideLoading();
-        SQ.Logger.error('Writer', 'New act Writer failed', { error: err.message });
-        SQ.ErrorOverlay.show(err, {
-          onRetry: function () {
-            self._startNewAct(state);
           }
         });
       });

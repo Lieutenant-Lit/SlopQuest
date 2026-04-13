@@ -266,7 +266,7 @@
      * Build the system prompt for a finale Writer call.
      * Called after the finale GM has resolved state — the Writer writes a conclusive passage with NO choices.
      * @param {object} gameState - Full game state
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @returns {string} System prompt
      */
     buildFinaleSystem: function (gameState, terminalType) {
@@ -286,11 +286,6 @@
         p += 'You are writing the FINAL passage of the character\'s journey. The character has FAILED IRREVERSIBLY.\n';
         p += 'This could be death, permanent loss, catastrophic failure, or any genre-appropriate ending. ';
         p += 'Narrate the failure vividly and definitively. No escape, no survival, no continuation.\n\n';
-      } else if (terminalType === 'advances_act') {
-        p += 'You are writing the FINAL passage of the current act. The act\'s end condition has been triggered.\n';
-        p += 'Write a satisfying conclusion to this chapter of the story. Resolve the act\'s central conflict. ';
-        p += 'End with a sense of closure for this chapter while leaving narrative threads for the next act. ';
-        p += 'Do NOT set up immediate next steps — a transition prompt will handle moving to the next act.\n\n';
       } else if (terminalType === 'conclusion') {
         p += 'You are writing the FINAL passage of the ENTIRE STORY. The story\'s ultimate end condition has been met.\n';
         p += 'Provide definitive narrative closure. Resolve character arcs. Reflect on the journey. ';
@@ -354,7 +349,7 @@
      * Build the user prompt for a finale Writer call.
      * @param {object} gameState - Full game state
      * @param {string} choiceId - Which choice was selected (A/B/C/D)
-     * @param {string} terminalType - 'game_over', 'advances_act', or 'conclusion'
+     * @param {string} terminalType - 'game_over' or 'conclusion'
      * @param {object} gmResponse - The finale GM response (for event_log_entry context)
      * @returns {string} User prompt
      */
